@@ -18,6 +18,10 @@ const currentView = ref("home")
         <a class="link" @click="currentView = 'perfil'">Perfil</a>
         <a class="link" @click="currentView = 'grupos'">Grupos</a>
         <a class="link" @click="currentView = 'tareas'">Tareas</a>
+        <a class="link" @click="currentView = 'Foro'">Foro</a>
+        <a class="link" @click="currentView = 'Mensajes'">Mensajes</a>
+        <a class="link" @click="currentView = 'Notificaciones'">Notificaciones</a>
+        <a class="link" @click="currentView = 'Configuracion'">Configuracion</a>
 
       </nav>
     </aside>
