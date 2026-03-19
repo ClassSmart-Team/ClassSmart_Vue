@@ -1,6 +1,6 @@
 import { createRouter, createWebHistory } from 'vue-router'
-import HomeView from '../views/HomeView.vue'
 import AdminRegistroView from '../views/AdminRegistroView.vue'
+import HomeGeneralView from '@/views/HomeGeneralView.vue'
 
 const router = createRouter({
   history: createWebHistory(import.meta.env.BASE_URL),
@@ -8,7 +8,7 @@ const router = createRouter({
     {
       path: '/',
       name: 'home',
-      component: HomeView,
+      component: HomeGeneralView,
     },
     {
       path: '/AdminRegister',
