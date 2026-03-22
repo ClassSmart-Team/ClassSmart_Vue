@@ -1,15 +1,22 @@
 import { createRouter, createWebHistory } from 'vue-router'
 import AdminRegistroView from '../views/AdminRegistroView.vue'
-import HomeGeneralView from '@/views/HomeGeneralView.vue'
 import LoginView from '@/views/LoginView.vue'
+import HomeTeacherView from '@/views/HomeTeacherView.vue'
+import ProfileTeacherView from '@/views/ProfileTeacherView.vue'
+
 
 const router = createRouter({
   history: createWebHistory(import.meta.env.BASE_URL),
   routes: [
     {
-      path: '/home',
+      path: '/teacher/home',
       name: 'home',
-      component: HomeGeneralView,
+      component: HomeTeacherView,
+    },
+    {
+      path: '/teacher/profile',
+      name: 'profile',
+      component: ProfileTeacherView,
     },
     {
       path: '/adminRegister',
@@ -23,7 +30,7 @@ const router = createRouter({
       component: LoginView,
     
     },
-
+   
   ],
 })
 

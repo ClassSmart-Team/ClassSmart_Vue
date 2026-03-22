@@ -7,11 +7,11 @@ import SidebarLayout from '@/components/TeacherSidebar.vue'
 <SidebarLayout>
 
   <div class="ContSmall center">
-    <h1>Pagina Home</h1>
+    <h1>Pagina Perfil TEACHER</h1>
   </div>  
 
   <div class="ContBig center" style="margin-top: 80px">
-    <h2>Contenido de la pagina home</h2>
+    <h2>Contenido de la pagina perfil</h2>
   </div>   
 
 </SidebarLayout>

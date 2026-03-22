@@ -45,7 +45,7 @@ body {
 
 /* SIDEBAR */
 .sidebar{
-  background: linear-gradient(180deg,var(--color-Azul),var(--color-AzulFuerte));
+  background: linear-gradient(180deg,var(--color-Azul),var(--color-AzulTres));
   width: 200px;
   height: 590px;
   border-radius: 15px;
@@ -54,18 +54,18 @@ body {
   box-shadow: 0 10px 25px #00000040;
 }
 
+.columna{
+  display:flex;
+  flex-direction:column;
+  gap:10px;
+}
+
 .logo{
   width:120px;
   margin:auto;
   margin-bottom:20px;
 }
 
-
-.columna{
-  display:flex;
-  flex-direction:column;
-  gap:10px;
-}
 
 
 .link{
