@@ -42,7 +42,7 @@
 }
 
 h1 {
-  color: var(--color-AzulF);
+  color: var(--color-AzulCuatro);
   margin-bottom: 30px;
 }
 

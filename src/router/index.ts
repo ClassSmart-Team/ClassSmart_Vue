@@ -7,37 +7,24 @@ const router = createRouter({
   history: createWebHistory(import.meta.env.BASE_URL),
   routes: [
     {
-      path: '/',
+      path: '/home',
       name: 'home',
       component: HomeGeneralView,
     },
     {
-      path: '/AdminRegister',
+      path: '/adminRegister',
       name: 'AdminRegister',
       component: AdminRegistroView,
-      meta: { role: 'Administrador' }
     },
 
    {
-      path: '/Login',
+      path: '/login',
       name: 'Login',
       component: LoginView,
     
     },
 
   ],
-})
-
-router.beforeEach((to, from, next) => {
-  const user = {
-    role: 'Administrador'
-  }
-
-  if (to.meta.role && to.meta.role !== user.role) {
-    return next('/login')
-  }
-
-  next()
 })
 
 export default router

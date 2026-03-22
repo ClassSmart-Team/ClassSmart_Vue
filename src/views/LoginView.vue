@@ -30,16 +30,15 @@
 
 .bg-page {
   position: fixed;
-  top: 0;
-  left: 0;
+  inset: 0;
   width: 100vw;
   height: 100vh;
-  background: linear-gradient(180deg,var(--color-Azul),var(--color-AzulFuerte));
+  background: linear-gradient(180deg,var(--color-Azul),var(--color-AzulTres));
   z-index: -1;
 }
 
 .login-container {
-  background: var(--color-BlancoBg);
+  background: var(--color-Contenedor);
   padding: 40px;
   border-radius: 15px;
   width: 400px;
@@ -48,7 +47,7 @@
 }
 
 h1 {
-  color: var(--color-AzulFuerte);
+  color: var(--color-TitulosMenu);
   margin-bottom: 30px;
 }
 
@@ -70,8 +69,8 @@ input {
   padding: 12px;
   border-radius: 8px;
   border: none;
-  background: var(--color-Azul);
-  color: white;
+  background: var(--color-ContenedorClaro);
+  color: var(--color-Texto);
   outline: none;
 }
 
@@ -84,13 +83,13 @@ input::placeholder {
   padding: 15px;
   border: none;
   border-radius: 10px;
-  background: var(--color-AzulFuerte);
+  background: var(--color-AzulTres);
   color: white;
   font-size: 16px;
   cursor: pointer;
 }
 
 .btn-login:hover {
-  background: var(--color-OscuroAzulado);
+  background: var(--color-AzulCuatro);
 }
 </style>

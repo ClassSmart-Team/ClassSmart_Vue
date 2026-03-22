@@ -7,10 +7,9 @@ const currentView = ref("home")
 
 <template>
 
-<Contenedor>
+  <Contenedor>
 
-  <div class="layout">
-
+<div>
     <aside class="sidebar">
       <nav class="columna">
 

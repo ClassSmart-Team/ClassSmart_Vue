@@ -9,7 +9,7 @@
 <style>
 
 .contain {
-  background: var(--color-BlancoBg);
+  background: var(--color-Contenedor);
   width: 1400px;
   height:690px;
   border-radius: 10px;
