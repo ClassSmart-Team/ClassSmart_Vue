@@ -1,6 +1,8 @@
 <template>
+
+<div class="bg-page">
   <div class="form-container">
-    <h1>Crear nueva cuenta</h1>
+    <h1>Crear Cuenta</h1>
 
     <form class="form-grid">
       
@@ -14,7 +16,7 @@
         <input type="email" placeholder="correo@example.com" />
 
         <label>Teléfono (opcional)</label>
-        <input type="text" placeholder="Teléfono (opcional)" />
+        <input type="text" placeholder="Teléfono" />
 
         <label>Contraseña</label>
         <input type="password" placeholder="**" />
@@ -26,24 +28,40 @@
 
     <button class="btn-submit">Confirmar Registro</button>
   </div>
+
+  </div>
 </template>
 
 
 
 <style scoped>
 
+.bg-page {
+  position: fixed;
+  inset: 0;
+  overflow-x: hidden;
+  overflow-y: auto;
+  background: linear-gradient(180deg,var(--color-Azul),var(--color-AzulTres));
+  z-index: -1;
+}
+
 .form-container {
-  background: var(--color-BlancoBg);
+  background: var(--color-Contenedor);
   padding: 50px;
   border-radius: 15px;
-  width: 50%;
+  width: 45%;
   margin: auto;
   text-align: center;
+  box-shadow: 0px 0px 30px #01a2ff80
 }
 
 h1 {
-  color: var(--color-AzulCuatro);
-  margin-bottom: 30px;
+  color: var(--color-Titulos);
+  background-color: var(--color-AzulDos);
+  border-radius: 40px;
+}
+h2 {
+  color: var(--color-Texto);
 }
 
 .form-grid {
@@ -66,23 +84,21 @@ input, select {
   padding: 12px;
   border-radius: 8px;
   border: none;
-  background: var(--color-Azul);
+  background: var(--color-ContenedorClaro);
   color: #343a55;
   outline: none;
 }
 
-/* Placeholder blanco */
 input::placeholder {
   color: #343a55;
 }
 
-/* Botón */
 .btn-submit {
   margin-top: 40px;
   padding: 15px 40px;
   border: none;
   border-radius: 10px;
-  background: var(--color-AzulFuerte);
+  background: var(--color-AzulTres);
   color: white;
   font-size: 16px;
   cursor: pointer;

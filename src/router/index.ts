@@ -1,5 +1,6 @@
 import { createRouter, createWebHistory } from 'vue-router'
 import AdminRegistroView from '../views/AdminRegistroView.vue'
+import RegistroView from '../views/RegistroView.vue'
 import LoginView from '@/views/LoginView.vue'
 import HomeTeacherView from '@/views/HomeTeacherView.vue'
 import ProfileTeacherView from '@/views/ProfileTeacherView.vue'
@@ -23,6 +24,13 @@ const router = createRouter({
       name: 'AdminRegister',
       component: AdminRegistroView,
     },
+    
+    {
+      path: '/Register',
+      name: 'Register',
+      component: RegistroView,
+    },
+
 
    {
       path: '/login',

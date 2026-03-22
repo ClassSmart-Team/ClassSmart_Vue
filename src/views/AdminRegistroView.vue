@@ -16,8 +16,8 @@
         <label>Correo electrónico</label>
         <input type="email" placeholder="correo@example.com" />
 
-        <label>Teléfono (opcional)</label>
-        <input type="text" placeholder="Teléfono (opcional)" />
+        <label>Teléfono</label>
+        <input type="text" placeholder="Teléfono" />
 
         <label>Contraseña</label>
         <input type="password" placeholder="**" />
