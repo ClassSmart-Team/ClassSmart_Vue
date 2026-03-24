@@ -16,7 +16,7 @@ import Contenedor from '@/components/Contenedor.vue'
         <RouterLink to="/teacher/profile" class="link"> Perfil</RouterLink>
         <RouterLink to="/teacher/groups" class="link"> Grupos</RouterLink>
         <RouterLink to="/teacher/tasks" class="link"> Tareas</RouterLink>
-        <RouterLink to="/teacher/forum" class="link"> Foro</RouterLink>
+        <RouterLink to="/teacher/announcements" class="link"> Anuncios</RouterLink>
         <RouterLink to="/teacher/messages" class="link"> Mensajes</RouterLink>
         <RouterLink to="/teacher/notifications" class="link"> Notificaciones</RouterLink>
         <RouterLink to="/teacher/settings" class="link"> Configuración</RouterLink>

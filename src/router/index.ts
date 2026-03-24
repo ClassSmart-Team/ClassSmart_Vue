@@ -4,21 +4,14 @@ import RegistroView from '../views/RegistroView.vue'
 import LoginView from '@/views/LoginView.vue'
 import HomeTeacherView from '@/views/HomeTeacherView.vue'
 import ProfileTeacherView from '@/views/ProfileTeacherView.vue'
+import GroupsTeacherView from '@/views/GroupsTeacherView.vue'
+import TasksTeacherView from '@/views/TasksTeacherView.vue'
+import AnnouncementTeacherView from '@/views/AnnouncementTeacherView.vue'
 
 
 const router = createRouter({
   history: createWebHistory(import.meta.env.BASE_URL),
   routes: [
-    {
-      path: '/teacher/home',
-      name: 'home',
-      component: HomeTeacherView,
-    },
-    {
-      path: '/teacher/profile',
-      name: 'profile',
-      component: ProfileTeacherView,
-    },
     {
       path: '/adminRegister',
       name: 'AdminRegister',
@@ -38,6 +31,38 @@ const router = createRouter({
       component: LoginView,
     
     },
+
+   {
+      path: '/teacher/home',
+      name: 'home',
+      component: HomeTeacherView,
+    },
+
+    {
+      path: '/teacher/profile',
+      name: 'profile',
+      component: ProfileTeacherView,
+    },
+    
+    {
+      path: '/teacher/groups',
+      name: 'groups',
+      component: GroupsTeacherView,
+    },
+
+   {
+      path: '/teacher/tasks',
+      name: 'tasks',
+      component: TasksTeacherView,
+    },
+   
+
+        {
+      path: '/teacher/announcements',
+      name: 'announcements',
+      component: AnnouncementTeacherView,
+    },
+   
    
   ],
 })

@@ -10,12 +10,12 @@ import SidebarLayout from '@/components/TeacherSidebar.vue'
 <SidebarLayout>
 
   <div class="ContSmall center">
-    <h1>Perfil</h1>
+    <h1>Pagina Tasks</h1>
   </div>  
 
   <div class="ContBig CenterItems" style="margin-top: 80px">
 
-    <h3>Contenido de la pagina Perfil</h3>
+
   </div>   
 
 </SidebarLayout>

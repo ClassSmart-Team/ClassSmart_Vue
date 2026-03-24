@@ -13,8 +13,9 @@ import SidebarLayout from '@/components/TeacherSidebar.vue'
     <h1>Pagina Home</h1>
   </div>  
 
-  <div class="ContBig center" style="margin-top: 80px">
-    <h2>Contenido de la pagina home</h2>
+  <div class="ContBig CenterItems" style="margin-top: 80px">
+
+    <h3>Contenido de la pagina home</h3>
   </div>   
 
 </SidebarLayout>
@@ -24,6 +25,12 @@ import SidebarLayout from '@/components/TeacherSidebar.vue'
 </template>
 
 <style scoped>
+
+.CenterItems {
+  align-items: center;
+  padding-left: 50px;
+}
+
 
 .bg-page {
   position: fixed;
