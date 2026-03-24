@@ -7,6 +7,7 @@ import ProfileTeacherView from '@/views/ProfileTeacherView.vue'
 import GroupsTeacherView from '@/views/GroupsTeacherView.vue'
 import TasksTeacherView from '@/views/TasksTeacherView.vue'
 import AnnouncementTeacherView from '@/views/AnnouncementTeacherView.vue'
+import SettingsView from '@/views/SettingsView.vue'
 
 
 const router = createRouter({
@@ -57,10 +58,16 @@ const router = createRouter({
     },
    
 
-        {
+   {
       path: '/teacher/announcements',
       name: 'announcements',
       component: AnnouncementTeacherView,
+    },
+   
+    {
+      path: '/settings',
+      name: 'settings',
+      component: SettingsView,
     },
    
    
