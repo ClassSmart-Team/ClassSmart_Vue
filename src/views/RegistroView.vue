@@ -1,6 +1,6 @@
 <template>
 
-<div class="bg-page">
+<div class="bg-page center">
   <div class="form-container">
     <h1>Crear Cuenta</h1>
 
@@ -50,6 +50,7 @@
   padding: 50px;
   border-radius: 15px;
   width: 45%;
+  height: 85%;
   margin: auto;
   text-align: center;
   box-shadow: 0px 0px 30px #01a2ff80

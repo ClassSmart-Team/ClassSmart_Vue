@@ -4,6 +4,9 @@ import SidebarLayout from '@/components/TeacherSidebar.vue'
 
 <template>
 
+<div class ="bg-page">
+
+
 <SidebarLayout>
 
   <div class="ContSmall center">
@@ -16,9 +19,21 @@ import SidebarLayout from '@/components/TeacherSidebar.vue'
 
 </SidebarLayout>
 
+</div>
+
 </template>
 
 <style scoped>
+
+.bg-page {
+  position: fixed;
+  inset: 0;
+  overflow-x: hidden;
+  overflow-y: auto;
+  background: linear-gradient(180deg,var(--color-OscuroAzulado),var(--color-OscuroDos));
+  z-index: -1;
+}
+
 
 .ContSmall{
   background: var(--color-Azul);

@@ -11,6 +11,9 @@
   --color-AzulDos: #4ba4df;
   --color-AzulTres: #1e67a3;
   --color-AzulCuatro: #08467a;
+
+  --color-Complemento: #9da2ff;
+   --color-ComplementoDos: #71e1fd;
   
  
   --color-TitulosMenu: #0c4a7a;
@@ -18,10 +21,6 @@
 }
 
 
-
-body {
-  background: var(--color-Oscuro);
-}
 
 .center {
   display: flex;
@@ -67,6 +66,13 @@ body {
 }
 
 
+button.link {
+  background: none;
+  border: none;
+  text-align: left;
+  cursor: pointer;
+  font-family: inherit;
+}
 
 .link{
   text-decoration:none;

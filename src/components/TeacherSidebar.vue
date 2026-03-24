@@ -20,7 +20,7 @@ import Contenedor from '@/components/Contenedor.vue'
         <RouterLink to="/teacher/messages" class="link"> Mensajes</RouterLink>
         <RouterLink to="/teacher/notifications" class="link"> Notificaciones</RouterLink>
         <RouterLink to="/teacher/settings" class="link"> Configuración</RouterLink>
-        <button>Cerrar Sesión</button>
+        <button class="link">Cerrar Sesión</button>
 
       </nav>
     </aside>
