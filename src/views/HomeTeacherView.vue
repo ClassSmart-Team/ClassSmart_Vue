@@ -14,8 +14,7 @@ import SidebarLayout from '@/components/TeacherSidebar.vue'
   </div>  
 
   <div class="ContBig CenterItems" style="margin-top: 80px">
-
-    <h3>Contenido de la pagina home</h3>
+    <h3>Contenido de la pagina home ass</h3>
   </div>   
 
 </SidebarLayout>
@@ -46,14 +45,14 @@ import SidebarLayout from '@/components/TeacherSidebar.vue'
   background: var(--color-Azul);
   width: 1000px;
   height:60px;
-  border-radius: 20px;
+  border-radius: 10px;
 }
 
 .ContBig{
   background: var(--color-Blanco);
-  width: 800px;
-  height:400px;
-  border-radius: 20px;
+  width: 850px;
+  height:450px;
+  border-radius: 10px;
 }
 
 

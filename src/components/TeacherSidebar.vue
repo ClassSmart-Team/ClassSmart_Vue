@@ -9,6 +9,7 @@ const logout = () => {
   router.push('/login')
 }
 
+
 </script>
 
 <template>

@@ -1,7 +1,14 @@
 <template>
 
-<div class="bg-page">
+<div class="bg-page center ">
+  
   <div class="form-container">
+    
+    <div class="ContSmall">
+
+      asdf
+
+    </div>
     
   </div>
 
@@ -25,7 +32,8 @@
   background: var(--color-Contenedor);
   padding: 50px;
   border-radius: 15px;
-  width: 45%;
+  width: 90%;
+  height: 80%;
   margin: auto;
   text-align: center;
   box-shadow: 0px 0px 30px #01a2ff80
@@ -84,5 +92,11 @@ input::placeholder {
   background: var(--color-OscuroAzulado);
 }
 
+.ContSmall{
+  background: var(--color-Azul);
+  width: 20%;
+  height:10%;
+  border-radius: 20px;
+}
 
 </style>
