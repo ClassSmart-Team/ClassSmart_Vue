@@ -1,41 +1,80 @@
+<script setup lang="ts">
+import { ref } from 'vue'
+import { type Register } from '@/types/types.ts'
+import { useFetch } from '@vueuse/core'
+import { useRouter } from 'vue-router'
+
+const router = useRouter()
+
+const form = ref<Register>({
+  name: '',
+  lastname: '',
+  email: '',
+  password: '',
+  cellphone: '',
+})
+
+function registrar() {
+  const { data, onFetchError, onFetchResponse } = useFetch(
+    'https://sutando-user.me/api/register',
+    {
+      method: 'post',
+      headers: {
+        Accept: 'application/json',
+        'Content-Type': 'application/json',
+      },
+    }
+  )
+    .post(form)
+    .json()
+
+  onFetchResponse(() => {
+    alert(data.value.message)
+    router.push('/login')
+  })
+
+  onFetchError(() => {
+    console.log('Error en registro')
+  })
+}
+</script>
+
 <template>
+  <div class="bg-page center">
+    <div class="form-container">
+      <h1>Crear Cuenta</h1>
 
-<div class="bg-page center">
-  <div class="form-container">
-    <h1>Crear Cuenta</h1>
-
-    <form class="form-grid">
-      
+      <!-- IMPORTANTE -->
+      <form class="form-grid" @submit.prevent="registrar">
+        
         <label>Nombre</label>
-        <input type="text" placeholder="Nombre" />
+        <input v-model="form.name" type="text" placeholder="Nombre" />
 
         <label>Apellido</label>
-        <input type="text" placeholder="Apellido" />
+        <input v-model="form.lastname" type="text" placeholder="Apellido" />
 
         <label>Correo electrónico</label>
-        <input type="email" placeholder="correo@example.com" />
+        <input v-model="form.email" type="email" placeholder="correo@example.com" />
 
         <label>Teléfono (opcional)</label>
-        <input type="text" placeholder="Teléfono" />
+        <input v-model="form.cellphone" type="text" placeholder="Teléfono" />
 
         <label>Contraseña</label>
-        <input type="password" placeholder="**" />
+        <input v-model="form.password" type="password" placeholder="••••••" />
 
         <label>Confirmar contraseña</label>
-        <input type="password" placeholder="**" />
+        <input type="password" placeholder="••••••" />
+        <!-- (esto luego lo puedes validar 👀) -->
 
-    </form>
-
-    <button class="btn-submit">Confirmar Registro</button>
-  </div>
-
+        <button type="submit" class="btn-submit">
+          Confirmar Registro
+        </button>
+      </form>
+    </div>
   </div>
 </template>
 
-
-
 <style scoped>
-
 .bg-page {
   position: fixed;
   inset: 0;
@@ -50,25 +89,22 @@
   padding: 50px;
   border-radius: 15px;
   width: 45%;
-  height: 85%;
+  height: auto;
   margin: auto;
   text-align: center;
-  box-shadow: 0px 0px 30px #01a2ff80
+  box-shadow: 0px 0px 30px #01a2ff80;
 }
 
 h1 {
-  color: var(--color-Titulos);
+  color: var(--color-TitulosMenu);
   background-color: var(--color-AzulDos);
   border-radius: 40px;
-}
-h2 {
-  color: var(--color-Texto);
+  padding: 10px;
 }
 
 .form-grid {
-  display: columns;
-  grid-template-columns: 1fr 1fr;
-  gap: 60px;
+  display: flex;
+  flex-direction: column;
   text-align: left;
 }
 
@@ -80,7 +116,7 @@ label {
   font-weight: bold;
 }
 
-input, select {
+input {
   width: 100%;
   padding: 12px;
   border-radius: 8px;
@@ -96,18 +132,17 @@ input::placeholder {
 
 .btn-submit {
   margin-top: 40px;
-  padding: 15px 40px;
+  padding: 15px;
   border: none;
   border-radius: 10px;
   background: var(--color-AzulTres);
   color: white;
   font-size: 16px;
   cursor: pointer;
+  transition: 0.2s;
 }
 
 .btn-submit:hover {
   background: var(--color-OscuroAzulado);
 }
-
-
 </style>

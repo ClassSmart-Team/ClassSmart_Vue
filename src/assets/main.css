@@ -60,16 +60,12 @@ body{
 /* SIDEBAR */
 .sidebar{
   background: linear-gradient(180deg,var(--color-Azul),var(--color-AzulTres));
-  width: 200px;
+  width: 150px;
   height: 590px;
   border-radius: 15px;
-  padding: 25px 15px;
+  padding: 20px;
 
   box-shadow: 0 10px 25px #00000040;
-}
-
-.sidebar.closed {
-  width: 70px;
 }
 
 .columna{

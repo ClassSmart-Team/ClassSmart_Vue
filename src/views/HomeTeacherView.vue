@@ -13,8 +13,12 @@ import SidebarLayout from '@/components/TeacherSidebar.vue'
     <h1>Pagina Home</h1>
   </div>  
 
-  <div class="ContBig CenterItems" style="margin-top: 80px">
-    <h3>Contenido de la pagina home ass</h3>
+  <div class="ContBig CenterItems" style="margin-top: 10px">
+
+    <div class="ContTittle CenterItems"  style="margin-top: 10px">
+
+    </div>
+    
   </div>   
 
 </SidebarLayout>
@@ -40,18 +44,25 @@ import SidebarLayout from '@/components/TeacherSidebar.vue'
   z-index: -1;
 }
 
+.ContTittle{
+  background: var(--color-Azul);
+  width: 900px;
+  height:40px;
+  border-radius: 10px;
+}
+
 
 .ContSmall{
   background: var(--color-Azul);
   width: 1000px;
-  height:60px;
+  height:40px;
   border-radius: 10px;
 }
 
 .ContBig{
   background: var(--color-Blanco);
-  width: 850px;
-  height:450px;
+  width: 1000px;
+  height:550px;
   border-radius: 10px;
 }
 
