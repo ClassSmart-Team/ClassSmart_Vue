@@ -1,42 +1,15 @@
 <template>
 
-<div class="bg-page">
+<div class="bg-page center ">
+  
   <div class="form-container">
-    <h1>Administrador</h1>
-        <h2>Panel para crear cuenta nueva</h2>
+    
+    <div class="ContSmall">
 
-    <form class="form-grid">
-      
-        <label>Nombre</label>
-        <input type="text" placeholder="Nombre" />
+      asdf
 
-        <label>Apellido</label>
-        <input type="text" placeholder="Apellido" />
-
-        <label>Correo electrónico</label>
-        <input type="email" placeholder="correo@example.com" />
-
-        <label>Teléfono</label>
-        <input type="text" placeholder="Teléfono" />
-
-        <label>Contraseña</label>
-        <input type="password" placeholder="**" />
-
-        <label>Confirmar contraseña</label>
-        <input type="password" placeholder="**" />
-
-        <label>Rol</label>
-        <select>
-          <option disabled selected>Seleccione un rol</option>
-          <option>Admin</option>
-          <option>Profesor</option>
-          <option>Alumno</option>
-          <option>Padre</option>
-        </select>
-
-    </form>
-
-    <button class="btn-submit">Confirmar Registro</button>
+    </div>
+    
   </div>
 
   </div>
@@ -59,7 +32,8 @@
   background: var(--color-Contenedor);
   padding: 50px;
   border-radius: 15px;
-  width: 45%;
+  width: 90%;
+  height: 80%;
   margin: auto;
   text-align: center;
   box-shadow: 0px 0px 30px #01a2ff80
@@ -118,5 +92,11 @@ input::placeholder {
   background: var(--color-OscuroAzulado);
 }
 
+.ContSmall{
+  background: var(--color-Azul);
+  width: 20%;
+  height:10%;
+  border-radius: 20px;
+}
 
 </style>
