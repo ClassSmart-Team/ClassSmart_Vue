@@ -3,7 +3,7 @@ import { useAuthStore } from '@/stores/authStore.ts'
 import router from '@/router'
 
 export const useapi = createFetch({
-  baseUrl: 'https://sutando-user.me/api',
+  baseUrl: 'https://api.sutando-user.me/api',
   options: {
     // Interceptor: Se ejecuta justo antes de cada petición
     async beforeFetch({ options, cancel }) {

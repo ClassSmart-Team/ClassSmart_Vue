@@ -14,24 +14,19 @@ const credentials = ref<Login>({
 })
 
 function login() {
-  const { data, onFetchError, onFetchResponse } = useFetch(
-    'https://sutando-user.me/api/login',
-    {
-      method: 'post',
-      headers: {
-        Accept: 'application/json',
-        'Content-Type': 'application/json',
-      },
-    }
-  )
-    .post(credentials.value) 
+  const { data, onFetchError, onFetchResponse } = useFetch('https://api.sutando-user.me/api/login', {
+    method: 'post',
+    headers: {
+      Accept: 'application/json',
+      'Content-Type': 'application/json',
+    },
+  })
+    .post(credentials)
     .json()
 
   onFetchResponse(() => {
-    console.log(data.value) 
-
     uas.setCredentials(data.value.data)
-
+    console.log(data.value)
     const role = uas.credentials?.user.role.id
 
     if (role === 1) router.push('/teacher/home')
@@ -48,28 +43,28 @@ function login() {
 
 <template>
   <div class="bg-page center">
-    
+
     <div class="login-container">
       <h1>Iniciar sesión</h1>
 
       <!-- IMPORTANTE: form con prevent -->
       <form class="login-form" @submit.prevent="login">
-        
+
         <div>
           <label>Correo electrónico</label>
-          <input 
+          <input
             v-model="credentials.email"
-            type="email" 
-            placeholder="correo@example.com" 
+            type="email"
+            placeholder="correo@example.com"
           />
         </div>
 
         <div>
           <label>Contraseña</label>
-          <input 
+          <input
             v-model="credentials.password"
-            type="password" 
-            placeholder="••••••" 
+            type="password"
+            placeholder="••••••"
           />
         </div>
 
@@ -78,7 +73,7 @@ function login() {
         </button>
       </form>
     </div>
-    
+
   </div>
 </template>
 

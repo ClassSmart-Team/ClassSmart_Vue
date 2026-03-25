@@ -31,12 +31,11 @@ const router = createRouter({
       component: LoginView,
     },
 
-  
     {
       path: '/teacher/home',
       name: 'home',
       component: HomeTeacherView,
-      meta: { requiresAuth: true, rol: 1 },
+      meta: { requiresAuth: true, rol: 2 },
     },
 
     {
@@ -50,7 +49,7 @@ const router = createRouter({
       path: '/teacher/groups',
       name: 'groups',
       component: GroupsTeacherView,
-      meta: { requiresAuth: true, rol: 1 },
+      meta: { requiresAuth: true, rol:[1,2] },
     },
 
     {
@@ -84,12 +83,14 @@ router.beforeEach((to, from, next) => {
       return next({ name: 'Login' })
     }
 
-    
-    if (to.meta.rol) {
-      if (authStore.credentials.user.role.id === to.meta.rol) {
-        return next()
+    if (to.matched.some((record) => record.meta.rol)) {
+      const userRole = authStore.credentials.user.role.id
+      const rolMeta = to.meta.rol
+
+      if ((Array.isArray(rolMeta) && rolMeta.indexOf(userRole) !== -1) || userRole === rolMeta) {
+        next()
       } else {
-        return next({ name: 'Login' })
+        next({ name: 'login' })
       }
     }
 
