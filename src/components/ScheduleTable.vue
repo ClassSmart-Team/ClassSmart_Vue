@@ -1,23 +1,13 @@
 <script setup lang="ts">
-import { useFetch } from '@vueuse/core'
+import { useapi } from '@/assets/composables/useApi'
 import { useAuthStore } from '@/stores/authStore'
 import { computed } from 'vue'
 
 const uas = useAuthStore()
 
-// 1. Configuramos la petición a tu API
-// Usamos el token del store si es necesario para la autenticación
-const { data, isFetching, error } = useFetch('https://sutando-user.me/api/schedule', {
-  beforeFetch({ options }) {
-    options.headers = {
-      ...options.headers,
-      Authorization: `Bearer ${uas.credentials?.token}`,
-      Accept: 'application/json',
-    }
-    return { options }
-  },
+const { data, isFetching, error } = useapi('/schedule', {
+  method: 'GET',
 })
-  .get()
   .json()
 
 const days = ['Lunes', 'Martes', 'Miércoles', 'Jueves', 'Viernes']
