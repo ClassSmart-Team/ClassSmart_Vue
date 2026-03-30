@@ -27,8 +27,10 @@ function login() {
   onFetchResponse(() => {
     uas.setCredentials(data.value.data)
     const role = uas.credentials?.user.role.id
-    if (role === 1) router.push('/teacher/home')
+    if (role === 1) router.push('/admin/home')
     else if (role === 2) router.push('/teacher/home')
+    else if (role===3) router.push('/student/home')
+    else router.push('/login')
     })
 
   onFetchError(() => {
