@@ -12,7 +12,7 @@ const groupdata = ref<GroupData>({
 })
 async function saveGroup() {
   const url = 'https://untabulable-incomparable-lean.ngrok-free.dev/api/groups'
-  const  {data, onFetchError, onFetchResponse} = useapi(, {
+  const  {data, onFetchError, onFetchResponse} = useapi(url, {
     method: 'post',
     headers: {
       Accept: 'application/json',

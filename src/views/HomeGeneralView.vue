@@ -27,7 +27,7 @@ const currentView = ref("home")
 
     <div class="contenido">
 
- 
+
       <template v-if="currentView === 'home'">
         <div class="center">
           <div class="ContSmall center">
