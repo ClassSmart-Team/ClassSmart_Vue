@@ -7,16 +7,17 @@ import SidebarLayout from '@/components/TeacherSidebar.vue'
 <div class ="bg-page">
 
 
+
 <SidebarLayout>
 
   <div class="ContSmall center">
     <h1>Pagina Tasks</h1>
-  </div>  
+  </div>
 
   <div class="ContBig CenterItems" style="margin-top: 80px">
 
 
-  </div>   
+  </div>
 
 </SidebarLayout>
 

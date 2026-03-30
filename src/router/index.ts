@@ -88,21 +88,19 @@ router.beforeEach((to, from, next) => {
       const rolMeta = to.meta.rol
 
       if ((Array.isArray(rolMeta) && rolMeta.indexOf(userRole) !== -1) || userRole === rolMeta) {
-        next()
+        return next()  // ← agregué return
       } else {
-        next({ name: 'login' })
+        return next({ name: 'Login' })  // ← agregué return
       }
     }
 
-    return next()
+    return next() // ← este se ejecuta solo si no hay meta.rol
   }
-
 
   if (to.name === 'Login' && authStore.credentials) {
     return next({ name: 'home' })
   }
 
-  next()
+  return next()
 })
-
 export default router
