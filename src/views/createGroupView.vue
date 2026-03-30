@@ -1,16 +1,18 @@
 <script setup lang="ts">
 import { ref } from 'vue'
-import { useFetch } from '@vueuse/core'
 import { type GroupData } from '@/types/types.ts'
+import { useapi } from '@/assets/composables/useApi.ts'
 
 const groupdata = ref<GroupData>({
   period_id: 0,
   name: '',
   description: '',
+  active:true
+
 })
 async function saveGroup() {
   const url = 'https://untabulable-incomparable-lean.ngrok-free.dev/api/groups'
-  const { data, onFetchError, onFetchResponse } = useFetch(url, {
+  const  {data, onFetchError, onFetchResponse} = useapi(, {
     method: 'post',
     headers: {
       Accept: 'application/json',
