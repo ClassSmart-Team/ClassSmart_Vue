@@ -72,7 +72,7 @@ const { data, error, isFetching } = useapi("/groups", {
 .ContSmall {
   background: var(--color-Azul);
   width: 1000px;
-  min-height: 70px;
+  min-height: 40px;
   border-radius: 20px;
   margin: 30px auto 0 auto;
   padding: 15px;

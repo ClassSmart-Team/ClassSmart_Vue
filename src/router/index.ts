@@ -10,6 +10,10 @@ import AnnouncementTeacherView from '@/views/AnnouncementTeacherView.vue'
 import SettingsView from '@/views/SettingsView.vue'
 import { useAuthStore } from '@/stores/authStore'
 
+//ROLES//
+//1-admin
+//2-teacher
+
 const router = createRouter({
   history: createWebHistory(import.meta.env.BASE_URL),
   routes: [
@@ -35,14 +39,14 @@ const router = createRouter({
       path: '/teacher/home',
       name: 'home',
       component: HomeTeacherView,
-      meta: { requiresAuth: true, rol: 2 },
+      meta: { requiresAuth: true, rol: [1,2] },
     },
 
     {
       path: '/teacher/profile',
       name: 'profile',
       component: ProfileTeacherView,
-      meta: { requiresAuth: true, rol: 1 },
+      meta: { requiresAuth: true, rol: [1,2] },
     },
 
     {
@@ -56,14 +60,14 @@ const router = createRouter({
       path: '/teacher/tasks',
       name: 'tasks',
       component: TasksTeacherView,
-      meta: { requiresAuth: true, rol: 1 },
+      meta: { requiresAuth: true, rol: [1,2] },
     },
 
     {
       path: '/teacher/announcements',
       name: 'announcements',
       component: AnnouncementTeacherView,
-      meta: { requiresAuth: true, rol: 1 },
+      meta: { requiresAuth: true, rol: [1,2] },
     },
 
     {
