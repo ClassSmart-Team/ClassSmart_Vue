@@ -14,7 +14,7 @@ const {
   error: tasksError, 
   isFetching: tasksLoading,
   execute: reloadTasks
-} = useapi("/tasks", {
+} = useapi("/api/teacher/tasks", {
   method: 'GET',
 }).json()
 
@@ -95,9 +95,6 @@ const createAssignment = async () => {
     message.value = "Error de conexión con el servidor"
   }
 }
-
-console.log('AUTH:', authStore.credentials)
-
 </script>
 
 <template>
