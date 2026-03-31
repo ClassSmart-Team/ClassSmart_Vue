@@ -26,6 +26,8 @@ import { useAuthStore } from '@/stores/authStore'
 //ROLES//
 //1-admin
 //2-teacher
+//3-student
+//4-parent
 
 const router = createRouter({
   history: createWebHistory(import.meta.env.BASE_URL),
