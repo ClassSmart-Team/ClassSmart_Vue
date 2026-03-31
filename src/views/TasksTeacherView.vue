@@ -4,9 +4,9 @@ import { ref } from 'vue'
 import { useapi } from '@/assets/composables/useApi'
 import TaskCard from '@/components/TaskCard.vue'
 
-const { 
-  data: tasksData, 
-  error: tasksError, 
+const {
+  data: tasksData,
+  error: tasksError,
   isFetching: tasksLoading,
   execute: reloadTasks
 } = useapi("/api/teacher/tasks", {
@@ -51,8 +51,8 @@ const createAssignment = async () => {
       message.value = "Tarea creada correctamente"
       showModal.value = false
 
-      await reloadTasks() 
-      
+      await reloadTasks()
+
       // reset
       title.value = ''
       description.value = ''
@@ -84,6 +84,7 @@ const createAssignment = async () => {
       </div>
 
       <!-- MODAL -->
+      <!-- MODAL -->
       <div v-if="showModal" class="modal-overlay">
         <div class="modal">
 
@@ -107,16 +108,15 @@ const createAssignment = async () => {
               <input v-model="start_date" type="datetime-local" />
             </div>
 
-
-<SidebarLayout>
-
-  <div class="ContSmall center">
-    <h1>Pagina Tasks</h1>
-  </div>
+            <div class="field">
+              <label>Fin</label>
+              <input v-model="end_date" type="datetime-local" />
+            </div>
 
             <div class="field">
               <label>Grupo</label>
               <select v-model="group_id">
+                <option value="">Selecciona un grupo</option>
                 <option v-for="g in groupsData?.data ?? []" :key="g.id" :value="g.id">
                   {{ g.name }}
                 </option>
@@ -126,6 +126,7 @@ const createAssignment = async () => {
             <div class="field">
               <label>Unidad</label>
               <select v-model="unit_id">
+                <option value="">Selecciona una unidad</option>
                 <option v-for="u in unitsData?.data ?? []" :key="u.id" :value="u.id">
                   {{ u.name }}
                 </option>
@@ -133,7 +134,16 @@ const createAssignment = async () => {
             </div>
           </div>
 
-  </div>
+          <!-- BOTONES -->
+          <div class="modal-actions">
+            <button class="btn cancel" @click="showModal = false">
+              Cancelar
+            </button>
+
+            <button class="btn primary" @click="createAssignment">
+              Guardar
+            </button>
+          </div>
 
         </div>
       </div>
