@@ -4,9 +4,10 @@ import { ref } from 'vue'
 import { useapi } from '@/assets/composables/useApi'
 import TaskCard from '@/components/TaskCard.vue'
 
-const {
-  data: tasksData,
-  error: tasksError,
+// TASKS
+const { 
+  data: tasksData, 
+  error: tasksError, 
   isFetching: tasksLoading,
   execute: reloadTasks
 } = useapi("/api/teacher/tasks", {
@@ -32,6 +33,8 @@ const { data: unitsData } = useapi("/units").json()
 
 // CREATE
 const createAssignment = async () => {
+  message.value = ''
+
   try {
     const res = await fetch("https://api.sutando-user.me/api/teacher/tasks", {
       method: "POST",
@@ -47,13 +50,15 @@ const createAssignment = async () => {
       })
     })
 
+    const data = await res.json()
+
     if (res.ok) {
       message.value = "Tarea creada correctamente"
       showModal.value = false
 
       await reloadTasks()
 
-      // reset
+      // RESET
       title.value = ''
       description.value = ''
       start_date.value = ''
@@ -61,8 +66,9 @@ const createAssignment = async () => {
       group_id.value = ''
       unit_id.value = ''
     } else {
-      message.value = "Error al crear la tarea"
+      message.value = data?.message || "Error al crear la tarea"
     }
+
   } catch (e) {
     message.value = "Error al crear la tarea"
     console.error(e)
@@ -83,7 +89,6 @@ const createAssignment = async () => {
         </button>
       </div>
 
-      <!-- MODAL -->
       <!-- MODAL -->
       <div v-if="showModal" class="modal-overlay">
         <div class="modal">
@@ -116,7 +121,7 @@ const createAssignment = async () => {
             <div class="field">
               <label>Grupo</label>
               <select v-model="group_id">
-                <option value="">Selecciona un grupo</option>
+                <option value="">Selecciona</option>
                 <option v-for="g in groupsData?.data ?? []" :key="g.id" :value="g.id">
                   {{ g.name }}
                 </option>
@@ -126,7 +131,7 @@ const createAssignment = async () => {
             <div class="field">
               <label>Unidad</label>
               <select v-model="unit_id">
-                <option value="">Selecciona una unidad</option>
+                <option value="">Selecciona</option>
                 <option v-for="u in unitsData?.data ?? []" :key="u.id" :value="u.id">
                   {{ u.name }}
                 </option>
@@ -139,9 +144,8 @@ const createAssignment = async () => {
             <button class="btn cancel" @click="showModal = false">
               Cancelar
             </button>
-
             <button class="btn primary" @click="createAssignment">
-              Guardar
+              Crear
             </button>
           </div>
 
@@ -158,22 +162,20 @@ const createAssignment = async () => {
         </div>
 
         <!-- ERROR -->
-        <div v-if="tasksError" class="error-banner">
+        <div v-else-if="tasksError" class="error-banner">
           <p>Error: {{ tasksError?.message || tasksError }}</p>
         </div>
 
         <!-- EMPTY -->
-        <div v-if="!tasksLoading && !(tasksData?.data ?? tasksData)?.length" class="empty-state">
+        <div v-else-if="!(tasksData?.data ?? tasksData)?.length" class="empty-state">
           No hay tareas registradas
         </div>
 
         <!-- GRID -->
-        <div v-if="(tasksData?.data ?? tasksData)" class="groups-grid">
-          <TaskCard
-            v-for="task in (tasksData?.data ?? tasksData)"
-            :key="task.id"
-            :task="task"
-          />
+        <div v-else class="groups-grid">
+
+          <TaskCard v-for="task in (tasksData?.data ?? tasksData)":key="task.id":activity="task"/>
+  
         </div>
 
       </div>
@@ -181,6 +183,7 @@ const createAssignment = async () => {
     </SidebarLayout>
   </div>
 </template>
+
 
 <style scoped>
 
