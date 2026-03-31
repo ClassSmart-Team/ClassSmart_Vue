@@ -71,6 +71,19 @@ const router = createRouter({
     },
 
     {
+  path: '/teacher/messages',
+  name: 'messages',
+  component: HomeTeacherView, // temporal
+  meta: { requiresAuth: true, rol: [1,2] },
+},
+{
+  path: '/teacher/notifications',
+  name: 'notifications',
+  component: HomeTeacherView, // temporal
+  meta: { requiresAuth: true, rol: [1,2] },
+},
+
+    {
       path: '/settings',
       name: 'settings',
       component: SettingsView,
@@ -84,7 +97,7 @@ router.beforeEach((to, from, next) => {
 
   if (to.matched.some((r) => r.meta.requiresAuth)) {
     if (!authStore.credentials) {
-      return next({ name: 'Login' })
+      return next({ name: 'login' })
     }
 
     if (to.matched.some((record) => record.meta.rol)) {
