@@ -1,11 +1,12 @@
 <script setup lang="ts">
 import Contenedor from '@/components/Contenedor.vue'
-
+import {useAuthStore} from '@/stores/authStore.ts'
 import { useRouter } from 'vue-router'
-
+const us=useAuthStore()
 const router = useRouter()
 
 const logout = () => {
+  us.logout()
   router.push('/login')
 }
 
@@ -35,7 +36,7 @@ const logout = () => {
       </nav>
     </aside>
 
-   
+
     <div class="contenido">
       <slot />
     </div>

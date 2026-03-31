@@ -9,6 +9,7 @@ import TasksTeacherView from '@/views/TasksTeacherView.vue'
 import AnnouncementTeacherView from '@/views/AnnouncementTeacherView.vue'
 import SettingsView from '@/views/SettingsView.vue'
 import { useAuthStore } from '@/stores/authStore'
+import createGroupView from '@/views/createGroupView.vue'
 
 //ROLES//
 //1-admin
@@ -53,7 +54,7 @@ const router = createRouter({
       path: '/teacher/groups',
       name: 'groups',
       component: GroupsTeacherView,
-      meta: { requiresAuth: true, rol:[1,2] },
+      meta: { requiresAuth: true, rol: [1, 2] },
     },
 
     {
@@ -71,17 +72,11 @@ const router = createRouter({
     },
 
     {
-  path: '/teacher/messages',
-  name: 'messages',
-  component: HomeTeacherView, // temporal
-  meta: { requiresAuth: true, rol: [1,2] },
-},
-{
-  path: '/teacher/notifications',
-  name: 'notifications',
-  component: HomeTeacherView, // temporal
-  meta: { requiresAuth: true, rol: [1,2] },
-},
+      path: '/teacher/creategroup',
+      name: 'creategrup',
+      component: createGroupView,
+     // meta: { requiresAuth: true, rol: 1 },
+    },
 
     {
       path: '/settings',
@@ -105,21 +100,19 @@ router.beforeEach((to, from, next) => {
       const rolMeta = to.meta.rol
 
       if ((Array.isArray(rolMeta) && rolMeta.indexOf(userRole) !== -1) || userRole === rolMeta) {
-        next()
+        return next()  // ← agregué return
       } else {
-        next({ name: 'login' })
+        return next({ name: 'Login' })  // ← agregué return
       }
     }
 
-    return next()
+    return next() // ← este se ejecuta solo si no hay meta.rol
   }
 
-
-  if (to.name === 'login' && authStore.credentials) {
+  if (to.name === 'Login' && authStore.credentials) {
     return next({ name: 'home' })
   }
 
-  next()
+  return next()
 })
-
 export default router

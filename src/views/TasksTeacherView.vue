@@ -107,20 +107,12 @@ const createAssignment = async () => {
               <input v-model="start_date" type="datetime-local" />
             </div>
 
-            <div class="field">
-              <label>Entrega</label>
-              <input v-model="end_date" type="datetime-local" />
-            </div>
-          </div>
 
-          <div class="grid-fields">
-            <div class="field">
-              <label>Status</label>
-              <select v-model="status">
-                <option>Activa</option>
-                <option>Cerrada</option>
-              </select>
-            </div>
+<SidebarLayout>
+
+  <div class="ContSmall center">
+    <h1>Pagina Tasks</h1>
+  </div>
 
             <div class="field">
               <label>Grupo</label>
@@ -141,10 +133,7 @@ const createAssignment = async () => {
             </div>
           </div>
 
-          <div class="modal-actions">
-            <button class="btn cancel" @click="showModal = false">Cancelar</button>
-            <button class="btn primary" @click="createAssignment">Guardar</button>
-          </div>
+  </div>
 
         </div>
       </div>

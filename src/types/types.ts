@@ -34,4 +34,5 @@ export interface SessionData {
    period_id:number,
    name:string
    description:string
+    active:true
 }
