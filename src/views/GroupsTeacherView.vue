@@ -116,7 +116,7 @@ function creategroup() {
 .ContSmall {
   background: var(--color-Azul);
   width: 1000px;
-  min-height: 70px;
+  min-height: 40px;
   border-radius: 20px;
   margin: 30px auto 0 auto;
   padding: 15px;
@@ -138,7 +138,7 @@ function creategroup() {
 .ContBig {
   background: var(--color-Blanco);
   width: 1000px;
-  min-height: 500px;
+  min-height: 400px;
   border-radius: 20px;
   margin: 30px auto;
   padding: 30px;
