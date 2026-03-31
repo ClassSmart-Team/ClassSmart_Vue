@@ -2,6 +2,21 @@
 import SidebarLayout from '@/components/TeacherSidebar.vue'
 import { ref } from 'vue'
 import { useapi } from '@/assets/composables/useApi'
+import TaskCard from '@/components/TaskCard.vue'
+import { useAuthStore } from '@/stores/authStore'
+
+// STORE
+const authStore = useAuthStore()
+
+// GET TASKS
+const { 
+  data: tasksData, 
+  error: tasksError, 
+  isFetching: tasksLoading,
+  execute: reloadTasks
+} = useapi("https://api.sutando-user.me/api/teacher/tasks", {
+  method: 'GET',
+}).json()
 
 // FORM
 const title = ref('')
@@ -17,43 +32,67 @@ const message = ref('')
 const showModal = ref(false)
 
 // DATA
-const { data: groupsData, error: groupsError, isFetching: groupsLoading } = useapi("/groups").json()
-const { data: unitsData, error: unitsError, isFetching: unitsLoading } = useapi("/units").json()
+const { data: groupsData } = useapi("/groups").json()
+const { data: unitsData } = useapi("/units").json()
+
+// FORMAT DATE
+const formatDate = (date: string) => {
+  if (!date) return null
+  return date.replace('T', ' ') + ':00'
+}
 
 // CREATE
 const createAssignment = async () => {
+  message.value = ''
+
+  // VALIDACIÓN
+  if (!title.value || !description.value || !start_date.value || !end_date.value || !group_id.value || !unit_id.value) {
+    message.value = "Completa todos los campos"
+    return
+  }
+
   try {
     const res = await fetch("https://api.sutando-user.me/api/teacher/tasks", {
       method: "POST",
-      headers: { "Content-Type": "application/json" },
+      headers: { 
+        "Content-Type": "application/json",
+        "Authorization": `Bearer ${authStore.credentials?.token}`
+      },
       body: JSON.stringify({
         title: title.value,
         description: description.value,
-        start_date: start_date.value,
-        end_date: end_date.value,
+        start_date: formatDate(start_date.value),
+        end_date: formatDate(end_date.value),
         status: status.value,
-        group_id: group_id.value,
-        unit_id: unit_id.value
+        group_id: Number(group_id.value),
+        unit_id: Number(unit_id.value)
       })
     })
+
+    const data = await res.json()
 
     if (res.ok) {
       message.value = "Tarea creada correctamente"
       showModal.value = false
 
-      // reset
+      await reloadTasks()
+
+      // RESET
       title.value = ''
       description.value = ''
       start_date.value = ''
       end_date.value = ''
       group_id.value = ''
       unit_id.value = ''
+      status.value = 'Activa'
     } else {
-      message.value = "Error al crear la tarea"
+      console.error(data)
+      message.value = data.message || "Error al crear la tarea"
     }
+
   } catch (e) {
-    message.value = "Error al crear la tarea"
     console.error(e)
+    message.value = "Error de conexión con el servidor"
   }
 }
 </script>
@@ -137,6 +176,36 @@ const createAssignment = async () => {
         </div>
       </div>
 
+      <!-- CONTENEDOR DE TAREAS -->
+      <div class="ContBig">
+
+        <!-- LOADING -->
+        <div v-if="tasksLoading" class="loading-state">
+          <div class="spinner"></div>
+          <p>Cargando tareas...</p>
+        </div>
+
+        <!-- ERROR -->
+        <div v-if="tasksError" class="error-banner">
+          <p>Error: {{ tasksError?.message || tasksError }}</p>
+        </div>
+
+        <!-- EMPTY -->
+        <div v-if="!tasksLoading && !(tasksData?.data ?? tasksData)?.length" class="empty-state">
+          No hay tareas registradas
+        </div>
+
+        <!-- GRID -->
+        <div v-if="(tasksData?.data ?? tasksData)" class="groups-grid">
+          <TaskCard
+            v-for="task in (tasksData?.data ?? tasksData)"
+            :key="task.id"
+            :task="task"
+          />
+        </div>
+
+      </div>
+
     </SidebarLayout>
   </div>
 </template>
@@ -160,7 +229,6 @@ const createAssignment = async () => {
   padding:10px 15px;
   border-radius:10px;
   cursor:pointer;
-  transition:.3s;
 }
 
 .btn-add:hover{
@@ -182,8 +250,6 @@ const createAssignment = async () => {
   width: 500px;
   padding:25px;
   border-radius:20px;
-  box-shadow: 0 10px 30px #00000050;
-  animation: fadeIn .3s ease;
 }
 
 /* INPUTS */
@@ -197,12 +263,6 @@ input, textarea, select{
   padding:8px;
   border-radius:8px;
   border:1px solid #ccc;
-  outline:none;
-  transition:.2s;
-}
-
-input:focus, textarea:focus, select:focus{
-  border-color: var(--color-AzulDos);
 }
 
 /* GRID */
@@ -212,12 +272,11 @@ input:focus, textarea:focus, select:focus{
   gap:10px;
 }
 
-/* BOTONES MODAL */
+/* BOTONES */
 .modal-actions{
   display:flex;
   justify-content:flex-end;
   gap:10px;
-  margin-top:15px;
 }
 
 .btn{
@@ -236,12 +295,6 @@ input:focus, textarea:focus, select:focus{
   background:#ccc;
 }
 
-/* ALERT */
-.alert{
-  color:green;
-  margin-bottom:10px;
-}
-
 /* BG */
 .bg-page {
   position: fixed;
@@ -250,7 +303,7 @@ input:focus, textarea:focus, select:focus{
   background: linear-gradient(180deg,var(--color-OscuroAzulado),var(--color-OscuroDos));
 }
 
-/* CONTENEDOR */
+/* CONTENEDORES */
 .ContSmall{
   background: var(--color-Azul);
   width: 1000px;
@@ -260,10 +313,55 @@ input:focus, textarea:focus, select:focus{
   margin-top:20px;
 }
 
-/* ANIMACIÓN */
-@keyframes fadeIn{
-  from{ opacity:0; transform:scale(.9);}
-  to{ opacity:1; transform:scale(1);}
+.ContBig {
+  background: var(--color-Blanco);
+  width: 1000px;
+  min-height: 400px;
+  border-radius: 20px;
+  margin: 30px auto;
+  padding: 30px;
+}
+
+/* GRID */
+.groups-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+  gap: 25px;
+}
+
+/* LOADING */
+.loading-state {
+  text-align: center;
+  padding: 40px;
+}
+
+.spinner {
+  width: 40px;
+  height: 40px;
+  border: 4px solid #e0e0e0;
+  border-top: 4px solid var(--color-AzulTres);
+  border-radius: 50%;
+  animation: spin 1s linear infinite;
+  margin: auto;
+}
+
+@keyframes spin {
+  100% { transform: rotate(360deg); }
+}
+
+/* ERROR */
+.error-banner {
+  background: #ffe5e5;
+  color: #b91c1c;
+  padding: 15px;
+  border-radius: 10px;
+}
+
+/* EMPTY */
+.empty-state{
+  text-align:center;
+  padding:40px;
+  color: var(--color-AzulTres);
 }
 
 </style>
