@@ -93,6 +93,100 @@ const router = createRouter({
   ],
 })
 
+// Parent
+    {
+      path: '/parent/home',
+      name: 'parentHome',
+      component: HomeParentView,
+      meta: { requiresAuth: true, role: 4 },
+    },
+
+    {
+      path: '/parent/profile',
+      name: 'parentProfile',
+      component: ProfileParentView,
+      meta: { requiresAuth: true, role: 4 },
+    },
+
+    {
+      path: '/parent/students',
+      name: 'parentStudents',
+      component: StudentsParentView,
+      meta: { requiresAuth: true, role: 4 },
+    },
+
+    {
+      path: '/parent/groups',
+      name: 'parentGroups',
+      component: GroupsParentView,
+      meta: { requiresAuth: true, role: 4 },
+    },
+
+    {
+      path: '/parent/groups/:id',
+      name: 'parentGroupDetail',
+      component: ShowGroup,
+      meta: { requiresAuth: true, role: 4 },
+    },
+
+    {
+      path: '/parent/tasks',
+      name: 'parentTasks',
+      component: TasksParentView,
+      meta: { requiresAuth: true, role: 4 },
+    },
+
+    {
+      path: '/parent/tasks/:id',
+      name: 'parentTasksDetail',
+      component: TaskDetailView,
+      meta: { requiresAuth: true, role: 4 },
+    },
+
+    {
+      path: '/parent/forum',
+      name: 'parentForum',
+      component: ForumParentView,
+      meta: { requiresAuth: true, role: 4 },
+    },
+
+    {
+      path: '/parent/forum/:id',
+      name: 'parentForumDetail',
+      component: ForumDetailView,
+      props: true,
+      meta: { requiresAuth: true, role: 4 },
+    },
+
+    {
+      path: '/parent/grades',
+      name: 'parentGrades',
+      component: GradesParentView,
+      meta: { requiresAuth: true, role: 4 },
+    },
+
+    {
+      path: '/parent/notifications',
+      name: 'parentNotifications',
+      component: NotificationParentView,
+      meta: { requiresAuth: true, role: 4 },
+    },
+
+    {
+      path: '/parent/settings',
+      name: 'parentSettings',
+      component: SettingsParentView,
+      meta: { requiresAuth: true, role: 4 },
+    },
+
+    {
+      path: '/grupo/:id',
+      name: 'group-detail',
+      component: ShowGroup,
+      props: true, // Esto permite recibir el :id como una prop en la vista de detalle
+      meta: { requiresAuth: true, role: 4 },
+    },
+
 router.beforeEach((to, from, next) => {
   const authStore = useAuthStore()
 
