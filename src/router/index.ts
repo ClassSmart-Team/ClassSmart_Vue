@@ -102,8 +102,7 @@ const router = createRouter({
       component: SettingsView,
       meta: { requiresAuth: true },
     },
-  ],
-})
+
 
 // Parent
     {
@@ -198,6 +197,9 @@ const router = createRouter({
       props: true, // Esto permite recibir el :id como una prop en la vista de detalle
       meta: { requiresAuth: true, role: 4 },
     },
+
+      ],
+})
 
 router.beforeEach((to, from, next) => {
   const authStore = useAuthStore()
