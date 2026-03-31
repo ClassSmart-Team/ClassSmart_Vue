@@ -115,7 +115,7 @@ router.beforeEach((to, from, next) => {
   }
 
 
-  if (to.name === 'Login' && authStore.credentials) {
+  if (to.name === 'login' && authStore.credentials) {
     return next({ name: 'home' })
   }
 
