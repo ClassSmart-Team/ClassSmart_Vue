@@ -72,11 +72,17 @@ const router = createRouter({
     },
 
     {
-      path: '/teacher/creategroup',
-      name: 'creategrup',
-      component: createGroupView,
-     // meta: { requiresAuth: true, rol: 1 },
-    },
+  path: '/teacher/messages',
+  name: 'messages',
+  component: HomeTeacherView, // temporal
+  meta: { requiresAuth: true, rol: [1,2] },
+},
+{
+  path: '/teacher/notifications',
+  name: 'notifications',
+  component: HomeTeacherView, // temporal
+  meta: { requiresAuth: true, rol: [1,2] },
+},
 
     {
       path: '/settings',
@@ -109,7 +115,8 @@ router.beforeEach((to, from, next) => {
     return next() // ← este se ejecuta solo si no hay meta.rol
   }
 
-  if (to.name === 'Login' && authStore.credentials) {
+
+  if (to.name === 'login' && authStore.credentials) {
     return next({ name: 'home' })
   }
 
