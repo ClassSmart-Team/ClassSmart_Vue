@@ -1,146 +1,168 @@
 <script setup lang="ts">
-import SidebarLayout from '@/components/TeacherSidebar.vue'
-import GroupTargect from '@/components/GroupTargect.vue'
-import { useapi } from '@/assets/composables/useApi'
+import { computed } from 'vue'
 
+const props = defineProps<{
+  activity: any
+}>()
 
-const { data, error, isFetching } = useapi("/groups", {
-  method: 'GET',
-}).json()
+// Lógica de estado basada en los modelos de Laravel
+const computedStatus = computed(() => {
+  const sub = props.activity.submission
+  if (!sub) return 'pendiente'
+  if (sub.status === 'Calificada') return 'calificada'
+  if (new Date(sub.submission_date) > new Date(props.activity.end_date)) return 'tardia'
+  return 'entregada'
+})
+
+const formatDate = (dateStr: string) => {
+  return new Date(dateStr).toLocaleDateString('es-MX', { day: '2-digit', month: 'short' })
+}
 </script>
 
 <template>
-  <div class="bg-page">
-    <SidebarLayout>
-
-      <!-- HEADER AZUL -->
-      <div class="ContSmall center">
-        <div>
-          <h1>Explorar Grupos</h1>
-          <p v-if="data">
-            {{ data.data.length }} grupos académicos
-          </p>
-        </div>
+  <div :class="['activity-card', computedStatus]">
+    <div class="activity-info">
+      <div class="top-row">
+        <span class="subject-tag">{{ activity.subject }}</span>
+        <span v-if="computedStatus === 'tardia'" class="late-badge">Fuera de tiempo</span>
       </div>
+      <h4>{{ activity.title }}</h4>
+      <p class="due-date"> Límite: {{ formatDate(activity.end_date) }}</p>
+    </div>
 
-      <!-- CONTENEDOR GRANDE -->
-      <div class="ContBig CenterItems">
-
-        <!-- LOADING -->
-        <div v-if="isFetching" class="loading-state">
-          <div class="spinner"></div>
-          <p>Cargando grupos...</p>
-        </div>
-
-        <!-- ERROR -->
-        <div v-if="error" class="error-banner">
-          <span>⚠</span>
-          <p>Error al conectar: {{ error }}</p>
-        </div>
-
-        <!-- GRID DE CARDS -->
-        <div v-if="data && data.data" class="groups-grid">
-          <GroupTargect
-            v-for="group in data.data"
-            :key="group.id"
-            :group="group"
-          />
-        </div>
-
+    <div class="activity-status-box">
+      <div v-if="computedStatus === 'calificada'" class="grade-container">
+        <span class="grade-label">Nota</span>
+        <span class="grade-value">{{ activity.submission.grade }}</span>
       </div>
+    </div>
 
-    </SidebarLayout>
+    <div class="activity-actions">
+      <router-link
+        :to="{ name: 'parentTasksDetail', params: { id: activity.id } }"
+        class="btn-open-task"
+      >
+        {{ computedStatus === 'calificada' ? 'Ver Retroalimentación' : 'Ver Detalles' }}
+      </router-link>
+    </div>
   </div>
 </template>
 
 <style scoped>
-/* FONDO GENERAL */
-.bg-page {
-  position: fixed;
-  inset: 0;
-  overflow-x: hidden;
-  overflow-y: auto;
-  background: linear-gradient(
-    180deg,
-    var(--color-OscuroAzulado),
-    var(--color-OscuroDos)
-  );
-  z-index: -1;
+.activity-card {
+  display: grid;
+  grid-template-columns: 1fr auto auto;
+  align-items: center;
+  gap: 20px;
+  background: white;
+  padding: 18px 25px;
+  border-radius: 16px;
+  border: 1px solid #f1f5f9;
+  border-left: 6px solid #cbd5e1;
+  margin-bottom: 12px;
+  transition: transform 0.2s;
 }
 
-/* HEADER */
-.ContSmall {
+.activity-card:hover {
+  transform: scale(1.01);
+  border-color: var(--color-AzulTres);
+}
+
+/* Colores de Borde basados en Submission Status */
+.pendiente {
+  border-left-color: #f59e0b;
+}
+.entregada {
+  border-left-color: var(--color-AzulTres);
+}
+.tardia {
+  border-left-color: #ef4444;
+  background: #fffafb;
+}
+.calificada {
+  border-left-color: #10b981;
+}
+
+.top-row {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-bottom: 4px;
+}
+.subject-tag {
+  font-size: 0.65rem;
+  font-weight: 800;
+  color: var(--color-Azul);
+  text-transform: uppercase;
+  background: #eff6ff;
+  padding: 2px 8px;
+  border-radius: 4px;
+}
+.late-badge {
+  font-size: 0.6rem;
+  color: #ef4444;
+  font-weight: bold;
+  text-transform: uppercase;
+}
+
+.activity-info h4 {
+  margin: 0;
+  font-size: 1.05rem;
+  color: #1e293b;
+  font-weight: 700;
+}
+.due-date {
+  font-size: 0.8rem;
+  color: #64748b;
+  margin-top: 4px;
+}
+
+.grade-container {
+  text-align: center;
+  padding: 0 15px;
+  border-left: 1px solid #f1f5f9;
+}
+.grade-label {
+  display: block;
+  font-size: 0.6rem;
+  color: #94a3b8;
+  text-transform: uppercase;
+  font-weight: bold;
+}
+.grade-value {
+  font-size: 1.4rem;
+  font-weight: 900;
+  color: #10b981;
+}
+
+/* AJUSTES PARA QUE EL LINK SE VEA COMO BOTÓN */
+.btn-open-task {
+  display: inline-block;
+  text-decoration: none; /* Elimina el subrayado */
+  padding: 10px 18px;
+  border-radius: 10px;
+  background: #f8fafc;
+  color: var(--color-Azul);
+  font-weight: bold;
+  font-size: 0.8rem;
+  text-align: center;
+  transition: 0.2s;
+}
+
+.btn-open-task:hover {
   background: var(--color-Azul);
-  width: 1000px;
-  min-height: 40px;
-  border-radius: 20px;
-  margin: 30px auto 0 auto;
-  padding: 15px;
   color: white;
 }
 
-.ContSmall h1 {
-  margin: 0;
-  font-size: 1.5rem;
-}
-
-.ContSmall p {
-  margin: 0;
-  font-size: 0.9rem;
-  opacity: 0.9;
-}
-
-/* CONTENEDOR PRINCIPAL */
-.ContBig {
-  background: var(--color-Blanco);
-  width: 1000px;
-  min-height: 400px;
-  border-radius: 20px;
-  margin: 30px auto;
-  padding: 30px;
-  box-shadow: 0 10px 30px #00000030;
-}
-
-/* GRID (adaptado a tu estilo) */
-.groups-grid {
-  display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
-  gap: 25px;
-  margin-top: 20px;
-}
-
-/* LOADING */
-.loading-state {
-  text-align: center;
-  padding: 60px;
-  color: var(--color-AzulTres);
-}
-
-.spinner {
-  width: 40px;
-  height: 40px;
-  border: 4px solid #e0e0e0;
-  border-top: 4px solid var(--color-AzulTres);
-  border-radius: 50%;
-  animation: spin 1s linear infinite;
-  margin: 0 auto 15px;
-}
-
-@keyframes spin {
-  0% { transform: rotate(0deg); }
-  100% { transform: rotate(360deg); }
-}
-
-/* ERROR */
-.error-banner {
-  background: #ffe5e5;
-  color: #b91c1c;
-  padding: 15px;
-  border-radius: 10px;
-  margin-bottom: 20px;
-  display: flex;
-  gap: 10px;
-  align-items: center;
-  font-weight: 600;
+@media (max-width: 768px) {
+  .activity-card {
+    grid-template-columns: 1fr;
+    gap: 15px;
+  }
+  .activity-status-box {
+    justify-self: start;
+    padding: 0;
+    border: none;
+  }
 }
 </style>
