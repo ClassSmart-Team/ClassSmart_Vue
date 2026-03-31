@@ -6,6 +6,7 @@ import Modal from '@/components/createGroupModal.vue'
 import { useAuthStore } from '@/stores/authStore.ts'
 import { type formgroup } from '@/types/types.ts'
 import { ref } from 'vue'
+
 const form = ref<formgroup>({
   period_id: 1,
   name: '',
@@ -31,7 +32,7 @@ const {
 }).json()
 
 function creategroup() {
-  const { data:postData, onFetchResponse } = useapi('/groups', {
+  const { data: postData, onFetchResponse } = useapi('/groups', {
     method: 'POST',
   })
     .post(form.value)
@@ -44,6 +45,10 @@ function creategroup() {
     await reloadGroups()
   })
 }
+// Petición para traer los periodos del backend
+const { data: periodsData } = useapi('/periods', {
+  method: 'GET',
+}).json()
 </script>
 
 <template>
@@ -77,7 +82,13 @@ function creategroup() {
         <Modal v-model="showModal">
           <form class="group-form" @submit.prevent="creategroup">
             <label>Periodo ID</label>
-            <input v-model="form.period_id" type="number" min="1" />
+            <label>Periodo</label>
+            <select v-model="form.period_id">
+              <!-- v-for recorre el array data que viene del backend -->
+              <option v-for="period in periodsData?.data" :key="period.id" :value="period.id">
+                {{ period.name }} - {{ period.year }}
+              </option>
+            </select>
 
             <label>Nombre del Grupo</label>
             <input v-model="form.name" type="text" placeholder="Ej. Grupo chido" />
@@ -306,5 +317,14 @@ function creategroup() {
 
 .btn-save:hover {
   background: #1d4ed8;
+}
+.group-form select {
+  border: 1px solid #d1d5db;
+  border-radius: 12px;
+  padding: 10px;
+  font-size: 0.95rem;
+  outline: none;
+  background: white;
+  cursor: pointer;
 }
 </style>
