@@ -43,3 +43,13 @@ export interface formgroup{
   period_id:number,
   active:true
 }
+
+export type formtask = {
+   title: string
+   description: string
+   start_date: string
+   end_date: string
+   status: string
+   group_id: number | ''
+   unit_id: number | ''
+ }
