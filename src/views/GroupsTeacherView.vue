@@ -20,20 +20,28 @@ const initialgroup = <formgroup>{
 }
 const ua = useAuthStore()
 const showModal = ref(false)
-const { data, error, isFetching } = useapi('/groups', {
+
+const {
+  data,
+  error,
+  isFetching,
+  execute: reloadGroups,
+} = useapi('/groups', {
   method: 'GET',
 }).json()
 
 function creategroup() {
-  const { data, onFetchResponse } = useapi('/groups', {
+  const { data:postData, onFetchResponse } = useapi('/groups', {
     method: 'POST',
   })
     .post(form.value)
     .json()
-  onFetchResponse(() => {
-    alert(data.value.message)
+  onFetchResponse(async () => {
+    alert(postData.value.message)
     showModal.value = false
     form.value = { ...initialgroup }
+
+    await reloadGroups()
   })
 }
 </script>
@@ -138,7 +146,8 @@ function creategroup() {
 .ContBig {
   background: var(--color-Blanco);
   width: 1000px;
-  min-height: 400px;
+  height: 500px; /* puedes subirlo a 600 o más */
+  overflow-y: auto;
   border-radius: 20px;
   margin: 30px auto;
   padding: 30px;

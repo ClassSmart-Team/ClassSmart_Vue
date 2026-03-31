@@ -208,7 +208,7 @@ router.beforeEach((to, from, next) => {
 
   if (to.matched.some((r) => r.meta.requiresAuth)) {
     if (!authStore.credentials) {
-      return next({ name: 'login' })
+      return next({ name: 'Login' })
     }
 
     if (to.matched.some((record) => record.meta.rol)) {

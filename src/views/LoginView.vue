@@ -21,7 +21,7 @@ function login() {
       'Content-Type': 'application/json',
     },
   })
-    .post(credentials)
+    .post(credentials.value)
     .json()
 
   onFetchResponse(() => {
