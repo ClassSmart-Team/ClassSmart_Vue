@@ -30,6 +30,7 @@ function login() {
     if (role === 1) router.push('/admin/home')
     else if (role === 2) router.push('/teacher/home')
     else if (role===3) router.push('/student/home')
+      else if(role===4)router.push('/parent/home')
     else router.push('/login')
     })
 
