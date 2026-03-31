@@ -2,11 +2,40 @@
 import SidebarLayout from '@/components/TeacherSidebar.vue'
 import GroupTargect from '@/components/GroupTargect.vue'
 import { useapi } from '@/assets/composables/useApi'
+import Modal from '@/components/createGroupModal.vue'
 import { useAuthStore } from '@/stores/authStore.ts'
+import { type formgroup } from '@/types/types.ts'
+import { ref } from 'vue'
+const form = ref<formgroup>({
+  period_id: 1,
+  name: '',
+  description: '',
+  active: true,
+})
+const initialgroup = <formgroup>{
+  period_id: 1,
+  name: '',
+  description: '',
+  active: true,
+}
 const ua = useAuthStore()
+const showModal = ref(false)
 const { data, error, isFetching } = useapi('/groups', {
   method: 'GET',
 }).json()
+
+function creategroup() {
+  const { data, onFetchResponse } = useapi('/groups', {
+    method: 'POST',
+  })
+    .post(form.value)
+    .json()
+  onFetchResponse(() => {
+    alert(data.value.message)
+    showModal.value = false
+    form.value = { ...initialgroup }
+  })
+}
 </script>
 
 <template>
@@ -20,7 +49,7 @@ const { data, error, isFetching } = useapi('/groups', {
           <div class="avatar">
             {{ ua.credentials?.user.name.charAt(0) }}{{ ua.credentials?.user.lastname.charAt(0) }}
           </div>
-          <button class="btn-create-group">CREAR GRUPO</button>
+          <button @click="showModal = true" class="btn-create-group">CREAR GRUPO</button>
         </div>
       </div>
 
@@ -37,7 +66,32 @@ const { data, error, isFetching } = useapi('/groups', {
           <span>⚠</span>
           <p>Error al conectar: {{ error }}</p>
         </div>
+        <Modal v-model="showModal">
+          <form class="group-form" @submit.prevent="creategroup">
+            <label>Periodo ID</label>
+            <input v-model="form.period_id" type="number" min="1" />
 
+            <label>Nombre del Grupo</label>
+            <input v-model="form.name" type="text" placeholder="Ej. Grupo chido" />
+
+            <label>Descripción</label>
+            <textarea
+              v-model="form.description"
+              placeholder="Ej. Este es un grupo chido"
+            ></textarea>
+
+            <label class="check-row">
+              <input v-model="form.active" type="checkbox" />
+              Grupo activo
+            </label>
+
+            <div class="actions">
+              <button type="button" class="btn-cancel" @click="showModal = false">Cancelar</button>
+
+              <button type="submit" class="btn-save">Guardar</button>
+            </div>
+          </form></Modal
+        >
         <!-- GRID DE CARDS -->
         <div v-if="data && data.data" class="groups-grid">
           <GroupTargect v-for="group in data.data" :key="group.id" :group="group" />
@@ -180,5 +234,68 @@ const { data, error, isFetching } = useapi('/groups', {
   font-size: 14px;
   font-weight: 500;
   color: #0f6e56;
+}
+.group-form {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.group-form label {
+  font-weight: 700;
+  font-size: 0.9rem;
+  color: #111827;
+}
+
+.group-form input,
+.group-form textarea {
+  border: 1px solid #d1d5db;
+  border-radius: 12px;
+  padding: 10px;
+  font-size: 0.95rem;
+  outline: none;
+}
+
+.group-form textarea {
+  resize: none;
+  min-height: 90px;
+}
+
+.check-row {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  font-weight: 700;
+  margin-top: 5px;
+}
+
+.actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 10px;
+  margin-top: 10px;
+}
+
+.btn-cancel {
+  border: none;
+  background: #e5e7eb;
+  padding: 10px 18px;
+  border-radius: 12px;
+  cursor: pointer;
+  font-weight: 800;
+}
+
+.btn-save {
+  border: none;
+  background: #2563eb;
+  color: white;
+  padding: 10px 18px;
+  border-radius: 12px;
+  cursor: pointer;
+  font-weight: 800;
+}
+
+.btn-save:hover {
+  background: #1d4ed8;
 }
 </style>

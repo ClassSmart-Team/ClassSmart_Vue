@@ -36,3 +36,10 @@ export interface SessionData {
    description:string
     active:true
 }
+
+export interface formgroup{
+  name:string,
+  description:string,
+  period_id:number,
+  active:true
+}
