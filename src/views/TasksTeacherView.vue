@@ -14,7 +14,7 @@ const {
   error: tasksError, 
   isFetching: tasksLoading,
   execute: reloadTasks
-} = useapi("https://api.sutando-user.me/api/teacher/tasks", {
+} = useapi("/api/teacher/tasks", {
   method: 'GET',
 }).json()
 
