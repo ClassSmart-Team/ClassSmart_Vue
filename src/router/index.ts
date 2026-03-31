@@ -84,17 +84,17 @@ const router = createRouter({
     },
 
     {
-  path: '/teacher/messages',
-  name: 'messages',
-  component: HomeTeacherView, // temporal
-  meta: { requiresAuth: true, rol: [1,2] },
-},
-{
-  path: '/teacher/notifications',
-  name: 'notifications',
-  component: HomeTeacherView, // temporal
-  meta: { requiresAuth: true, rol: [1,2] },
-},
+      path: '/teacher/messages',
+      name: 'messages',
+      component: HomeTeacherView, // temporal
+      meta: { requiresAuth: true, rol: [1,2] },
+    },
+    {
+      path: '/teacher/notifications',
+      name: 'notifications',
+      component: HomeTeacherView, // temporal
+      meta: { requiresAuth: true, rol: [1,2] },
+    },
 
     {
       path: '/settings',
