@@ -180,7 +180,7 @@ const { data: periodsData } = useapi('/periods', {
 .ContBig {
   background: var(--color-Blanco);
   width: 1000px;
-  height: 500px; /* puedes subirlo a 600 o más */
+  height: 400px; 
   overflow-y: auto;
   border-radius: 20px;
   margin: 30px auto;
