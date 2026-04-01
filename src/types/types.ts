@@ -1,4 +1,3 @@
-
 export interface Register {
   name: string
   lastname: string
@@ -13,43 +12,79 @@ export interface Login {
 }
 export interface SessionData {
   token: string
-  user: {
-    id: number
-    name: string
-    lastname: string
-    email: string
-    cellphone: string
-    active: boolean
-    role: {
-      id: number
-      description: string
-      created_at: string
-      updated_at: string
-    }
-    created_at: string
-    updated_at: string
-  }}
-
-  export interface GroupData{
-   period_id:number,
-   name:string
-   description:string
-    active:true
+  user: User
+}
+export interface User {
+  id: number
+  name: string
+  lastname: string
+  email: string
+  cellphone: string
+  active: boolean
+  role: Role
+}
+export interface Role {
+  id: number
+  description: string
+  created_at: string
+  updated_at: string
 }
 
-export interface formgroup{
-  name:string,
-  description:string,
-  period_id:number,
-  active:true
+export interface GroupData {
+  period_id: number
+  name: string
+  description: string
+  active: true
+}
+
+export interface formgroup {
+  name: string
+  description: string
+  period_id: number
+  active: true
 }
 
 export type formtask = {
-   title: string
-   description: string
-   start_date: string
-   end_date: string
-   status: string
-   group_id: number | ''
-   unit_id: number | ''
- }
+  title: string
+  description: string
+  start_date: string
+  end_date: string
+  status: string
+  group_id: number | ''
+  unit_id: number | ''
+}
+// Cada interfaz representa una "forma" de objeto diferente
+
+export interface Owner {
+  id: number
+  name: string
+  lastname: string
+  email: string
+  cellphone: string
+  active: boolean
+  created_at: string | null
+  updated_at: string | null
+}
+
+export interface Period {
+  id: number
+  name: string
+  year: number
+  start_date: string
+  end_date: string
+  created_at: string | null
+  updated_at: string | null
+}
+
+export interface Group {
+  id: number
+  name: string
+  description: string
+  active: boolean
+  owner: Owner
+  period: Period
+  students_count: number
+  assignments_count: number
+  created_at: string | null
+  updated_at: string | null
+}

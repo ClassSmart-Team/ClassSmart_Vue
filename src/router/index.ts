@@ -21,6 +21,7 @@ import ShowGroup from '@/views/ShowGroup.vue'
 import TaskDetailView from '@/views/TaskDetailView.vue'
 import ForumDetailView from '@/views/ForumDetailView.vue'
 import TaskDetailTeacherView from '@/views/TaskDetailTeacherView.vue'
+import AdminHomeView from '@/views/AdminHomeView.vue'
 import { useAuthStore } from '@/stores/authStore'
 
 
@@ -38,6 +39,13 @@ const router = createRouter({
       name: 'AdminRegister',
       component: AdminRegistroView,
     },
+    {
+      path: '/admin/home',
+      name: 'AdminHome',
+      component: AdminHomeView,
+      meta: { requiresAuth: true, rol: 1 },
+    }
+    ,
 
     {
       path: '/register',
@@ -55,28 +63,30 @@ const router = createRouter({
       path: '/teacher/home',
       name: 'home',
       component: HomeTeacherView,
-      meta: { requiresAuth: true, rol: [1,2] },
+      meta: { requiresAuth: true, rol: 2 },
     },
 
     {
       path: '/teacher/profile',
       name: 'profile',
       component: ProfileTeacherView,
-      meta: { requiresAuth: true, rol: [1,2] },
+      meta: { requiresAuth: true, rol:2 },
     },
 
     {
       path: '/teacher/groups',
       name: 'groups',
       component: GroupsTeacherView,
-      meta: { requiresAuth: true, rol: [1, 2] },
+      meta: { requiresAuth: true, rol: 2 },
     },
 
     {
       path: '/teacher/tasks',
       name: 'tasks',
       component: TasksTeacherView,
-      meta: { requiresAuth: true, rol: [1,2] },
+      meta: { requiresAuth: true, rol: 2 },
+
+      
     },
 
     {
@@ -90,20 +100,20 @@ const router = createRouter({
       path: '/teacher/announcements',
       name: 'announcements',
       component: AnnouncementTeacherView,
-      meta: { requiresAuth: true, rol: [1,2] },
+      meta: { requiresAuth: true, rol: 2 },
     },
 
     {
       path: '/teacher/messages',
       name: 'messages',
       component: HomeTeacherView, // temporal
-      meta: { requiresAuth: true, rol: [1,2] },
+      meta: { requiresAuth: true, rol: 2 },
     },
     {
       path: '/teacher/notifications',
       name: 'notifications',
       component: HomeTeacherView, // temporal
-      meta: { requiresAuth: true, rol: [1,2] },
+      meta: { requiresAuth: true, rol: 2 },
     },
 
     {
