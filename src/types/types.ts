@@ -87,6 +87,7 @@ export interface Group {
   assignments_count: number
   created_at: string | null
   updated_at: string | null
+  units?: Unit[]
 }
 
 export interface Unit{
