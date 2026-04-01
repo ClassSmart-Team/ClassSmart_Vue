@@ -1,6 +1,5 @@
 <script setup lang="ts">
 import SidebarLayout from '@/components/TeacherSidebar.vue'
-import TaskCard from '@/components/TaskCard.vue'
 import Modal from '@/components/createGroupModal.vue'
 import { useapi } from '@/assets/composables/useApi'
 import { useAuthStore } from '@/stores/authStore.ts'
@@ -58,43 +57,89 @@ function createTask() {
     <SidebarLayout>
 
       <!-- HEADER AZUL -->
-      <div class="ContSmall center">
-        <div>
-          <h1>Explorar Tareas</h1>
-          <p v-if="data">{{ (data.data ?? data).length }} tareas registradas</p>
-          <div class="avatar">
-            {{ ua.credentials?.user.name.charAt(0) }}{{ ua.credentials?.user.lastname.charAt(0) }}
-          </div>
-          <button @click="showModal = true" class="btn-create-task">CREAR TAREA</button>
+<div class="ContSmall">
+  <!-- IZQUIERDA -->
+  <div class="left">
+    <div class="avatar">
+      {{ ua.credentials?.user.name.charAt(0) }}{{ ua.credentials?.user.lastname.charAt(0) }}
+    </div>
+    <div>
+      <h1>Explorar Tareas</h1>
+      <p v-if="data">{{ (data.data ?? data).length }} tareas registradas</p>
+    </div>
+  </div>
+
+  <!-- DERECHA -->
+  <div class="right">
+    <button @click="showModal = true" class="btn-create-task">
+      CREAR TAREA
+    </button>
+  </div>
+</div>
+
+<!-- CONTENEDOR GRANDE -->
+<div class="ContBig CenterItems">
+
+  <!-- LOADING -->
+  <div v-if="isFetching" class="loading-state">
+    <div class="spinner"></div>
+    <p>Cargando tareas...</p>
+  </div>
+
+  <!-- ERROR -->
+  <div v-if="error" class="error-banner">
+    <span>⚠</span>
+    <p>Error al conectar: {{ error }}</p>
+  </div>
+
+  <!-- PANEL DE TAREAS -->
+  <div v-if="!isFetching && !error">
+    <div class="panel-header">
+      <h2>Mis Tareas</h2>
+      <span class="badge">{{ (data?.data ?? data ?? []).length }}</span>
+    </div>
+
+    <!-- VACÍO -->
+    <div v-if="!(data?.data ?? data)?.length" class="empty-state">
+      <p>📭 No hay tareas registradas aún.</p>
+    </div>
+
+    <!-- GRID -->
+    <div v-else class="tasks-grid">
+      <div
+        v-for="task in (data?.data ?? data)"
+        :key="task.id"
+        class="task-card"
+        :class="task.status?.toLowerCase()"
+      >
+        <div class="task-card-top">
+          <span class="status-dot"></span>
+          <span class="status-label">{{ task.status }}</span>
+        </div>
+        <h3 class="task-title">{{ task.title }}</h3>
+        <p class="task-desc">{{ task.description }}</p>
+        <div class="task-meta">
+          <span> {{ task.start_date?.slice(0, 10) }}</span>
+          <span> {{ task.end_date?.slice(0, 10) }}</span>
         </div>
       </div>
+    </div>
+  </div>
 
-      <!-- CONTENEDOR GRANDE -->
-      <div class="ContBig CenterItems">
 
-        <!-- LOADING -->
-        <div v-if="isFetching" class="loading-state">
-          <div class="spinner"></div>
-          <p>Cargando tareas...</p>
-        </div>
 
-        <!-- ERROR -->
-        <div v-if="error" class="error-banner">
-          <span>⚠</span>
-          <p>Error al conectar: {{ error }}</p>
-        </div>
 
         <!-- MODAL -->
         <Modal v-model="showModal">
           <form class="task-form" @submit.prevent="createTask">
 
             <label>Título</label>
-            <input v-model="form.title" type="text" placeholder="Ej. Tarea de matemáticas" />
+            <input v-model="form.title" type="text" placeholder="Ej. Titulo de tarea" />
 
             <label>Descripción</label>
             <textarea
               v-model="form.description"
-              placeholder="Ej. Resolver los ejercicios del capítulo 3"
+              placeholder="Ej. Resolver ...."
             ></textarea>
 
             <div class="grid-fields">
@@ -153,19 +198,6 @@ function createTask() {
           </form>
         </Modal>
 
-        <!-- GRID DE CARDS -->
-        <div v-if="data && (data.data ?? data).length" class="tasks-grid">
-          <TaskCard
-            v-for="task in (data.data ?? data)"
-            :key="task.id"
-            :activity="task"
-          />
-        </div>
-
-        <!-- EMPTY -->
-        <div v-else-if="!isFetching && !error" class="empty-state">
-          No hay tareas registradas aún.
-        </div>
 
       </div>
     </SidebarLayout>
@@ -192,6 +224,10 @@ function createTask() {
   margin: 30px auto 0 auto;
   padding: 15px;
   color: white;
+
+  display: flex;               
+  justify-content: space-between;
+  align-items: center;
 }
 
 .ContSmall h1 {
@@ -203,6 +239,17 @@ function createTask() {
   margin: 0;
   font-size: 0.9rem;
   opacity: 0.9;
+}
+
+.left {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.right {
+  display: flex;
+  align-items: center;
 }
 
 /* CONTENEDOR PRINCIPAL */
@@ -391,5 +438,108 @@ function createTask() {
 
 .btn-save:hover {
   background: #1d4ed8;
+}
+
+/* PANEL HEADER */
+.panel-header {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin-bottom: 20px;
+}
+
+.panel-header h2 {
+  font-size: 1.2rem;
+  font-weight: 800;
+  color: var(--color-OscuroAzulado);
+  margin: 0;
+}
+
+.badge {
+  background: var(--color-Azul);
+  color: white;
+  border-radius: 20px;
+  padding: 2px 12px;
+  font-size: 0.85rem;
+  font-weight: 700;
+}
+
+/* GRID DE TAREAS */
+.tasks-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+  gap: 18px;
+}
+
+/* TARJETA */
+.task-card {
+  border-radius: 16px;
+  padding: 18px;
+  background: #f8fafc;
+  border: 1px solid #e2e8f0;
+  transition: transform 0.2s, box-shadow 0.2s;
+}
+
+.task-card:hover {
+  transform: translateY(-3px);
+  box-shadow: 0 8px 24px rgba(0,0,0,0.1);
+}
+
+/* STATUS COLORS */
+.task-card.activa  { border-left: 4px solid #2563eb; }
+.task-card.inactiva { border-left: 4px solid #9ca3af; }
+.task-card.cerrada  { border-left: 4px solid #ef4444; }
+
+.task-card-top {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  margin-bottom: 10px;
+}
+
+.status-dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: currentColor;
+}
+
+.activa  .status-dot { background: #2563eb; }
+.inactiva .status-dot { background: #9ca3af; }
+.cerrada  .status-dot { background: #ef4444; }
+
+.status-label {
+  font-size: 0.75rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  color: #6b7280;
+}
+
+/* CONTENIDO */
+.task-title {
+  font-size: 1rem;
+  font-weight: 700;
+  color: #111827;
+  margin: 0 0 6px 0;
+}
+
+.task-desc {
+  font-size: 0.85rem;
+  color: #6b7280;
+  margin: 0 0 12px 0;
+  line-height: 1.4;
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+
+.task-meta {
+  display: flex;
+  gap: 12px;
+  font-size: 0.78rem;
+  color: #9ca3af;
 }
 </style>

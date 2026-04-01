@@ -76,6 +76,8 @@ const router = createRouter({
       name: 'tasks',
       component: TasksTeacherView,
       meta: { requiresAuth: true, rol: [1,2] },
+
+      
     },
 
     {
