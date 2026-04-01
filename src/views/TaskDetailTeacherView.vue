@@ -97,6 +97,8 @@ const statusClass = computed(() => task.value?.status?.toLowerCase() ?? '')
 </script>
 
 <template>
+
+<div class="bg-page">
   <SidebarLayout>
 
     <!-- LOADING -->
@@ -277,6 +279,8 @@ const statusClass = computed(() => task.value?.status?.toLowerCase() ?? '')
     </template>
 
   </SidebarLayout>
+
+  </div>
 </template>
 
 <style scoped>
