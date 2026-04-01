@@ -50,8 +50,8 @@ export type formtask = {
   start_date: string
   end_date: string
   status: string
-  group_id: number | ''
-  unit_id: number | ''
+  group_id: number | null
+  unit_id: number | null
 }
 // Cada interfaz representa una "forma" de objeto diferente
 
@@ -87,4 +87,22 @@ export interface Group {
   assignments_count: number
   created_at: string | null
   updated_at: string | null
+}
+
+export interface Unit{
+  id: number
+  name: string
+  group_id: number
+  group?:Group
+  assignments_count?:number
+}
+
+export interface FormTask{
+  title: string
+  description: string
+  start_date: string
+  end_date: string
+  status: string
+  group_id: number | null
+  unit_id: number | null
 }

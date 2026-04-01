@@ -4,8 +4,21 @@ import Modal from '@/components/createGroupModal.vue'
 import { useapi } from '@/assets/composables/useApi'
 import { useAuthStore } from '@/stores/authStore.ts'
 import { type formtask } from '@/types/types.ts'
-import { ref } from 'vue'
+import { watch, ref } from 'vue'  
+import { type Unit } from '@/types/types.ts'
 
+const filteredUnits = ref<Unit[]>([])
+watch(() => form.value.group_id, async (groupId) => {
+  if (!groupId) {
+    filteredUnits.value = []
+    form.value.unit_id = null
+    return
+  }
+  const { data } = await useapi(`/units?group_id=${groupId}`).json()
+  filteredUnits.value = data.value?.data ?? []
+  // reset unit si cambia grupo
+  form.value.unit_id = null
+})
 
 
 const initialTask: formtask = {
@@ -14,8 +27,8 @@ const initialTask: formtask = {
   start_date: '',
   end_date: '',
   status: 'Activa',
-  group_id: '',
-  unit_id: '',
+  group_id: null,
+  unit_id: null,
 }
 
 const form = ref<formtask>({ ...initialTask })
