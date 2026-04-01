@@ -33,8 +33,22 @@ const { data, error, isFetching, execute: reloadTasks } = useapi('/assignments',
 }).json()
 
 // ── Selects auxiliares ───────────────────────────────────────────────────────
-const { data: groupsData } = useapi('/groups').json()
-const { data: unitsData } = useapi('/units').json()
+  const { data: groupsData } = useapi('/groups').json()
+// Nota: unitsData ya no será necesario si usamos la data de groupsData
+// Propiedad computada para obtener las unidades del grupo seleccionado
+  const availableUnits = computed(() => { 
+    const selectedGroupId = form.value.group_id
+    if (!selectedGroupId||!groupsData.value?.data) return []
+    const group = groupsData.value.data.find((g: any) => g.id === selectedGroupId)
+    return group ? group.units : []
+  })
+
+  // Resetear la unidad si el grupo cambia
+  watch(() => form.value.group_id, () => {
+    form.value.unit_id = null
+  })
+
+
 
 // ── POST tarea ───────────────────────────────────────────────────────────────
 function createTask() {
@@ -200,9 +214,9 @@ const filteredActivities = computed(() => {
 
               <div>
                 <label>Unidad</label>
-                <select v-model="form.unit_id">
-                  <option value="">Selecciona una unidad</option>
-                  <option v-for="u in unitsData?.data ?? []" :key="u.id" :value="u.id">
+                <select v-model="form.unit_id":disabled="!form.group_id">
+                  <option :value="null">Selecciona una unidad - Primero Selecciona Un Grupo</option>
+                  <option v-for="u in availableUnits" :key="u.id" :value="u.id">
                     {{ u.name }}
                   </option>
                 </select>
