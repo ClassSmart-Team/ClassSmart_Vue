@@ -4,7 +4,9 @@ import Modal from '@/components/createGroupModal.vue'
 import { useapi } from '@/assets/composables/useApi'
 import { useAuthStore } from '@/stores/authStore.ts'
 import { type formtask } from '@/types/types.ts'
-import { ref } from 'vue'
+import { ref, computed } from 'vue'
+import TeacherTaskCard from '@/components/TeacherTaskCard.vue'
+
 
 
 
@@ -19,6 +21,7 @@ const initialTask: formtask = {
 }
 
 const form = ref<formtask>({ ...initialTask })
+const currentTab = ref('pendientes')
 
 // ── Auth ─────────────────────────────────────────────────────────────────────
 const ua = useAuthStore()
@@ -37,10 +40,29 @@ const { data: unitsData } = useapi('/units').json()
 
 // ── POST tarea ───────────────────────────────────────────────────────────────
 function createTask() {
+
+  if (!form.value.group_id || !form.value.unit_id) {
+    alert('Debes seleccionar grupo y unidad')
+    return
+  }
+
+ 
+  const payload = {
+    ...form.value,
+    group_id: Number(form.value.group_id),
+    unit_id: Number(form.value.unit_id),
+    start_date: form.value.start_date
+      ? form.value.start_date.replace('T', ' ') + ':00'
+      : null,
+    end_date: form.value.end_date
+      ? form.value.end_date.replace('T', ' ') + ':00'
+      : null,
+  }
+
   const { data: res, onFetchResponse } = useapi('/assignments', {
     method: 'POST',
   })
-    .post(form.value)
+    .post(payload) 
     .json()
 
   onFetchResponse(async () => {
@@ -50,84 +72,102 @@ function createTask() {
     await reloadTasks()
   })
 }
-</script>
 
+const filteredActivities = computed(() => {
+  const list = data.value?.data ?? data.value ?? []
+
+  return list.filter((a: any) => {
+    const hasSubmission = !!a.submission
+    const isGraded = a.submission?.status === 'Calificada'
+    const isLate =
+      hasSubmission &&
+      new Date(a.submission.submission_date) > new Date(a.end_date)
+
+    if (currentTab.value === 'pendientes') return !hasSubmission
+    if (currentTab.value === 'entregadas') return hasSubmission && !isGraded && !isLate
+    if (currentTab.value === 'calificadas') return isGraded
+    if (currentTab.value === 'tardias') return isLate
+    return false
+  })
+})
+</script>
 <template>
   <div class="bg-page">
     <SidebarLayout>
 
       <!-- HEADER AZUL -->
-<div class="ContSmall">
-  <!-- IZQUIERDA -->
-  <div class="left">
-    <div class="avatar">
-      {{ ua.credentials?.user.name.charAt(0) }}{{ ua.credentials?.user.lastname.charAt(0) }}
-    </div>
-    <div>
-      <h1>Explorar Tareas</h1>
-      <p v-if="data">{{ (data.data ?? data).length }} tareas registradas</p>
-    </div>
-  </div>
-
-  <!-- DERECHA -->
-  <div class="right">
-    <button @click="showModal = true" class="btn-create-task">
-      CREAR TAREA
-    </button>
-  </div>
-</div>
-
-<!-- CONTENEDOR GRANDE -->
-<div class="ContBig CenterItems">
-
-  <!-- LOADING -->
-  <div v-if="isFetching" class="loading-state">
-    <div class="spinner"></div>
-    <p>Cargando tareas...</p>
-  </div>
-
-  <!-- ERROR -->
-  <div v-if="error" class="error-banner">
-    <span>⚠</span>
-    <p>Error al conectar: {{ error }}</p>
-  </div>
-
-  <!-- PANEL DE TAREAS -->
-  <div v-if="!isFetching && !error">
-    <div class="panel-header">
-      <h2>Mis Tareas</h2>
-      <span class="badge">{{ (data?.data ?? data ?? []).length }}</span>
-    </div>
-
-    <!-- VACÍO -->
-    <div v-if="!(data?.data ?? data)?.length" class="empty-state">
-      <p>📭 No hay tareas registradas aún.</p>
-    </div>
-
-    <!-- GRID -->
-    <div v-else class="tasks-grid">
-      <div
-        v-for="task in (data?.data ?? data)"
-        :key="task.id"
-        class="task-card"
-        :class="task.status?.toLowerCase()"
-      >
-        <div class="task-card-top">
-          <span class="status-dot"></span>
-          <span class="status-label">{{ task.status }}</span>
+      <div class="ContSmall">
+        <div class="left">
+          <div class="avatar">
+            {{ ua.credentials?.user.name.charAt(0) }}{{ ua.credentials?.user.lastname.charAt(0) }}
+          </div>
+          <div>
+            <h1>Explorar Tareas</h1>
+            <p v-if="data">{{ filteredActivities.length }} tareas</p>
+          </div>
         </div>
-        <h3 class="task-title">{{ task.title }}</h3>
-        <p class="task-desc">{{ task.description }}</p>
-        <div class="task-meta">
-          <span> {{ task.start_date?.slice(0, 10) }}</span>
-          <span> {{ task.end_date?.slice(0, 10) }}</span>
+
+        <div class="right">
+          <button @click="showModal = true" class="btn-create-task">
+            CREAR TAREA
+          </button>
         </div>
       </div>
-    </div>
-  </div>
 
+      <!-- CONTENEDOR GRANDE -->
+      <div class="ContBig CenterItems">
 
+        <!-- TABS -->
+        <div class="tabs-container">
+          <button @click="currentTab = 'pendientes'" :class="{ active: currentTab === 'pendientes' }">
+            Pendientes
+          </button>
+          <button @click="currentTab = 'entregadas'" :class="{ active: currentTab === 'entregadas' }">
+            Entregadas
+          </button>
+          <button @click="currentTab = 'calificadas'" :class="{ active: currentTab === 'calificadas' }">
+            Calificadas
+          </button>
+          <button @click="currentTab = 'tardias'" :class="{ active: currentTab === 'tardias' }">
+            Entrega tardía
+          </button>
+        </div>
 
+        <!-- LOADING -->
+        <div v-if="isFetching" class="loading-state">
+          <div class="spinner"></div>
+          <p>Cargando tareas...</p>
+        </div>
+
+        <!-- ERROR -->
+        <div v-if="error" class="error-banner">
+          <span>⚠</span>
+          <p>Error al conectar: {{ error }}</p>
+        </div>
+
+        <!-- PANEL -->
+        <div v-if="!isFetching && !error">
+
+          <div class="panel-header">
+            <h2>Mis Tareas</h2>
+            <span class="badge">{{ filteredActivities.length }}</span>
+          </div>
+
+          <!-- VACÍO -->
+          <div v-if="!filteredActivities.length" class="empty-state">
+            <p>No hay tareas en esta categoría.</p>
+          </div>
+
+          <!-- GRID -->
+<div v-else class="tasks-grid">
+  <TeacherTaskCard
+    v-for="task in filteredActivities"
+    :key="task.id"
+    :task="task"
+  />
+</div>
+
+        </div>
 
         <!-- MODAL -->
         <Modal v-model="showModal">
@@ -137,16 +177,14 @@ function createTask() {
             <input v-model="form.title" type="text" placeholder="Ej. Titulo de tarea" />
 
             <label>Descripción</label>
-            <textarea
-              v-model="form.description"
-              placeholder="Ej. Resolver ...."
-            ></textarea>
+            <textarea v-model="form.description" placeholder="Ej. Resolver ...."></textarea>
 
             <div class="grid-fields">
               <div>
                 <label>Fecha de inicio</label>
                 <input v-model="form.start_date" type="datetime-local" />
               </div>
+
               <div>
                 <label>Fecha de entrega</label>
                 <input v-model="form.end_date" type="datetime-local" />
@@ -156,11 +194,7 @@ function createTask() {
                 <label>Grupo</label>
                 <select v-model="form.group_id">
                   <option value="">Selecciona un grupo</option>
-                  <option
-                    v-for="g in groupsData?.data ?? []"
-                    :key="g.id"
-                    :value="g.id"
-                  >
+                  <option v-for="g in groupsData?.data ?? []" :key="g.id" :value="g.id">
                     {{ g.name }}
                   </option>
                 </select>
@@ -170,11 +204,7 @@ function createTask() {
                 <label>Unidad</label>
                 <select v-model="form.unit_id">
                   <option value="">Selecciona una unidad</option>
-                  <option
-                    v-for="u in unitsData?.data ?? []"
-                    :key="u.id"
-                    :value="u.id"
-                  >
+                  <option v-for="u in unitsData?.data ?? []" :key="u.id" :value="u.id">
                     {{ u.name }}
                   </option>
                 </select>
@@ -184,20 +214,23 @@ function createTask() {
             <label class="check-row">
               Estado
               <select v-model="form.status" class="select-status">
-                <option value="Activa">Activa</option>
-                <option value="Inactiva">Inactiva</option>
+                <option value="Activa">Activa</option>              
                 <option value="Cerrada">Cerrada</option>
+                <option value="Cancelada">Cancelada</option>
               </select>
             </label>
 
             <div class="actions">
-              <button type="button" class="btn-cancel" @click="showModal = false">Cancelar</button>
-              <button type="submit" class="btn-save">Guardar</button>
+              <button type="button" class="btn-cancel" @click="showModal = false">
+                Cancelar
+              </button>
+              <button type="submit" class="btn-save">
+                Guardar
+              </button>
             </div>
 
           </form>
         </Modal>
-
 
       </div>
     </SidebarLayout>
@@ -541,5 +574,32 @@ function createTask() {
   gap: 12px;
   font-size: 0.78rem;
   color: #9ca3af;
+}
+
+.tabs-container {
+  display: flex;
+  gap: 5px;
+  margin-bottom: 30px;
+  background: #f8fafc;
+  padding: 6px;
+  border-radius: 14px;
+  overflow-x: auto;
+}
+.tabs-container button {
+  flex: 1;
+  padding: 10px 15px;
+  border: none;
+  background: none;
+  border-radius: 10px;
+  cursor: pointer;
+  font-weight: bold;
+  color: #64748b;
+  white-space: nowrap;
+  transition: 0.3s;
+}
+.tabs-container button.active {
+  background: white;
+  color: var(--color-Azul);
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
 }
 </style>

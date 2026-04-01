@@ -20,6 +20,7 @@ import SettingsParentView from '@/views/SettingsParentView.vue'
 import ShowGroup from '@/views/ShowGroup.vue'
 import TaskDetailView from '@/views/TaskDetailView.vue'
 import ForumDetailView from '@/views/ForumDetailView.vue'
+import TaskDetailTeacherView from '@/views/TaskDetailTeacherView.vue'
 import { useAuthStore } from '@/stores/authStore'
 
 
@@ -76,9 +77,14 @@ const router = createRouter({
       name: 'tasks',
       component: TasksTeacherView,
       meta: { requiresAuth: true, rol: [1,2] },
-
-      
     },
+
+    {
+  path: '/teacher/tasks/:id',
+  name: 'teacherTasksDetail',
+  component: TaskDetailTeacherView,
+  meta: { requiresAuth: true, rol: [1, 2] },
+},
 
     {
       path: '/teacher/announcements',
