@@ -1,4 +1,7 @@
-<script setup lang="ts"></script>
+<script setup lang="ts">
+
+
+</script>
 
 <template>
   aqui veremos un grupo en especifico

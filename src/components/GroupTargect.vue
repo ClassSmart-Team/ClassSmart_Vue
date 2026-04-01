@@ -1,15 +1,17 @@
 <script setup lang="ts">
 import type { Group } from '@/types/types.ts'
 
-defineProps<{ group: Group }>()
+ defineProps<{ group: Group }>()
+
 </script>
 
 <template>
-  <div class="card" :class="{ inactive: !group.active }">
+  <div class="card"  :class="{ inactive: !group.active }">
     <!-- Header con gradiente azul -->
     <div class="card-header">
       <div class="header-top">
         <div class="period-badge">{{ group.period.name }} {{ group.period.year }}</div>
+
         <div class="status-badge" :class="{ active: group.active }">
           {{ group.active ? 'Activo' : 'Finalizado' }}
         </div>
@@ -136,7 +138,7 @@ defineProps<{ group: Group }>()
 }
 
 .status-badge.active {
-  background: rgba(0, 255, 91, 0.79);
+  background: rgba(120, 251, 166, 0.79);
   border-color: rgba(6, 255, 102, 0.76);
 }
 
@@ -226,11 +228,11 @@ defineProps<{ group: Group }>()
 }
 
 .students-icon {
-  background: linear-gradient(135deg, #3b82f6 0%, #2563eb 100%);
+  background: linear-gradient(135deg, #3b82f6 0%, #929db3 100%);
 }
 
 .assignments-icon {
-  background: linear-gradient(135deg, #4ade80 0%, #22c55e 100%);
+  background: linear-gradient(135deg, #4ade80 0%, #58cd83 100%);
 }
 
 .stat-number {
@@ -259,7 +261,7 @@ defineProps<{ group: Group }>()
   width: 44px;
   height: 44px;
   border-radius: 50%;
-  background: linear-gradient(135deg, #3b82f6 0%, #2563eb 100%);
+  background: linear-gradient(135deg, #3b82f6 0%, #294173 100%);
   display: flex;
   align-items: center;
   justify-content: center;

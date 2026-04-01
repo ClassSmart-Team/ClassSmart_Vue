@@ -6,6 +6,7 @@ import Modal from '@/components/createGroupModal.vue'
 import { useAuthStore } from '@/stores/authStore.ts'
 import { type formgroup } from '@/types/types.ts'
 import { ref } from 'vue'
+import router from '@/router'
 
 const form = ref<formgroup>({
   period_id: 1,
@@ -49,6 +50,11 @@ function creategroup() {
 const { data: periodsData } = useapi('/periods', {
   method: 'GET',
 }).json()
+
+function showgroup(id:number){
+  alert("id del grupo, "+id)
+  router.push('/teacher/show/group')
+}
 </script>
 
 <template>
@@ -56,7 +62,6 @@ const { data: periodsData } = useapi('/periods', {
     <SidebarLayout>
       <!-- HEADER AZUL -->
       <div class="ContSmall">
-
         <div class="left">
           <div class="avatar">
             {{ ua.credentials?.user.name.charAt(0) }}{{ ua.credentials?.user.lastname.charAt(0) }}
@@ -65,14 +70,10 @@ const { data: periodsData } = useapi('/periods', {
           <p v-if="data">{{ data.data.length }} grupos académicos</p>
         </div>
 
-           <div class="right">
-              <button @click="showModal = true" class="btn-create-group">CREAR GRUPO</button>
+        <div class="right">
+          <button @click="showModal = true" class="btn-create-group">CREAR GRUPO</button>
         </div>
-      
       </div>
-
-     
-
 
       <!-- CONTENEDOR GRANDE -->
       <div class="ContBig CenterItems">
@@ -121,7 +122,12 @@ const { data: periodsData } = useapi('/periods', {
         >
         <!-- GRID DE CARDS -->
         <div v-if="data && data.data" class="groups-grid">
-          <GroupTargect v-for="group in data.data" :key="group.id" :group="group" />
+          <GroupTargect
+            @click="showgroup(group.id)"
+            v-for="group in data.data"
+            :key="group.id"
+            :group="group"
+          />
         </div>
       </div>
     </SidebarLayout>
@@ -149,7 +155,7 @@ const { data: periodsData } = useapi('/periods', {
   padding: 15px;
   color: white;
 
-  display: flex;               
+  display: flex;
   justify-content: space-between;
   align-items: center;
 }
@@ -180,7 +186,7 @@ const { data: periodsData } = useapi('/periods', {
 .ContBig {
   background: var(--color-Blanco);
   width: 1000px;
-  height: 400px; 
+  height: 400px;
   overflow-y: auto;
   border-radius: 20px;
   margin: 30px auto;

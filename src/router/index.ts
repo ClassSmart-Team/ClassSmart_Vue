@@ -86,7 +86,7 @@ const router = createRouter({
       component: TasksTeacherView,
       meta: { requiresAuth: true, rol: 2 },
 
-      
+
     },
 
     {
