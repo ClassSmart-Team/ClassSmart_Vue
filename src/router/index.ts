@@ -23,6 +23,7 @@ import ForumDetailView from '@/views/ForumDetailView.vue'
 import TaskDetailTeacherView from '@/views/TaskDetailTeacherView.vue'
 import AdminHomeView from '@/views/AdminHomeView.vue'
 import { useAuthStore } from '@/stores/authStore'
+import TeacherShowGroupView from "@/views/TeacherShowGroupView.vue";
 
 
 //ROLES//
@@ -180,7 +181,12 @@ const router = createRouter({
       component: ForumParentView,
       meta: { requiresAuth: true, role: 4 },
     },
-
+    {
+      path: '/teacher/show/group/:id',
+      name: 'teachershowgroup',
+      component: TeacherShowGroupView,
+      meta: { requiresAuth: true, role: 4 },
+    },
     {
       path: '/parent/forum/:id',
       name: 'parentForumDetail',
