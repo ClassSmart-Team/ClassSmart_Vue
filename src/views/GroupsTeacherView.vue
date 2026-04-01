@@ -55,16 +55,24 @@ const { data: periodsData } = useapi('/periods', {
   <div class="bg-page">
     <SidebarLayout>
       <!-- HEADER AZUL -->
-      <div class="ContSmall center">
-        <div>
-          <h1>Explorar Grupos</h1>
-          <p v-if="data">{{ data.data.length }} grupos académicos</p>
+      <div class="ContSmall">
+
+        <div class="left">
           <div class="avatar">
             {{ ua.credentials?.user.name.charAt(0) }}{{ ua.credentials?.user.lastname.charAt(0) }}
           </div>
-          <button @click="showModal = true" class="btn-create-group">CREAR GRUPO</button>
+          <h1>Explorar Grupos</h1>
+          <p v-if="data">{{ data.data.length }} grupos académicos</p>
         </div>
+
+           <div class="right">
+              <button @click="showModal = true" class="btn-create-group">CREAR GRUPO</button>
+        </div>
+      
       </div>
+
+     
+
 
       <!-- CONTENEDOR GRANDE -->
       <div class="ContBig CenterItems">
@@ -140,6 +148,10 @@ const { data: periodsData } = useapi('/periods', {
   margin: 30px auto 0 auto;
   padding: 15px;
   color: white;
+
+  display: flex;               
+  justify-content: space-between;
+  align-items: center;
 }
 
 .ContSmall h1 {
@@ -153,11 +165,22 @@ const { data: periodsData } = useapi('/periods', {
   opacity: 0.9;
 }
 
+.left {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.right {
+  display: flex;
+  align-items: center;
+}
+
 /* CONTENEDOR PRINCIPAL */
 .ContBig {
   background: var(--color-Blanco);
   width: 1000px;
-  height: 500px; /* puedes subirlo a 600 o más */
+  height: 400px; 
   overflow-y: auto;
   border-radius: 20px;
   margin: 30px auto;

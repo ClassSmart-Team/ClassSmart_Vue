@@ -18,7 +18,7 @@ const emit = defineEmits(['view-schedule', 'view-grades'])
   <div class="child-card">
     <div class="card-header">
       <div class="avatar-mini">
-        {{ child.name.charAt(0).toUpperCase() }}
+        {{ child.name.charAt(0).toUpperCase() || '?' }}
       </div>
       <div class="header-text">
         <h3>{{ child.name }}</h3>
@@ -34,14 +34,14 @@ const emit = defineEmits(['view-schedule', 'view-grades'])
       </div>
       <div class="info-row">
         <span class="label">Estado:</span>
-        <span :class="['status-pill', child.status.toLowerCase()]">
-          {{ child.status }}
+        <span :class="['status-pill', (child.status || 'inactivo').toLowerCase()]">
+          {{ child.status || 'Desconocido' }}
         </span>
       </div>
     </div>
 
     <div class="card-footer">
-      <button @click="emit('view-schedule', child.id)" class="btn-action primary">Horario</button>
+      <button @click="emit('view-schedule', child)" class="btn-action primary">Horario</button>
     </div>
   </div>
 </template>

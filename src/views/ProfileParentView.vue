@@ -91,9 +91,16 @@ async function updateProfile() {
 
 <template>
   <SidebarLayout>
-    <div v-if="isFetching" class="loading-state">Cargando datos del perfil...</div>
+    <div v-if="isFetching" class="state-container">
+      <div class="loader-dots"></div>
+      <p class="state-msg">Cargando datos del perfil...</p>
+    </div>
 
-    <div v-else-if="error" class="error-state">Hubo un error al cargar tu información.</div>
+    <div v-else-if="error" class="state-container error">
+      <div class="icon-circle">⚠️</div>
+      <p class="state-msg">Hubo un error al cargar tu información.</p>
+      <span class="state-subtitle">Intenta recargar la página más tarde.</span>
+    </div>
 
     <template v-else-if="user">
       <div class="ContSmall center profile-header">
@@ -101,7 +108,7 @@ async function updateProfile() {
         <h1>Mi Perfil</h1>
       </div>
 
-      <div v class="ContBig" style="margin-top: 40px">
+      <div class="ContBig" style="margin-top: 40px">
         <div class="profile-grid">
           <section class="info-section">
             <h3>Información Personal</h3>
@@ -146,9 +153,10 @@ async function updateProfile() {
                 </div>
               </div>
 
-              <p v-if="!user.children?.length" class="no-children">
-                No hay hijos vinculados a esta cuenta.
-              </p>
+              <div v-if="!user.children?.length" class="no-children-empty">
+                <div class="icon-mini">👨‍👩‍👧‍👦</div>
+                <p>No hay hijos vinculados a esta cuenta.</p>
+              </div>
             </div>
 
             <div class="info-box">
@@ -185,7 +193,11 @@ async function updateProfile() {
 
             <div class="form-group">
               <label>Contraseña</label>
-              <input v-model="form.password" type="password" placeholder="Dejar en blanco para no cambiar" />
+              <input
+                v-model="form.password"
+                type="password"
+                placeholder="Dejar en blanco para no cambiar"
+              />
             </div>
 
             <div class="modal-actions">
@@ -200,6 +212,97 @@ async function updateProfile() {
 </template>
 
 <style scoped>
+.state-container {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 80px 20px;
+  text-align: center;
+}
+
+.state-msg {
+  font-size: 1.1rem;
+  font-weight: 600;
+  color: #555;
+  margin-top: 15px;
+}
+
+.state-subtitle {
+  font-size: 0.9rem;
+  color: #999;
+  margin-top: 5px;
+}
+
+.icon-circle {
+  width: 70px;
+  height: 70px;
+  background: #f0f2f5;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 2rem;
+  margin-bottom: 10px;
+}
+
+.error .icon-circle {
+  background: #fff1f0;
+}
+
+.loader-dots {
+  width: 50px;
+  aspect-ratio: 2;
+  --_g: no-repeat radial-gradient(circle closest-side, #000 90%, #0000);
+  background:
+    var(--_g) 0% 50%,
+    var(--_g) 50% 50%,
+    var(--_g) 100% 50%;
+  background-size: calc(100% / 3) 50%;
+  animation: l3 1s infinite linear;
+  opacity: 0.3;
+}
+@keyframes l3 {
+  20% {
+    background-position:
+      0% 0%,
+      50% 50%,
+      100% 50%;
+  }
+  40% {
+    background-position:
+      0% 100%,
+      50% 0%,
+      100% 50%;
+  }
+  60% {
+    background-position:
+      0% 50%,
+      50% 100%,
+      100% 0%;
+  }
+  80% {
+    background-position:
+      0% 50%,
+      50% 50%,
+      100% 100%;
+  }
+}
+
+.no-children-empty {
+  text-align: center;
+  padding: 30px;
+  background: #fafafa;
+  border-radius: 15px;
+  border: 2px dashed #eee;
+  color: #888;
+}
+
+.icon-mini {
+  font-size: 1.5rem;
+  margin-bottom: 10px;
+}
+
 .ContSmall {
   background: var(--color-Azul);
   width: 95%;
@@ -228,7 +331,7 @@ async function updateProfile() {
 
 .ContBig {
   background: var(--color-Blanco);
-  width: 95%;
+  width: 90%;
   max-width: 1000px;
   border-radius: 20px;
   margin: 40px auto;
@@ -242,12 +345,7 @@ async function updateProfile() {
 }
 
 .ContBig::-webkit-scrollbar {
-  width: 8px;
   display: none;
-}
-.ContBig::-webkit-scrollbar-thumb {
-  background: #ccc;
-  border-radius: 10px;
 }
 
 .profile-grid {
@@ -295,17 +393,6 @@ h3 {
   font-weight: bold;
 }
 
-.status-pill {
-  font-size: 0.8rem;
-  font-weight: bold;
-}
-.status-pill.active {
-  color: #27ae60;
-}
-.status-pill.inactive {
-  color: #e74c3c;
-}
-
 .children-list {
   display: flex;
   flex-direction: column;
@@ -326,22 +413,6 @@ h3 {
   margin: 0;
   font-size: 0.95rem;
   color: var(--color-Texto);
-}
-.child-info span {
-  font-size: 0.8rem;
-  color: #999;
-}
-
-.btn-view-child {
-  margin-left: auto;
-  background: white;
-  border: 1px solid var(--color-AzulTres);
-  color: var(--color-AzulTres);
-  padding: 5px 10px;
-  border-radius: 8px;
-  font-size: 0.75rem;
-  cursor: pointer;
-  font-weight: bold;
 }
 
 .info-box {
@@ -374,18 +445,18 @@ h3 {
   }
 }
 
-/* Estilos para el Modal de Edición */
+/* Modal Estilos */
 .modal-overlay {
   position: fixed;
   top: 0;
   left: 0;
   width: 100%;
   height: 100%;
-  background: rgba(0, 0, 0, 0.5); /* Fondo oscuro transparente */
+  background: rgba(0, 0, 0, 0.5);
   display: flex;
   justify-content: center;
   align-items: center;
-  z-index: 1000; /* Asegura que esté por encima de todo */
+  z-index: 1000;
 }
 
 .modal-content {
@@ -400,7 +471,6 @@ h3 {
 .form-group {
   margin-bottom: 20px;
 }
-
 .form-group label {
   display: block;
   font-size: 0.85rem;
@@ -408,7 +478,6 @@ h3 {
   margin-bottom: 8px;
   font-weight: bold;
 }
-
 .form-group input {
   width: 100%;
   padding: 12px;
@@ -417,14 +486,15 @@ h3 {
   font-size: 1rem;
   box-sizing: border-box;
 }
-
+.input-disabled {
+  background: #f5f5f5;
+}
 .modal-actions {
   display: flex;
   justify-content: flex-end;
   gap: 15px;
   margin-top: 30px;
 }
-
 .btn-cancel {
   background: #f5f5f5;
   border: none;
@@ -434,7 +504,6 @@ h3 {
   cursor: pointer;
   font-weight: bold;
 }
-
 .btn-save {
   background: var(--color-AzulTres);
   color: white;
@@ -444,14 +513,11 @@ h3 {
   cursor: pointer;
   font-weight: bold;
 }
-
 .helper-text {
   display: block;
   font-size: 0.68rem;
   color: #a0a0a0;
   margin-top: -2px;
   margin-bottom: 5px;
-  text-transform: none;
-  font-weight: normal;
 }
 </style>
