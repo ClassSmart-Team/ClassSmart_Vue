@@ -20,6 +20,7 @@ import SettingsParentView from '@/views/SettingsParentView.vue'
 import ShowGroup from '@/views/ShowGroup.vue'
 import TaskDetailView from '@/views/TaskDetailView.vue'
 import ForumDetailView from '@/views/ForumDetailView.vue'
+import AdminHomeView from '@/views/AdminHomeView.vue'
 import { useAuthStore } from '@/stores/authStore'
 
 
@@ -37,6 +38,13 @@ const router = createRouter({
       name: 'AdminRegister',
       component: AdminRegistroView,
     },
+    {
+      path: '/admin/home',
+      name: 'AdminHome',
+      component: AdminHomeView,
+      meta: { requiresAuth: true, rol: 1 },
+    }
+    ,
 
     {
       path: '/register',
