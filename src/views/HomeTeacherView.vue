@@ -2,6 +2,10 @@
 <script setup lang="ts">
 import SidebarLayout from '@/components/TeacherSidebar.vue'
 
+
+const ua = useAuthStore()
+import { useAuthStore } from '@/stores/authStore.ts'
+
 </script>
 
 <template>
@@ -12,18 +16,26 @@ import SidebarLayout from '@/components/TeacherSidebar.vue'
 <SidebarLayout>
   <div class="contenido">
 
-    <div class="ContSmall center">
-      <h1>Pagina Home</h1>
-    </div>  
+      <div class="ContSmall">
+        <div class="left">
+          <div class="avatar">
+            {{ ua.credentials?.user.name.charAt(0) }}{{ ua.credentials?.user.lastname.charAt(0) }}
+          </div>
+          <h1>Bienvenido, {{ ua.credentials?.user.name }}</h1>
+
+
+        </div>
+
+          
+       </div> 
 
     <div class="ContBig">
-
       <div class="ContTittle center">
         <h3>Horario de clases</h3>
       </div>
 
     </div>   
-
+      
   </div>
 </SidebarLayout>
 
@@ -87,4 +99,32 @@ import SidebarLayout from '@/components/TeacherSidebar.vue'
   padding: 30px;
   box-shadow: 0 10px 30px #00000030;
 }
+
+.avatar {
+  width: 38px;
+  height: 38px;
+  border-radius: 50%;
+  background: #e1f5ee;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 14px;
+  font-weight: 500;
+  color: #0f6e56;
+}
+
+.left {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.right {
+  display: flex;
+  align-items: center;
+}
+
+
+
+
 </style>

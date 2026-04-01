@@ -20,12 +20,7 @@ const logout = () => {
 
           <RouterLink to="/teacher/home" class="link"> Home</RouterLink>
 
-          <RouterLink to="/teacher/profile" class="link link-perfil">
-            <div class="avatar">
-              {{ us.credentials?.user.name.charAt(0) }}{{ us.credentials?.user.lastname.charAt(0) }}
-            </div>
-            Perfil</RouterLink
-          >
+          <RouterLink to="/teacher/profile" class="link link-perfil">Perfil</RouterLink>
           <RouterLink to="/teacher/groups" class="link"> Grupos</RouterLink>
           <RouterLink to="/teacher/tasks" class="link"> Tareas</RouterLink>
           <RouterLink to="/teacher/announcements" class="link"> Anuncios</RouterLink>
