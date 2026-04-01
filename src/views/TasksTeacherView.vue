@@ -8,21 +8,6 @@ import { watch, ref, computed } from 'vue'
 import TeacherTaskCard from '@/components/TeacherTaskCard.vue'
 import { type Unit } from '@/types/types.ts'
 
-
-const filteredUnits = ref<Unit[]>([])
-watch(() => form.value.group_id, async (groupId) => {
-  if (!groupId) {
-    filteredUnits.value = []
-    form.value.unit_id = null
-    return
-  }
-  const { data } = await useapi(`/units?group_id=${groupId}`).json()
-  filteredUnits.value = data.value?.data ?? []
-  // reset unit si cambia grupo
-  form.value.unit_id = null
-})
-
-
 const initialTask: formtask = {
   title: '',
   description: '',
