@@ -301,11 +301,12 @@ const filteredActivities = computed(() => {
 .ContBig {
   background: var(--color-Blanco);
   width: 1000px;
-  min-height: 400px;
+  height: 400px;
   border-radius: 20px;
   margin: 30px auto;
   padding: 30px;
   box-shadow: 0 10px 30px #00000030;
+  overflow-y: auto;
 }
 
 /* GRID */

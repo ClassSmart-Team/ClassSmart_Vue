@@ -24,6 +24,10 @@ import TaskDetailTeacherView from '@/views/TaskDetailTeacherView.vue'
 import AdminHomeView from '@/views/AdminHomeView.vue'
 import { useAuthStore } from '@/stores/authStore'
 import TeacherShowGroupView from "@/views/TeacherShowGroupView.vue";
+import HomeStudentView from "@/views/HomeStudentView.vue";
+import TaskDetailStudentView from "@/views/TaskDetailStudentView.vue";
+import TaskStudentView from "@/views/TaskStudentView.vue";
+
 
 
 //ROLES//
@@ -35,6 +39,7 @@ import TeacherShowGroupView from "@/views/TeacherShowGroupView.vue";
 const router = createRouter({
   history: createWebHistory(import.meta.env.BASE_URL),
   routes: [
+    //ADMINISTRADOR//
     {
       path: '/adminRegister',
       name: 'AdminRegister',
@@ -47,7 +52,7 @@ const router = createRouter({
       meta: { requiresAuth: true, rol: 1 },
     }
     ,
-
+    
     {
       path: '/register',
       name: 'Register',
@@ -59,6 +64,8 @@ const router = createRouter({
       name: 'Login',
       component: LoginView,
     },
+
+    //TEACHER
 
     {
       path: '/teacher/home',
@@ -91,11 +98,11 @@ const router = createRouter({
     },
 
     {
-  path: '/teacher/tasks/:id',
-  name: 'teacherTasksDetail',
-  component: TaskDetailTeacherView,
-  meta: { requiresAuth: true, rol: [1, 2] },
-},
+    path: '/teacher/tasks/:id',
+    name: 'teacherTasksDetail',
+    component: TaskDetailTeacherView,
+    meta: { requiresAuth: true, rol: [1, 2] },
+    },
 
     {
       path: '/teacher/announcements',
@@ -123,6 +130,29 @@ const router = createRouter({
       component: SettingsView,
       meta: { requiresAuth: true },
     },
+
+    //STUDENT
+        {
+      path: '/student/home',
+      name: 'studentHome',
+      component: HomeStudentView,
+      meta: { requiresAuth: true, rol: 3 },
+    },
+
+            {
+      path: '/student/tasks',
+      name: 'studentTasks',
+      component: TaskStudentView,
+      meta: { requiresAuth: true, rol: 3 },
+    },
+
+
+{
+  path: '/student/tasks/:id',
+  name: 'studentTasksDetail',
+  component: TaskDetailStudentView,
+  meta: { requiresAuth: true, rol: [3] },
+},
 
 
 // Parent
