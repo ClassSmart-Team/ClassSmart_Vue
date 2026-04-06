@@ -5,9 +5,16 @@ import { useRouter } from 'vue-router';
 const use = useAuthStore();
 const router = useRouter();
 
+const logout = () => {
+  use.logout();
+  router.push('/login');
+};
 </script>
 
 <template>
+    <Contenedor>
+        
+    </Contenedor>
 </template>
 
 <style scoped>
