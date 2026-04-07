@@ -43,6 +43,13 @@ export interface formgroup {
   period_id: number
   active: true
 }
+export interface UnitRequest {
+  group_id:number,
+  name:string,
+  order:number,
+  start_date:string,
+  end_date:string
+}
 
 export type formtask = {
   title: string

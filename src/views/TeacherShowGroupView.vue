@@ -3,20 +3,132 @@ import { ref } from 'vue'
 import { useapi } from '@/assets/composables/useApi.ts'
 import { useRoute, useRouter } from 'vue-router'
 import { h } from 'vue'
-
+import type { User } from '@/types/types.ts'
+import type { UnitRequest } from '@/types/types.ts'
 const route = useRoute()
 const router = useRouter()
 const id = Number(route.params.id)
+const ur = ref<UnitRequest>({
+  group_id: id,
+  name: '',
+  order: 1,
+  start_date: '',
+  end_date: '',
+})
 
-const { data, isFetching, error } = useapi(`/groups/${id}`).json()
+function submitAddUnit() {
+  const { data: dat, onFetchResponse: onaddsubmitresposne } = useapi('units', {
+    method: 'POST',
+  })
+    .post(ur.value)
+    .json()
+  onaddsubmitresposne(() => {
+    alert(dat.value.message)
+    closeAddUnitModal()
+    reloadGroup()
+  })
+}
+
+// 🔥 IMPORTANTE: guardamos execute para recargar datos del grupo
+const { data, isFetching, error, execute: reloadGroup } = useapi(`/groups/${id}`).json()
 
 // --- COMPONENTES DE ICONOS NATIVOS (Vue 3 'h') ---
-// Ajustados para que se vean bien en fondo claro (stroke más oscuro)
-const IconBack = () => h('svg', { width: '20', height: '20', viewBox: '0 0 24 24', fill: 'none', stroke: 'currentColor', 'stroke-width': '2.5', 'stroke-linecap': 'round', 'stroke-linejoin': 'round' }, [h('line', { x1: '19', y1: '12', x2: '5', y2: '12' }), h('polyline', { points: '12 19 5 12 12 5' })])
-const IconUser = () => h('svg', { width: '18', height: '18', viewBox: '0 0 24 24', fill: 'none', stroke: 'currentColor', 'stroke-width': '2', 'stroke-linecap': 'round', 'stroke-linejoin': 'round' }, [h('path', { d: 'M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2' }), h('circle', { cx: '12', cy: '7', r: '4' })])
-const IconCalendar = () => h('svg', { width: '18', height: '18', viewBox: '0 0 24 24', fill: 'none', stroke: 'currentColor', 'stroke-width': '2', 'stroke-linecap': 'round', 'stroke-linejoin': 'round' }, [h('rect', { x: '3', y: '4', width: '18', height: '18', rx: '2', ry: '2' }), h('line', { x1: '16', y1: '2', x2: '16', y2: '6' }), h('line', { x1: '8', y1: '2', x2: '8', y2: '6' }), h('line', { x1: '3', y1: '10', x2: '21', y2: '10' })])
-const IconPlus = () => h('svg', { width: '18', height: '18', viewBox: '0 0 24 24', fill: 'none', stroke: 'currentColor', 'stroke-width': '2.5', 'stroke-linecap': 'round', 'stroke-linejoin': 'round' }, [h('line', { x1: '12', y1: '5', x2: '12', y2: '19' }), h('line', { x1: '5', y1: '12', x2: '19', y2: '12' })])
-const IconX = () => h('svg', { width: '20', height: '20', viewBox: '0 0 24 24', fill: 'none', stroke: 'currentColor', 'stroke-width': '2.5', 'stroke-linecap': 'round', 'stroke-linejoin': 'round' }, [h('line', { x1: '18', y1: '6', x2: '6', y2: '18' }), h('line', { x1: '6', y1: '6', x2: '18', y2: '18' })])
+const IconBack = () =>
+  h(
+    'svg',
+    {
+      width: '20',
+      height: '20',
+      viewBox: '0 0 24 24',
+      fill: 'none',
+      stroke: 'currentColor',
+      'stroke-width': '2.5',
+      'stroke-linecap': 'round',
+      'stroke-linejoin': 'round',
+    },
+    [
+      h('line', { x1: '19', y1: '12', x2: '5', y2: '12' }),
+      h('polyline', { points: '12 19 5 12 12 5' }),
+    ],
+  )
+
+const IconUser = () =>
+  h(
+    'svg',
+    {
+      width: '18',
+      height: '18',
+      viewBox: '0 0 24 24',
+      fill: 'none',
+      stroke: 'currentColor',
+      'stroke-width': '2',
+      'stroke-linecap': 'round',
+      'stroke-linejoin': 'round',
+    },
+    [
+      h('path', { d: 'M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2' }),
+      h('circle', { cx: '12', cy: '7', r: '4' }),
+    ],
+  )
+
+const IconCalendar = () =>
+  h(
+    'svg',
+    {
+      width: '18',
+      height: '18',
+      viewBox: '0 0 24 24',
+      fill: 'none',
+      stroke: 'currentColor',
+      'stroke-width': '2',
+      'stroke-linecap': 'round',
+      'stroke-linejoin': 'round',
+    },
+    [
+      h('rect', { x: '3', y: '4', width: '18', height: '18', rx: '2', ry: '2' }),
+      h('line', { x1: '16', y1: '2', x2: '16', y2: '6' }),
+      h('line', { x1: '8', y1: '2', x2: '8', y2: '6' }),
+      h('line', { x1: '3', y1: '10', x2: '21', y2: '10' }),
+    ],
+  )
+
+const IconPlus = () =>
+  h(
+    'svg',
+    {
+      width: '18',
+      height: '18',
+      viewBox: '0 0 24 24',
+      fill: 'none',
+      stroke: 'currentColor',
+      'stroke-width': '2.5',
+      'stroke-linecap': 'round',
+      'stroke-linejoin': 'round',
+    },
+    [
+      h('line', { x1: '12', y1: '5', x2: '12', y2: '19' }),
+      h('line', { x1: '5', y1: '12', x2: '19', y2: '12' }),
+    ],
+  )
+
+const IconX = () =>
+  h(
+    'svg',
+    {
+      width: '20',
+      height: '20',
+      viewBox: '0 0 24 24',
+      fill: 'none',
+      stroke: 'currentColor',
+      'stroke-width': '2.5',
+      'stroke-linecap': 'round',
+      'stroke-linejoin': 'round',
+    },
+    [
+      h('line', { x1: '18', y1: '6', x2: '6', y2: '18' }),
+      h('line', { x1: '6', y1: '6', x2: '18', y2: '18' }),
+    ],
+  )
 
 const getInitials = (name: string, lastname: string) => {
   return `${name.charAt(0)}${lastname.charAt(0)}`.toUpperCase()
@@ -30,21 +142,29 @@ const goBack = () => {
 const showAddStudentModal = ref(false)
 const showAddUnitModal = ref(false)
 const showStudentDetailModal = ref(false)
-const selectedStudent = ref<any>(null)
+const selectedStudent = ref<User | null>(null)
 
 // --- FORM STATES ---
 const selectedStudentId = ref<number | null>(null)
 const newUnitForm = ref({
   name: '',
   start_date: '',
-  end_date: ''
+  end_date: '',
 })
 
-// --- EXAMPLE: Available students (reemplaza con tu consulta real) ---
-const availableStudents = ref<Array<{ id: number; name: string; lastname: string; email: string }>>([])
+// --- Petición para traer estudiantes disponibles ---
+const { data: studentsData, execute: loadStudents } = useapi(`/groups/available-students/${id}`, {
+  method: 'GET',
+}).json()
+
+// Cargar estudiantes al abrir el modal
+const openAddStudentModal = () => {
+  showAddStudentModal.value = true
+  loadStudents()
+}
 
 // --- FUNCIONES PARA MODAL DE DETALLES DEL ESTUDIANTE ---
-const openStudentDetailModal = (student: any) => {
+const openStudentDetailModal = (student: User) => {
   selectedStudent.value = student
   showStudentDetailModal.value = true
 }
@@ -52,21 +172,6 @@ const openStudentDetailModal = (student: any) => {
 const closeStudentDetailModal = () => {
   showStudentDetailModal.value = false
   selectedStudent.value = null
-}
-
-// --- FUNCIONES MODALES ---
-const openAddStudentModal = async () => {
-  showAddStudentModal.value = true
-  // Aquí va tu consulta para obtener estudiantes disponibles
-  // REEMPLAZA ESTA LÍNEA CON TU CONSULTA REAL:
-  // const { data: students } = useapi('/students/available').json()
-  // availableStudents.value = students.value?.data || []
-
-  // Por ahora, usa este placeholder:
-  availableStudents.value = [
-    { id: 1, name: 'Juan', lastname: 'García', email: 'juan@example.com' },
-    { id: 2, name: 'María', lastname: 'López', email: 'maria@example.com' },
-  ]
 }
 
 const closeAddStudentModal = () => {
@@ -85,18 +190,26 @@ const closeAddUnitModal = () => {
 
 const submitAddStudent = async () => {
   if (!selectedStudentId.value) return
-  // Aquí va tu lógica para agregar el estudiante
-  console.log('Agregando estudiante:', selectedStudentId.value)
-  // await useapi(`/groups/${id}/students`, { method: 'POST', body: { student_id: selectedStudentId.value } })
-  closeAddStudentModal()
-}
 
-const submitAddUnit = async () => {
-  if (!newUnitForm.value.name || !newUnitForm.value.start_date || !newUnitForm.value.end_date) return
-  // Aquí va tu lógica para agregar la unidad
-  console.log('Agregando unidad:', newUnitForm.value)
-  // await useapi(`/groups/${id}/units`, { method: 'POST', body: newUnitForm.value })
-  closeAddUnitModal()
+  const { data: dd, error: err } = await useapi(`/groups/${id}/students`, {
+    method: 'POST',
+    body: JSON.stringify({ student_id: selectedStudentId.value }),
+  }).json()
+
+  if (err.value) {
+    alert('Error al inscribir estudiante')
+    return
+  }
+
+  alert(dd.value.message)
+
+  // 🔥 refrescar lista de alumnos inscritos
+  reloadGroup()
+
+  // 🔥 refrescar lista de disponibles
+  loadStudents()
+
+  closeAddStudentModal()
 }
 </script>
 
@@ -106,9 +219,7 @@ const submitAddUnit = async () => {
     <div v-else-if="error" class="state-msg error">Hubo un error al cargar los datos.</div>
 
     <div v-else-if="data?.data" class="main-layout">
-
       <aside class="sidebar-info">
-
         <button @click="goBack" class="btn-back-soft">
           <div class="back-icon-box">
             <IconBack />
@@ -152,15 +263,18 @@ const submitAddUnit = async () => {
             <h3>Estudiantes Inscritos</h3>
             <span class="count-pill">{{ data.data.students_count }}</span>
           </div>
-          <!-- BOTÓN INSCRIBIR ESTUDIANTE AQUÍ (ANTES DEL SCROLL) -->
+
           <button @click="openAddStudentModal" class="btn-inscribe-student">
             <IconPlus /> Inscribir Estudiante
           </button>
+
           <div class="students-scroll">
             <div v-for="student in data.data.students" :key="student.id" class="student-item">
               <div class="avatar">{{ getInitials(student.name, student.lastname) }}</div>
               <div class="student-detail">
-                <p class="name" @click="openStudentDetailModal(student)" style="cursor: pointer;">{{ student.name }} {{ student.lastname }}</p>
+                <p class="name" @click="openStudentDetailModal(student)" style="cursor: pointer">
+                  {{ student.name }} {{ student.lastname }}
+                </p>
                 <p class="email">{{ student.email }}</p>
               </div>
             </div>
@@ -172,9 +286,18 @@ const submitAddUnit = async () => {
         <section class="top-stats">
           <div class="stat-box box-solid-blue">
             <div class="stat-icon-wrapper stat-icon-primary">
-              <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                <path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"/>
-                <path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"/>
+              <svg
+                width="28"
+                height="28"
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                stroke-width="2"
+                stroke-linecap="round"
+                stroke-linejoin="round"
+              >
+                <path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20" />
+                <path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z" />
               </svg>
             </div>
             <div class="stat-text">
@@ -184,9 +307,18 @@ const submitAddUnit = async () => {
           </div>
           <div class="stat-box box-soft-blue">
             <div class="stat-icon-wrapper stat-icon-secondary">
-              <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/>
-                <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/>
+              <svg
+                width="28"
+                height="28"
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                stroke-width="2"
+                stroke-linecap="round"
+                stroke-linejoin="round"
+              >
+                <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7" />
+                <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z" />
               </svg>
             </div>
             <div class="stat-text">
@@ -199,7 +331,6 @@ const submitAddUnit = async () => {
         <section class="units-timeline">
           <div class="section-header">
             <h2>Estructura del Programa</h2>
-            <!-- BOTÓN AGREGAR UNIDAD AQUÍ -->
             <button @click="openAddUnitModal" class="btn-primary-add">
               <IconPlus /> Agregar Unidad
             </button>
@@ -212,12 +343,8 @@ const submitAddUnit = async () => {
                 <div class="unit-main">
                   <h3>{{ unit.name }}</h3>
                   <div class="date-row">
-                    <div class="date-tag start">
-                      <strong>INICIO</strong> {{ unit.start_date }}
-                    </div>
-                    <div class="date-tag end">
-                      <strong>TÉRMINO</strong> {{ unit.end_date }}
-                    </div>
+                    <div class="date-tag start"><strong>INICIO</strong> {{ unit.start_date }}</div>
+                    <div class="date-tag end"><strong>TÉRMINO</strong> {{ unit.end_date }}</div>
                   </div>
                 </div>
                 <button class="btn-manage-unit">Gestionar</button>
@@ -226,7 +353,6 @@ const submitAddUnit = async () => {
           </div>
         </section>
       </main>
-
     </div>
 
     <!-- MODAL: AGREGAR ESTUDIANTE -->
@@ -243,30 +369,20 @@ const submitAddUnit = async () => {
           <div class="modal-body">
             <div class="form-group">
               <label for="student-select">Seleccionar Estudiante</label>
-              <select
-                id="student-select"
-                v-model.number="selectedStudentId"
-                class="form-select"
-              >
-                <option :value="null" disabled>-- Elige un estudiante --</option>
-                <option
-                  v-for="student in availableStudents"
-                  :key="student.id"
-                  :value="student.id"
-                >
-                  {{ student.name }} {{ student.lastname }} ({{ student.email }})
+
+              <!-- 🔥 AQUÍ ESTABA EL ERROR: faltaba v-model -->
+              <select v-model="selectedStudentId">
+                <option value="">-- Selecciona un estudiante --</option>
+                <option v-for="student in studentsData?.data" :key="student.id" :value="student.id">
+                  {{ student.name }} {{ student.lastname }}
                 </option>
               </select>
             </div>
           </div>
 
           <div class="modal-footer">
-            <button @click="closeAddStudentModal" class="btn-cancel">
-              Cancelar
-            </button>
-            <button @click="submitAddStudent" class="btn-confirm">
-              Inscribir
-            </button>
+            <button @click="closeAddStudentModal" class="btn-cancel">Cancelar</button>
+            <button @click="submitAddStudent" class="btn-confirm">Inscribir</button>
           </div>
         </div>
       </div>
@@ -274,7 +390,11 @@ const submitAddUnit = async () => {
 
     <!-- MODAL: DETALLES DEL ESTUDIANTE -->
     <Teleport to="body">
-      <div v-if="showStudentDetailModal && selectedStudent" class="modal-overlay" @click.self="closeStudentDetailModal">
+      <div
+        v-if="showStudentDetailModal && selectedStudent"
+        class="modal-overlay"
+        @click.self="closeStudentDetailModal"
+      >
         <div class="modal-content">
           <div class="modal-header">
             <h2>Información del Estudiante</h2>
@@ -284,22 +404,28 @@ const submitAddUnit = async () => {
           </div>
 
           <div class="modal-body">
-            <!-- AVATAR GRANDE -->
             <div class="student-avatar-large">
               {{ getInitials(selectedStudent.name, selectedStudent.lastname) }}
             </div>
 
-            <!-- NOMBRE -->
             <div class="student-info-section">
               <h3>{{ selectedStudent.name }} {{ selectedStudent.lastname }}</h3>
             </div>
 
-            <!-- EMAIL -->
             <div class="info-item">
               <div class="info-icon email-icon">
-                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                  <rect x="2" y="4" width="20" height="16" rx="2"/>
-                  <path d="m22 7-8.97 5.7a1.94 1.94 0 0 1-2.06 0L2 7"/>
+                <svg
+                  width="18"
+                  height="18"
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  stroke="currentColor"
+                  stroke-width="2"
+                  stroke-linecap="round"
+                  stroke-linejoin="round"
+                >
+                  <rect x="2" y="4" width="20" height="16" rx="2" />
+                  <path d="m22 7-8.97 5.7a1.94 1.94 0 0 1-2.06 0L2 7" />
                 </svg>
               </div>
               <div class="info-content">
@@ -308,11 +434,21 @@ const submitAddUnit = async () => {
               </div>
             </div>
 
-            <!-- TELÉFONO (con enlace para llamar) -->
-            <div class="info-item" v-if="selectedStudent.cellphone">
+            <div class="info-item">
               <div class="info-icon phone-icon">
-                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                  <path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72 12.84 12.84 0 0 0 .7 2.81 2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45 12.84 12.84 0 0 0 2.81.7A2 2 0 0 1 22 16.92z"/>
+                <svg
+                  width="18"
+                  height="18"
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  stroke="currentColor"
+                  stroke-width="2"
+                  stroke-linecap="round"
+                  stroke-linejoin="round"
+                >
+                  <path
+                    d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72 12.84 12.84 0 0 0 .7 2.81 2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45 12.84 12.84 0 0 0 2.81.7A2 2 0 0 1 22 16.92z"
+                  />
                 </svg>
               </div>
               <div class="info-content">
@@ -323,12 +459,22 @@ const submitAddUnit = async () => {
               </div>
             </div>
 
-            <!-- ID DEL ESTUDIANTE -->
-            <div class="info-item" v-if="selectedStudent.id">
+            <div class="info-item">
               <div class="info-icon id-icon">
-                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                  <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2z"/>
-                  <text x="12" y="16" text-anchor="middle" font-size="10" fill="currentColor">ID</text>
+                <svg
+                  width="18"
+                  height="18"
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  stroke="currentColor"
+                  stroke-width="2"
+                  stroke-linecap="round"
+                  stroke-linejoin="round"
+                >
+                  <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2z" />
+                  <text x="12" y="16" text-anchor="middle" font-size="10" fill="currentColor">
+                    ID
+                  </text>
                 </svg>
               </div>
               <div class="info-content">
@@ -337,27 +483,30 @@ const submitAddUnit = async () => {
               </div>
             </div>
 
-            <!-- INFORMACIÓN ADICIONAL SI EXISTE -->
-            <div class="info-item" v-if="selectedStudent.enrollment_date">
-              <div class="info-icon date-icon">
-                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                  <rect x="3" y="4" width="18" height="18" rx="2" ry="2"/>
-                  <line x1="16" y1="2" x2="16" y2="6"/>
-                  <line x1="8" y1="2" x2="8" y2="6"/>
-                  <line x1="3" y1="10" x2="21" y2="10"/>
+            <div class="info-item">
+              <div class="info-icon status-icon">
+                <svg
+                  width="18"
+                  height="18"
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  stroke="currentColor"
+                  stroke-width="2"
+                  stroke-linecap="round"
+                  stroke-linejoin="round"
+                >
+                  <polyline points="20 6 9 17 4 12" />
                 </svg>
               </div>
               <div class="info-content">
-                <label>Fecha de Inscripción</label>
-                <p>{{ selectedStudent.enrollment_date }}</p>
+                <label>Estado</label>
+                <p>{{ selectedStudent.active ? 'Activo' : 'Inactivo' }}</p>
               </div>
             </div>
           </div>
 
           <div class="modal-footer">
-            <button @click="closeStudentDetailModal" class="btn-cancel">
-              Cerrar
-            </button>
+            <button @click="closeStudentDetailModal" class="btn-cancel">Cerrar</button>
           </div>
         </div>
       </div>
@@ -379,59 +528,50 @@ const submitAddUnit = async () => {
               <label for="unit-name">Nombre de la Unidad</label>
               <input
                 id="unit-name"
-                v-model="newUnitForm.name"
+                v-model="ur.name"
                 type="text"
                 class="form-input"
                 placeholder="Ej: Introducción a los Conceptos Básicos"
+              />
+              <label for="unit-name">Orden de la Unidad</label>
+              <input
+                id="unit-name"
+                v-model="ur.order"
+                type="number"
+                class="form-input"
+                placeholder="un numero entero papi"
               />
             </div>
 
             <div class="form-row">
               <div class="form-group">
                 <label for="unit-start">Fecha de Inicio</label>
-                <input
-                  id="unit-start"
-                  v-model="newUnitForm.start_date"
-                  type="date"
-                  class="form-input"
-                />
+                <input id="unit-start" v-model="ur.start_date" type="date" class="form-input" />
               </div>
               <div class="form-group">
                 <label for="unit-end">Fecha de Término</label>
-                <input
-                  id="unit-end"
-                  v-model="newUnitForm.end_date"
-                  type="date"
-                  class="form-input"
-                />
+                <input id="unit-end" v-model="ur.end_date" type="date" class="form-input" />
               </div>
             </div>
           </div>
 
           <div class="modal-footer">
-            <button @click="closeAddUnitModal" class="btn-cancel">
-              Cancelar
-            </button>
-            <button @click="submitAddUnit" class="btn-confirm">
-              Crear Unidad
-            </button>
+            <button @click="closeAddUnitModal" class="btn-cancel">Cancelar</button>
+            <button @click="submitAddUnit" class="btn-confirm">Crear Unidad</button>
           </div>
         </div>
       </div>
     </Teleport>
-
   </div>
 </template>
 
 <style scoped>
 /* --- CONFIGURACIÓN DE COLORES ANTI-CEGUERA (SOFT LIGHT) --- */
 .dashboard-container.soft-light-mode {
-  /* Fondo principal: Azul grisáceo muy pálido */
-  background-color: #d6e9fa; /* --color-Contenedor */
+  background-color: #d6e9fa;
   min-height: 100vh;
   padding: 30px;
-  /* Texto principal: Oscuro azulado para buen contraste */
-  color: #242f4e; /* --color-OscuroAzulado */
+  color: #242f4e;
   font-family: 'Plus Jakarta Sans', Inter, sans-serif;
   font-size: 15px;
 }
@@ -445,13 +585,13 @@ const submitAddUnit = async () => {
 }
 
 /* --- TARJETAS SOFT LIGHT --- */
-.soft-card, .unit-card-soft {
-  /* Fondo de tarjetas: Azul pastel claro */
-  background-color: #9bd3f1; /* --color-ContenedorClaro */
+.soft-card,
+.unit-card-soft {
+  background-color: #9bd3f1;
   border-radius: 20px;
   padding: 25px;
-  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.04); /* Sombras muy suaves */
-  border: 1px solid rgba(139, 194, 243, 0.2); /* var(--color-Azul) con opacidad */
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.04);
+  border: 1px solid rgba(139, 194, 243, 0.2);
 }
 
 /* --- BOTÓN REGRESAR ESTILO SOFT --- */
@@ -459,8 +599,8 @@ const submitAddUnit = async () => {
   display: flex;
   align-items: center;
   gap: 15px;
-  background-color: #9bd3f1; /* Fondo suave */
-  border: 1px solid rgba(30, 103, 163, 0.1); /* var(--color-AzulTres) suave */
+  background-color: #9bd3f1;
+  border: 1px solid rgba(30, 103, 163, 0.1);
   padding: 12px 20px;
   border-radius: 18px;
   cursor: pointer;
@@ -472,38 +612,39 @@ const submitAddUnit = async () => {
 .back-icon-box {
   width: 42px;
   height: 42px;
-  background-color: #d6e9fa; /* Color de fondo principal */
+  background-color: #d6e9fa;
   border-radius: 12px;
   display: flex;
   align-items: center;
   justify-content: center;
-  color: #1e67a3; /* --color-AzulTres */
+  color: #1e67a3;
   transition: 0.3s;
 }
 
 .back-text small {
-  color: #0c4a7a; /* --color-TitulosMenu */
+  color: #0c4a7a;
   font-size: 0.7rem;
   text-transform: uppercase;
   font-weight: 800;
   letter-spacing: 1px;
-  text-align: left; display: block;
+  text-align: left;
+  display: block;
 }
 
 .back-text span {
-  color: #242f4e; /* --color-OscuroAzulado */
+  color: #242f4e;
   font-weight: 800;
   font-size: 1rem;
 }
 
 .btn-back-soft:hover {
-  background-color: #8bc2f3; /* --color-Azul */
+  background-color: #8bc2f3;
   transform: translateX(-5px);
   border-color: transparent;
 }
 
 .btn-back-soft:hover .back-icon-box {
-  background-color: #1e67a3; /* --color-AzulTres */
+  background-color: #1e67a3;
   color: #ffffff;
 }
 
@@ -672,7 +813,7 @@ const submitAddUnit = async () => {
   gap: 15px;
   align-items: center;
   padding: 12px 0;
-  border-bottom: 1px solid rgba(0,0,0,0.03);
+  border-bottom: 1px solid rgba(0, 0, 0, 0.03);
   transition: all 0.2s;
 }
 
@@ -736,14 +877,14 @@ const submitAddUnit = async () => {
   display: flex;
   align-items: center;
   gap: 20px;
-  box-shadow: 0 8px 24px rgba(0,0,0,0.08);
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.08);
   transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-  border: 1px solid rgba(255,255,255,0.2);
+  border: 1px solid rgba(255, 255, 255, 0.2);
 }
 
 .stat-box:hover {
   transform: translateY(-4px);
-  box-shadow: 0 12px 32px rgba(0,0,0,0.12);
+  box-shadow: 0 12px 32px rgba(0, 0, 0, 0.12);
 }
 
 .box-solid-blue {
@@ -769,7 +910,7 @@ const submitAddUnit = async () => {
 }
 
 .stat-icon-primary {
-  background: rgba(255,255,255,0.2);
+  background: rgba(255, 255, 255, 0.2);
   color: white;
 }
 
@@ -778,7 +919,7 @@ const submitAddUnit = async () => {
   color: #1e67a3;
 }
 
-.stat-text{
+.stat-text {
   display: flex;
   flex-direction: column;
   gap: 6px;
@@ -1198,6 +1339,11 @@ const submitAddUnit = async () => {
 .date-icon {
   background: rgba(249, 115, 22, 0.1);
   color: #f97316;
+}
+
+.status-icon {
+  background: rgba(34, 197, 94, 0.1);
+  color: #22c55e;
 }
 
 .info-content {
