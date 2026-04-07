@@ -16,6 +16,20 @@ const statusColor = computed(() => {
   if (s === 'cancelada') return 'cancelada'
   return ''
 })
+
+const submissions = computed(() => props.task.submissions ?? [])
+
+const submissionsCount = computed(() => submissions.value.length)
+
+const gradedCount = computed(() =>
+  submissions.value.filter((s: any) => s.status === 'Calificada').length
+)
+
+const lateCount = computed(() =>
+  submissions.value.filter((s: any) =>
+    new Date(s.submission_date) > new Date(props.task.end_date)
+  ).length
+)
 </script>
 
 <template>
@@ -27,6 +41,13 @@ const statusColor = computed(() => {
       <h4>{{ task.title }}</h4>
       <p class="task-desc">{{ task.description }}</p>
       <p class="due-date">Límite: {{ formatDate(task.end_date) }}</p>
+
+      <div class="submission-stats">
+    <span> {{ submissionsCount }} entregas</span>
+    <span> {{ gradedCount }} calificadas</span>
+    <span v-if="lateCount"> {{ lateCount }} tardías</span>
+      </div>
+
     </div>
 
     <div class="task-actions">
@@ -122,4 +143,14 @@ const statusColor = computed(() => {
   background: var(--color-Azul);
   color: white;
 }
+
+.submission-stats {
+  margin-top: 6px;
+  font-size: 0.75rem;
+  color: #475569;
+  display: flex;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+
 </style>

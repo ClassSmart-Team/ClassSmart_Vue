@@ -8,7 +8,7 @@ const route = useRoute()
 const router = useRouter()
 const taskId = route.params.id
 
-// ── Estado ────────────────────────────────────────────────────────────────────
+// ── Estado ─────────────────────────────────────────
 const isEditing = ref(false)
 const isSaving  = ref(false)
 const saveError = ref('')
@@ -16,82 +16,25 @@ const saveError = ref('')
 const isGrading    = ref(false)
 const gradeError   = ref('')
 const gradeSuccess = ref(false)
+const selectedSubmission = ref<any>(null)
 
-// ── GET tarea ─────────────────────────────────────────────────────────────────
+// ── GET tarea ──────────────────────────────────────
 const { data, error, isFetching, execute: reload } = useapi(`/assignments/${taskId}`).json()
-const { data: groupsData } = useapi('/groups').json()
-const { data: unitsData } = useapi('/units').json()
 
 const task = computed(() => data.value?.data ?? data.value ?? null)
 
-// ── Formulario de edición ─────────────────────────────────────────────────────
-const form = ref({
-  title: '',
-  description: '',
-  start_date: '',
-  end_date: '',
-  status: '',
-  group_id: '',
-  unit_id: '',
-})
+//  IMPORTANTE: ahora sí usamos TODAS las submissions
+const submissions = computed(() => task.value?.submissions ?? [])
 
-function openEdit() {
-  if (!task.value) return
-  form.value = {
-    title:       task.value.title       ?? '',
-    description: task.value.description ?? '',
-    start_date:  task.value.start_date  ? task.value.start_date.slice(0, 16)  : '',
-    end_date:    task.value.end_date    ? task.value.end_date.slice(0, 16)    : '',
-    status:      task.value.status      ?? 'Activa',
-    group_id:    task.value.group_id    ? String(task.value.group_id)         : '',
-    unit_id:     task.value.unit_id     ? String(task.value.unit_id)          : '',
-  }
-  isEditing.value = true
-}
-
-function cancelEdit() {
-  isEditing.value = false
-  saveError.value  = ''
-}
-
-function saveEdit() {
-  isSaving.value = true
-  saveError.value = ''
-
-  const payload = {
-    ...form.value,
-    group_id: Number(form.value.group_id),
-    unit_id: Number(form.value.unit_id),
-    start_date: form.value.start_date.replace('T', ' ') + ':00',
-    end_date: form.value.end_date.replace('T', ' ') + ':00',
-  }
-
-  const { data: res, onFetchResponse, onFetchError } = useapi(`/assignments/${taskId}`)
-    .put(payload)
-    .json()
-
-  onFetchResponse(async () => {
-    isSaving.value = false
-    isEditing.value = false
-    await reload()
-  })
-
-  onFetchError(() => {
-    isSaving.value = false
-    saveError.value = res.value?.message ?? 'Error al guardar los cambios.'
-  })
-}
-
-// ── Lógica de Calificación ────────────────────────────────────────────────────
+// ── Calificar ──────────────────────────────────────
 const gradeForm = ref({ grade: '', feedback: '' })
 
-function openGrade() {
-  if (task.value?.submission?.grade != null) {
-    gradeForm.value.grade = String(task.value.submission.grade)
-    gradeForm.value.feedback = task.value.submission.feedback ?? ''
-  } else {
-    gradeForm.value = { grade: '', feedback: '' }
-  }
+function openGrade(sub: any) {
+  selectedSubmission.value = sub
+
+  gradeForm.value.grade = sub.grade != null ? String(sub.grade) : ''
+  gradeForm.value.feedback = sub.feedback ?? ''
+
   isGrading.value = true
   gradeError.value = ''
   gradeSuccess.value = false
@@ -99,242 +42,172 @@ function openGrade() {
 
 function cancelGrade() {
   isGrading.value = false
-  gradeError.value = ''
+  selectedSubmission.value = null
 }
 
 function saveGrade() {
-  const submissionId = task.value?.submission?.id
+  const submissionId = selectedSubmission.value?.id
   if (!submissionId) return
 
   const gradeNum = Number(gradeForm.value.grade)
-  const maxPoints = task.value?.points ?? 100
 
-  if (isNaN(gradeNum) || gradeNum < 0 || gradeNum > maxPoints) {
-    gradeError.value = `La calificación debe estar entre 0 y ${maxPoints}.`
+  if (isNaN(gradeNum) || gradeNum < 0 || gradeNum > 10) {
+    gradeError.value = 'La calificación debe estar entre 0 y 10'
     return
   }
 
   const { data: res, onFetchResponse, onFetchError } = useapi(`/submissions/${submissionId}/grade`)
-    .patch({ 
-      grade: gradeNum, 
-      feedback: gradeForm.value.feedback 
+    .patch({
+      grade: gradeNum,
+      feedback: gradeForm.value.feedback
     })
     .json()
 
   onFetchResponse(async () => {
     gradeSuccess.value = true
     await reload()
-    setTimeout(() => { 
+
+    setTimeout(() => {
       isGrading.value = false
-      gradeSuccess.value = false 
-    }, 1500)
+      gradeSuccess.value = false
+      selectedSubmission.value = null
+    }, 1200)
   })
 
   onFetchError(() => {
-    gradeError.value = res.value?.message ?? 'Error al procesar la calificación.'
+    gradeError.value = res.value?.message ?? 'Error al calificar'
   })
 }
 
-// ── Helpers ───────────────────────────────────────────────────────────────────
+// ── Helpers ────────────────────────────────────────
 const formatDate = (dateStr: string) =>
   new Date(dateStr).toLocaleString('es-MX', {
-    day: '2-digit', month: 'long', hour: '2-digit', minute: '2-digit',
+    day: '2-digit',
+    month: 'long',
+    hour: '2-digit',
+    minute: '2-digit'
   })
 
-const isLate = computed(() => {
-  if (!task.value?.submission) return false
-  return new Date(task.value.submission.submission_date) > new Date(task.value.end_date)
-})
-
-const statusClass = computed(() => task.value?.status?.toLowerCase() ?? '')
+const isLate = (sub: any) => {
+  return new Date(sub.submission_date) > new Date(task.value.end_date)
+}
 </script>
-
 <template>
   <div class="bg-page">
     <SidebarLayout>
 
+      <!-- LOADING -->
       <div v-if="isFetching" class="center-state">
-        <div class="spinner"></div>
-        <p>Cargando tarea...</p>
+        <p>Cargando...</p>
       </div>
 
-      <div v-else-if="error" class="error-banner">
-        <span>⚠</span>
-        <p>Error al cargar la tarea.</p>
+      <!-- ERROR -->
+      <div v-else-if="error">
+        <p>Error al cargar</p>
       </div>
 
+      <!-- CONTENIDO -->
       <template v-else-if="task">
 
         <div class="ContSmall">
-          <button class="btn-back" @click="router.back()">← Volver</button>
-
-          <div class="header-body">
-            <div class="header-text">
-              <h1>{{ task.title }}</h1>
-              <p>
-                Inicio: {{ formatDate(task.start_date) }} &nbsp;·&nbsp;
-                Límite: {{ formatDate(task.end_date) }}
-              </p>
-            </div>
-
-            <div class="header-right">
-              <span class="status-pill" :class="statusClass">{{ task.status }}</span>
-              <button class="btn-edit" @click="openEdit">✏ Editar</button>
-            </div>
-          </div>
+          <button @click="router.back()">← Volver</button>
+          <h1>{{ task.title }}</h1>
         </div>
 
-        <Teleport to="body">
-          <div v-if="isEditing" class="modal-overlay" @click.self="cancelEdit">
-            <div class="modal-box">
-              <h2>Editar Tarea</h2>
-
-              <label>Título</label>
-              <input v-model="form.title" type="text" placeholder="Título de la tarea" />
-
-              <label>Descripción</label>
-              <textarea v-model="form.description" placeholder="Descripción..."></textarea>
-
-              <div class="modal-grid">
-                <div>
-                  <label>Fecha de inicio</label>
-                  <input v-model="form.start_date" type="datetime-local" />
-                </div>
-                <div>
-                  <label>Fecha de entrega</label>
-                  <input v-model="form.end_date" type="datetime-local" />
-                </div>
-              </div>
-
-              <div class="modal-grid">
-                <div>
-                  <label>Grupo</label>
-                  <select v-model="form.group_id">
-                    <option value="">Selecciona un grupo</option>
-                    <option v-for="g in groupsData?.data ?? []" :key="g.id" :value="g.id">
-                      {{ g.name }}
-                    </option>
-                  </select>
-                </div>
-                <div>
-                  <label>Unidad</label>
-                  <select v-model="form.unit_id">
-                    <option value="">Selecciona una unidad</option>
-                    <option v-for="u in unitsData?.data ?? []" :key="u.id" :value="u.id">
-                      {{ u.name }}
-                    </option>
-                  </select>
-                </div>
-              </div>
-
-              <label>Estado</label>
-              <select v-model="form.status">
-                <option value="Activa">Activa</option>
-                <option value="Cerrada">Cerrada</option>
-                <option value="Cancelada">Cancelada</option>
-              </select>
-
-              <p v-if="saveError" class="save-error">{{ saveError }}</p>
-
-              <div class="modal-actions">
-                <button class="btn-cancel" @click="cancelEdit" :disabled="isSaving">Cancelar</button>
-                <button class="btn-save" @click="saveEdit" :disabled="isSaving">
-                  {{ isSaving ? 'Guardando...' : 'Guardar cambios' }}
-                </button>
-              </div>
-            </div>
-          </div>
-        </Teleport>
-
-        <Teleport to="body">
-          <div v-if="isGrading" class="modal-overlay" @click.self="cancelGrade">
-            <div class="modal-box">
-              <h2>Calificar entrega</h2>
-              <p class="grade-subtitle">
-                Alumno: <strong>{{ task.submission?.student_name ?? 'Estudiante' }}</strong>
-              </p>
-
-              <label>Calificación (0 – {{ task.points ?? 100 }})</label>
-              <input v-model="gradeForm.grade" type="number" :max="task.points ?? 100" />
-
-              <label>Retroalimentación</label>
-              <textarea v-model="gradeForm.feedback" placeholder="Comentarios del profesor..."></textarea>
-
-              <p v-if="gradeError" class="save-error">{{ gradeError }}</p>
-              <div v-if="gradeSuccess" class="success-banner">✅ Calificación guardada con éxito.</div>
-
-              <div class="modal-actions">
-                <button class="btn-cancel" @click="cancelGrade">Cancelar</button>
-                <button class="btn-save" @click="saveGrade" :disabled="!gradeForm.grade">
-                  Guardar nota
-                </button>
-              </div>
-            </div>
-          </div>
-        </Teleport>
-
+        <!-- LISTA DE ENTREGAS -->
         <div class="detail-container">
 
           <div class="ContBig">
-            <div class="section-tag">Instrucciones</div>
-            <p class="description-text">{{ task.description }}</p>
-          </div>
+            <h3>Entregas</h3>
 
-          <div class="ContBig submission-section" :class="{ graded: task.submission?.status === 'Calificada' }">
-            <div class="submission-header">
-              <div class="title-group">
-                <h3>Entrega del alumno</h3>
-                <span v-if="isLate" class="late-status">Entrega tardía</span>
-                <span v-else-if="task.submission" class="status-ok">{{ task.submission.status }}</span>
-                <span v-else class="status-pending">Sin entrega</span>
-              </div>
+            <!--  LOOP DE TODAS LAS SUBMISSIONS -->
+            <div
+              v-for="sub in submissions"
+              :key="sub.id"
+              class="submission-card"
+            >
+              <div class="submission-header">
 
-              <div class="header-actions">
-                <div v-if="task.submission?.grade != null" class="grade-display">
-                  <span class="score">{{ task.submission.grade }}</span>
-                  <span class="sep">/</span>
-                  <span class="total">{{ task.points ?? 100 }}</span>
+                <div>
+                  <strong>{{ sub.student?.name }}</strong>
+                  <p>{{ formatDate(sub.submission_date) }}</p>
+
+                  <span v-if="isLate(sub)" class="late">Tarde</span>
+                  <span v-else>{{ sub.status }}</span>
                 </div>
-                <button v-if="task.submission" class="btn-grade" @click="openGrade">
-                  {{ task.submission.status === 'Calificada' ? '✏ Editar nota' : '✔ Calificar' }}
-                </button>
+
+                <div>
+                  <span v-if="sub.grade != null">
+                    {{ sub.grade }}/10
+                  </span>
+
+                  <button @click="openGrade(sub)">
+                    {{ sub.status === 'Calificada' ? 'Editar' : 'Calificar' }}
+                  </button>
+                </div>
+
               </div>
+
+              <!-- ARCHIVOS -->
+              <div v-if="sub.files?.length">
+                <div v-for="f in sub.files" :key="f.id">
+                  📎 {{ f.file_name }}
+                </div>
+              </div>
+
+              <!-- FEEDBACK -->
+              <div v-if="sub.feedback">
+                <strong>Feedback:</strong>
+                <p>{{ sub.feedback }}</p>
+              </div>
+
             </div>
 
-            <div v-if="task.submission" class="submission-body">
-              <div v-if="task.submission.files?.length" class="student-files">
-                <div v-for="file in task.submission.files" :key="file.id" class="student-file-item">
-                  <span>📎</span>
-                  <span class="file-name">{{ file.name }}</span>
-                </div>
-              </div>
+            <p v-if="!submissions.length">
+              No hay entregas aún.
+            </p>
 
-              <div v-if="task.submission.feedback" class="comment-box">
-                <div class="avatar-circle">
-                  {{ task.submission.student_name?.charAt(0) ?? 'A' }}
-                </div>
-                <div class="comment-content">
-                  <strong>Retroalimentación del profesor</strong>
-                  <p>{{ task.submission.feedback }}</p>
-                </div>
-              </div>
-
-              <p class="sub-date">
-                Fecha de envío: {{ formatDate(task.submission.submission_date) }}
-              </p>
-            </div>
-
-            <div v-else class="empty-submission">
-              <p>El alumno aún no ha enviado su trabajo.</p>
-            </div>
           </div>
 
         </div>
+
+        <!-- MODAL CALIFICAR -->
+        <div v-if="isGrading" class="modal-overlay">
+          <div class="modal-box">
+
+            <h2>Calificar</h2>
+
+            <p>
+              Alumno:
+              <strong>{{ selectedSubmission?.student?.name }}</strong>
+            </p>
+
+            <input
+              v-model="gradeForm.grade"
+              type="number"
+              placeholder="Calificación"
+            />
+
+            <textarea
+              v-model="gradeForm.feedback"
+              placeholder="Feedback"
+            />
+
+            <p v-if="gradeError">{{ gradeError }}</p>
+            <p v-if="gradeSuccess">Guardado ✅</p>
+
+            <button @click="cancelGrade">Cancelar</button>
+            <button @click="saveGrade">Guardar</button>
+
+          </div>
+        </div>
+
       </template>
 
     </SidebarLayout>
   </div>
 </template>
+
 
 <style scoped>
 .bg-page {

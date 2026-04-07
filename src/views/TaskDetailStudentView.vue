@@ -11,7 +11,7 @@ const auth   = useAuthStore()
 const taskId = route.params.id
 
 // ── GET tarea ─────────────────────────────────────────────────────────────────
-const { data, error, isFetching, execute: reload } = useapi(`/assignments/${taskId}`).json()
+const { data, error, isFetching, execute: reload } = useapi(`/my-assignments/${taskId}`).json()
 const task = computed(() => data.value?.data ?? data.value ?? null)
 
 // ── Estado de entrega ─────────────────────────────────────────────────────────
@@ -41,15 +41,14 @@ async function submitTask() {
     fd.append('assignment_id', String(taskId))
     fd.append('file', selectedFile.value)
 
-    // El token viene de tu authStore — ajusta la key si es diferente
     const token = auth.credentials?.token
 
-    const res = await fetch(`${import.meta.env.VITE_API_URL}/submissions`, {
+    const res = await fetch(`https://api.sutando-user.me/api/submissions`, {
       method: 'POST',
       headers: {
         Authorization: `Bearer ${token}`,
         Accept: 'application/json',
-        // NO pongas Content-Type aquí — el navegador lo setea solo con el boundary
+
       },
       body: fd,
     })
@@ -216,7 +215,7 @@ const timeLeft = computed(() => {
               <div v-if="!selectedFile" class="upload-placeholder">
                 <span class="upload-icon">📁</span>
                 <p>Haz clic para seleccionar un archivo</p>
-                <span class="upload-hint">PDF, Word, ZIP — máx. 20MB</span>
+                <span class="upload-hint">PDF, Word, ZIP — máx. 10MB</span>
               </div>
               <div v-else class="upload-selected">
                 <span>📎</span>
@@ -230,7 +229,7 @@ const timeLeft = computed(() => {
             <p v-if="submitError" class="submit-error">{{ submitError }}</p>
 
             <div v-if="submitSuccess" class="success-banner">
-              ✅ Tarea entregada correctamente.
+               Tarea entregada correctamente.
             </div>
 
             <div class="submit-actions">

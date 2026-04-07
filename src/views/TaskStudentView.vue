@@ -13,7 +13,8 @@ const currentTab = ref('pendientes')
 
 // ── GET tareas ───────────────────────────────────────────────────────────────
 
-const { data, error, isFetching } = useapi('/assignments', {
+
+const { data, error, isFetching } = useapi('/my-assignments', {
   method: 'GET',
 }).json()
 

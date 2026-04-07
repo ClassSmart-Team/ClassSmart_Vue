@@ -6,7 +6,6 @@ import { useAuthStore } from '@/stores/authStore.ts'
 import { type formtask } from '@/types/types.ts'
 import { watch, ref, computed } from 'vue'
 import TeacherTaskCard from '@/components/TeacherTaskCard.vue'
-import { type Unit } from '@/types/types.ts'
 
 const initialTask: formtask = {
   title: '',
@@ -21,44 +20,53 @@ const initialTask: formtask = {
 const form = ref<formtask>({ ...initialTask })
 const currentTab = ref('pendientes')
 
-// ── Auth ─────────────────────────────────────────────────────────────────────
+// AUTH
 const ua = useAuthStore()
 
-// ── Modal ────────────────────────────────────────────────────────────────────
+// MODAL
 const showModal = ref(false)
 
-// ── GET tareas ───────────────────────────────────────────────────────────────
+// GET tareas
 const { data, error, isFetching, execute: reloadTasks } = useapi('/assignments', {
   method: 'GET',
 }).json()
 
-// ── Selects auxiliares ───────────────────────────────────────────────────────
-  const { data: groupsData } = useapi('/groups').json()
-// Nota: unitsData ya no será necesario si usamos la data de groupsData
-// Propiedad computada para obtener las unidades del grupo seleccionado
-  const availableUnits = computed(() => { 
-    const selectedGroupId = form.value.group_id
-    if (!selectedGroupId||!groupsData.value?.data) return []
-    const group = groupsData.value.data.find((g: any) => g.id === selectedGroupId)
-    return group ? group.units : []
-  })
+// GET grupos
+const { data: groupsData } = useapi('/groups').json()
 
-  // Resetear la unidad si el grupo cambia
-  watch(() => form.value.group_id, () => {
-    form.value.unit_id = null
-  })
+//  UNIDADES FILTRADAS
+const availableUnits = computed(() => { 
+  const selectedGroupId = form.value.group_id
+  if (!selectedGroupId || !groupsData.value?.data) return []
+  const group = groupsData.value.data.find((g: any) => g.id === selectedGroupId)
+  return group ? group.units : []
+})
 
+watch(() => form.value.group_id, () => {
+  form.value.unit_id = null
+})
 
+//  TRAER SUBMISSIONS MANUALMENTE
+watch(data, async () => {
+  if (!data.value) return
 
-// ── POST tarea ───────────────────────────────────────────────────────────────
+  const list = data.value?.data ?? data.value ?? []
+
+  for (const task of list) {
+    if (task.submissions) continue
+
+    const { data: subData } = await useapi(`/submissions?assignment_id=${task.id}`).json()
+    task.submissions = subData.value?.data ?? []
+  }
+})
+
+// POST tarea
 function createTask() {
-
   if (!form.value.group_id || !form.value.unit_id) {
     alert('Debes seleccionar grupo y unidad')
     return
   }
 
- 
   const payload = {
     ...form.value,
     group_id: Number(form.value.group_id),
@@ -74,7 +82,7 @@ function createTask() {
   const { data: res, onFetchResponse } = useapi('/assignments', {
     method: 'POST',
   })
-    .post(payload) 
+    .post(payload)
     .json()
 
   onFetchResponse(async () => {
@@ -85,24 +93,31 @@ function createTask() {
   })
 }
 
+// FILTRO
 const filteredActivities = computed(() => {
   const list = data.value?.data ?? data.value ?? []
 
   return list.filter((a: any) => {
-    const hasSubmission = !!a.submission
-    const isGraded = a.submission?.status === 'Calificada'
-    const isLate =
-      hasSubmission &&
-      new Date(a.submission.submission_date) > new Date(a.end_date)
+    const submissions = a.submissions ?? []
+
+    const hasSubmission = submissions.length > 0
+    const isGraded = submissions.some((s: any) => s.status === 'Calificada')
+    const isLate = submissions.some((s: any) =>
+      new Date(s.submission_date) > new Date(a.end_date)
+    )
 
     if (currentTab.value === 'pendientes') return !hasSubmission
-    if (currentTab.value === 'entregadas') return hasSubmission && !isGraded && !isLate
+    if (currentTab.value === 'entregadas') return hasSubmission && !isLate
     if (currentTab.value === 'calificadas') return isGraded
     if (currentTab.value === 'tardias') return isLate
+
     return false
   })
 })
 </script>
+
+
+
 <template>
   <div class="bg-page">
     <SidebarLayout>
