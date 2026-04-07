@@ -6,6 +6,10 @@ import { useAuthStore } from '@/stores/authStore.ts'
 import { type formtask } from '@/types/types.ts'
 import { watch, ref, computed } from 'vue'
 import TeacherTaskCard from '@/components/TeacherTaskCard.vue'
+import { useRouter } from 'vue-router'
+
+const router = useRouter()
+const ua = useAuthStore()
 
 const initialTask: formtask = {
   title: '',
@@ -19,23 +23,23 @@ const initialTask: formtask = {
 
 const form = ref<formtask>({ ...initialTask })
 const currentTab = ref('pendientes')
+const loadingSubmissions = ref(false)
 
-// AUTH
-const ua = useAuthStore()
-
-// MODAL
+// MODALS
 const showModal = ref(false)
+const showEditModal = ref(false)
+const selectedTask = ref<any>(null)
 
-// GET tareas
-const { data, error, isFetching, execute: reloadTasks } = useapi('/assignments', {
+// ─────────────────────────────────────────
+// LLAMADAS A API
+// ─────────────────────────────────────────
+const { data, execute: reloadTasks } = useapi('/assignments', {
   method: 'GET',
 }).json()
 
-// GET grupos
 const { data: groupsData } = useapi('/groups').json()
 
-//  UNIDADES FILTRADAS
-const availableUnits = computed(() => { 
+const availableUnits = computed(() => {
   const selectedGroupId = form.value.group_id
   if (!selectedGroupId || !groupsData.value?.data) return []
   const group = groupsData.value.data.find((g: any) => g.id === selectedGroupId)
@@ -46,21 +50,44 @@ watch(() => form.value.group_id, () => {
   form.value.unit_id = null
 })
 
-//  TRAER SUBMISSIONS MANUALMENTE
-watch(data, async () => {
-  if (!data.value) return
+// ─────────────────────────────────────────
+// CARGAR ENTREGAS (Submissions)
+// ─────────────────────────────────────────
+async function loadSubmissions(list: any[]) {
+  if (!list.length) return
+  loadingSubmissions.value = true
 
-  const list = data.value?.data ?? data.value ?? []
-
-  for (const task of list) {
-    if (task.submissions) continue
-
-    const { data: subData } = await useapi(`/submissions?assignment_id=${task.id}`).json()
-    task.submissions = subData.value?.data ?? []
+  try {
+    await Promise.all(
+      list.map(async (task: any) => {
+        try {
+          const res = await fetch(`/api/submissions?assignment_id=${task.id}`, {
+            headers: {
+              Authorization: `Bearer ${ua.credentials?.token}`,
+              Accept: 'application/json',
+            },
+          })
+          const json = await res.json()
+          task.submissions = json?.data ?? []
+        } catch {
+          task.submissions = []
+        }
+      })
+    )
+  } finally {
+    loadingSubmissions.value = false
   }
+}
+
+watch(data, (newData) => {
+  if (!newData) return
+  const list = newData?.data ?? newData ?? []
+  loadSubmissions(list)
 })
 
-// POST tarea
+// ─────────────────────────────────────────
+// ACCIONES: CREAR, ACTUALIZAR, ELIMINAR
+// ─────────────────────────────────────────
 function createTask() {
   if (!form.value.group_id || !form.value.unit_id) {
     alert('Debes seleccionar grupo y unidad')
@@ -71,58 +98,100 @@ function createTask() {
     ...form.value,
     group_id: Number(form.value.group_id),
     unit_id: Number(form.value.unit_id),
-    start_date: form.value.start_date
-      ? form.value.start_date.replace('T', ' ') + ':00'
-      : null,
-    end_date: form.value.end_date
-      ? form.value.end_date.replace('T', ' ') + ':00'
-      : null,
+    start_date: form.value.start_date?.replace('T', ' ') + ':00',
+    end_date: form.value.end_date?.replace('T', ' ') + ':00',
   }
 
-  const { data: res, onFetchResponse } = useapi('/assignments', {
-    method: 'POST',
-  })
-    .post(payload)
-    .json()
-
+  const { onFetchResponse } = useapi('/assignments', { method: 'POST' }).post(payload).json()
   onFetchResponse(async () => {
-    alert(res.value.message)
     showModal.value = false
     form.value = { ...initialTask }
     await reloadTasks()
   })
 }
 
-// FILTRO
+function updateTask() {
+  // Formateamos fechas antes de enviar por si se editaron en el modal
+  const payload = {
+    ...selectedTask.value,
+    start_date: selectedTask.value.start_date?.replace('T', ' ').substring(0, 19),
+    end_date: selectedTask.value.end_date?.replace('T', ' ').substring(0, 19),
+  }
+
+  const { onFetchResponse } = useapi(`/assignments/${selectedTask.value.id}`, {
+    method: 'PUT',
+  }).put(payload).json()
+
+  onFetchResponse(async () => {
+    showEditModal.value = false
+    await reloadTasks()
+  })
+}
+
+function deleteTask(id: number) {
+  if (!confirm('¿Estás seguro de eliminar esta tarea? Esta acción no se puede deshacer.')) return
+
+  const { onFetchResponse } = useapi(`/assignments/${id}`, {
+    method: 'DELETE',
+  }).json()
+
+  onFetchResponse(async () => {
+    showEditModal.value = false
+    await reloadTasks()
+  })
+}
+
+// ─────────────────────────────────────────
+// FILTROS Y LÓGICA DE NAVEGACIÓN
+// ─────────────────────────────────────────
 const filteredActivities = computed(() => {
   const list = data.value?.data ?? data.value ?? []
 
   return list.filter((a: any) => {
-    const submissions = a.submissions ?? []
+    const subs: any[] = a.submissions ?? []
+    const hasSubmission = subs.length > 0
+    // Calificadas: Tareas donde hay entregas y TODAS están calificadas
+    const allGraded = hasSubmission && subs.every((s: any) => s.status === 'Calificada')
+    // Tardías: Tareas con al menos una entrega después de la fecha límite
+    const isLate = subs.some((s: any) => new Date(s.submission_date) > new Date(a.end_date))
 
-    const hasSubmission = submissions.length > 0
-    const isGraded = submissions.some((s: any) => s.status === 'Calificada')
-    const isLate = submissions.some((s: any) =>
-      new Date(s.submission_date) > new Date(a.end_date)
-    )
-
-    if (currentTab.value === 'pendientes') return !hasSubmission
-    if (currentTab.value === 'entregadas') return hasSubmission && !isLate
-    if (currentTab.value === 'calificadas') return isGraded
+    if (currentTab.value === 'pendientes') return true // Muestra todo lo que el profesor ha subido
+    if (currentTab.value === 'entregadas') return hasSubmission
+    if (currentTab.value === 'calificadas') return allGraded
     if (currentTab.value === 'tardias') return isLate
-
     return false
   })
 })
+
+const tabCounts = computed(() => {
+  const list = data.value?.data ?? data.value ?? []
+  const counts = { pendientes: list.length, entregadas: 0, calificadas: 0, tardias: 0 }
+
+  for (const a of list) {
+    const subs: any[] = a.submissions ?? []
+    const hasSubmission = subs.length > 0
+    if (hasSubmission) counts.entregadas++
+    if (hasSubmission && subs.every((s: any) => s.status === 'Calificada')) counts.calificadas++
+    if (subs.some((s: any) => new Date(s.submission_date) > new Date(a.end_date))) counts.tardias++
+  }
+  return counts
+})
+
+function handleTaskClick(task: any) {
+  if (currentTab.value === 'pendientes') {
+    // Solo ver/editar/eliminar en un modal
+    selectedTask.value = { ...task }
+    showEditModal.value = true
+  } else {
+    // Redirigir al detalle de la tarea para calificar alumnos
+    router.push(`/teacher/tasks/${task.id}`)
+  }
+}
 </script>
-
-
 
 <template>
   <div class="bg-page">
     <SidebarLayout>
-
-      <!-- HEADER AZUL -->
       <div class="ContSmall">
         <div class="left">
           <div class="avatar">
@@ -130,142 +199,121 @@ const filteredActivities = computed(() => {
           </div>
           <div>
             <h1>Explorar Tareas</h1>
-            <p v-if="data">{{ filteredActivities.length }} tareas</p>
+            <p>{{ filteredActivities.length }} tareas encontradas</p>
           </div>
         </div>
-
         <div class="right">
-          <button @click="showModal = true" class="btn-create-task">
-            CREAR TAREA
-          </button>
+          <button @click="showModal = true" class="btn-create-task">+ CREAR TAREA</button>
         </div>
       </div>
 
-      <!-- CONTENEDOR GRANDE -->
-      <div class="ContBig CenterItems">
-
-        <!-- TABS -->
+      <div class="ContBig">
         <div class="tabs-container">
-          <button @click="currentTab = 'pendientes'" :class="{ active: currentTab === 'pendientes' }">
-            Pendientes
-          </button>
-          <button @click="currentTab = 'entregadas'" :class="{ active: currentTab === 'entregadas' }">
-            Entregadas
-          </button>
-          <button @click="currentTab = 'calificadas'" :class="{ active: currentTab === 'calificadas' }">
-            Calificadas
-          </button>
-          <button @click="currentTab = 'tardias'" :class="{ active: currentTab === 'tardias' }">
-            Entrega tardía
+          <button
+            v-for="tab in [
+              { key: 'pendientes', label: 'Pendientes' },
+              { key: 'entregadas', label: 'Entregadas' },
+              { key: 'calificadas', label: 'Calificadas' },
+              { key: 'tardias', label: 'Tardías' },
+            ]"
+            :key="tab.key"
+            @click="currentTab = tab.key"
+            :class="{ active: currentTab === tab.key }"
+          >
+            {{ tab.label }}
+            <span class="tab-count">{{ tabCounts[tab.key as keyof typeof tabCounts] }}</span>
           </button>
         </div>
 
-        <!-- LOADING -->
-        <div v-if="isFetching" class="loading-state">
-          <div class="spinner"></div>
-          <p>Cargando tareas...</p>
+        <div class="tasks-list">
+          <TeacherTaskCard
+            v-for="task in filteredActivities"
+            :key="task.id"
+            :task="task"
+            :show-action-button="currentTab !== 'pendientes'"
+            @click="handleTaskClick(task)"
+          />
         </div>
-
-        <!-- ERROR -->
-        <div v-if="error" class="error-banner">
-          <span>⚠</span>
-          <p>Error al conectar: {{ error }}</p>
-        </div>
-
-        <!-- PANEL -->
-        <div v-if="!isFetching && !error">
-
-          <div class="panel-header">
-            <h2>Mis Tareas</h2>
-            <span class="badge">{{ filteredActivities.length }}</span>
-          </div>
-
-          <!-- VACÍO -->
-          <div v-if="!filteredActivities.length" class="empty-state">
-            <p>No hay tareas en esta categoría.</p>
-          </div>
-
-          <!-- GRID -->
-<div v-else class="tasks-grid">
-  <TeacherTaskCard
-    v-for="task in filteredActivities"
-    :key="task.id"
-    :task="task"
-  />
-</div>
-
-        </div>
-
-        <!-- MODAL -->
-        <Modal v-model="showModal">
-          <form class="task-form" @submit.prevent="createTask">
-
-            <label>Título</label>
-            <input v-model="form.title" type="text" placeholder="Ej. Titulo de tarea" />
-
-            <label>Descripción</label>
-            <textarea v-model="form.description" placeholder="Ej. Resolver ...."></textarea>
-
-            <div class="grid-fields">
-              <div>
-                <label>Fecha de inicio</label>
-                <input v-model="form.start_date" type="datetime-local" />
-              </div>
-
-              <div>
-                <label>Fecha de entrega</label>
-                <input v-model="form.end_date" type="datetime-local" />
-              </div>
-
-              <div>
-                <label>Grupo</label>
-                <select v-model="form.group_id">
-                  <option value="">Selecciona un grupo</option>
-                  <option v-for="g in groupsData?.data ?? []" :key="g.id" :value="g.id">
-                    {{ g.name }}
-                  </option>
-                </select>
-              </div>
-
-              <div>
-                <label>Unidad</label>
-                <select v-model="form.unit_id":disabled="!form.group_id">
-                  <option :value="null">Selecciona una unidad - Primero Selecciona Un Grupo</option>
-                  <option v-for="u in availableUnits" :key="u.id" :value="u.id">
-                    {{ u.name }}
-                  </option>
-                </select>
-              </div>
-            </div>
-
-            <label class="check-row">
-              Estado
-              <select v-model="form.status" class="select-status">
-                <option value="Activa">Activa</option>              
-                <option value="Cerrada">Cerrada</option>
-                <option value="Cancelada">Cancelada</option>
-              </select>
-            </label>
-
-            <div class="actions">
-              <button type="button" class="btn-cancel" @click="showModal = false">
-                Cancelar
-              </button>
-              <button type="submit" class="btn-save">
-                Guardar
-              </button>
-            </div>
-
-          </form>
-        </Modal>
-
       </div>
+
+      <Modal v-model="showModal">
+        <form @submit.prevent="createTask" class="task-form">
+          <h3>Nueva Tarea</h3>
+          <input v-model="form.title" placeholder="Título de la tarea" required />
+          <textarea v-model="form.description" placeholder="Instrucciones para los alumnos"></textarea>
+
+          <div class="grid-fields">
+            <div>
+              <label>Grupo</label>
+              <select v-model="form.group_id" required>
+                <option :value="null" disabled>Seleccionar Grupo</option>
+                <option v-for="g in groupsData?.data ?? []" :key="g.id" :value="g.id">{{ g.name }}</option>
+              </select>
+            </div>
+            <div>
+              <label>Unidad</label>
+              <select v-model="form.unit_id" required>
+                <option :value="null" disabled>Seleccionar Unidad</option>
+                <option v-for="u in availableUnits" :key="u.id" :value="u.id">{{ u.name }}</option>
+              </select>
+            </div>
+          </div>
+
+          <div class="grid-fields">
+            <div>
+              <label>Fecha Inicio</label>
+              <input type="datetime-local" v-model="form.start_date" required />
+            </div>
+            <div>
+              <label>Fecha Límite</label>
+              <input type="datetime-local" v-model="form.end_date" required />
+            </div>
+          </div>
+
+          <button type="submit" class="btn-save">Publicar Tarea</button>
+        </form>
+      </Modal>
+
+      <Modal v-model="showEditModal">
+        <div v-if="selectedTask" class="task-form">
+          <h3>Gestionar Tarea</h3>
+          <p style="font-size: 0.8rem; color: #64748b; margin-bottom: 15px;">
+            Aquí puedes modificar los datos generales de la tarea o eliminarla permanentemente.
+          </p>
+
+          <label>Título</label>
+          <input v-model="selectedTask.title" />
+
+          <label>Descripción</label>
+          <textarea v-model="selectedTask.description"></textarea>
+
+          <div class="grid-fields">
+            <div>
+              <label>Fecha Inicio</label>
+              <input type="datetime-local" v-model="selectedTask.start_date" />
+            </div>
+            <div>
+              <label>Fecha Límite</label>
+              <input type="datetime-local" v-model="selectedTask.end_date" />
+            </div>
+          </div>
+
+          <div class="actions" style="margin-top: 20px;">
+            <button @click="deleteTask(selectedTask.id)" class="btn-cancel" style="background: #fee2e2; color: #dc2626;">
+              Eliminar Tarea
+            </button>
+            <button @click="updateTask" class="btn-save">
+              Guardar Cambios
+            </button>
+          </div>
+        </div>
+      </Modal>
+
     </SidebarLayout>
   </div>
 </template>
 
 <style scoped>
-/* FONDO GENERAL */
 .bg-page {
   position: fixed;
   inset: 0;
@@ -278,87 +326,109 @@ const filteredActivities = computed(() => {
 /* HEADER */
 .ContSmall {
   background: var(--color-Azul);
-  width: 1000px;
-  min-height: 40px;
+  width: 95%;
+  max-width: 1000px;
   border-radius: 20px;
   margin: 30px auto 0 auto;
-  padding: 15px;
+  padding: 18px 24px;
   color: white;
-
-  display: flex;               
+  display: flex;
   justify-content: space-between;
   align-items: center;
 }
+.ContSmall h1 { margin: 0; font-size: 1.4rem; }
+.ContSmall p  { margin: 0; font-size: 0.85rem; opacity: 0.85; }
 
-.ContSmall h1 {
-  margin: 0;
-  font-size: 1.5rem;
-}
-
-.ContSmall p {
-  margin: 0;
-  font-size: 0.9rem;
-  opacity: 0.9;
-}
-
-.left {
-  display: flex;
-  align-items: center;
-  gap: 12px;
-}
-
-.right {
-  display: flex;
-  align-items: center;
-}
+.left  { display: flex; align-items: center; gap: 12px; }
+.right { display: flex; align-items: center; }
 
 /* CONTENEDOR PRINCIPAL */
 .ContBig {
-  background: var(--color-Blanco);
-  width: 1000px;
-  height: 400px;
+  background: var(--color-Blanco, white);
+  width: 95%;
+  max-width: 1000px;
   border-radius: 20px;
-  margin: 30px auto;
-  padding: 30px;
-  box-shadow: 0 10px 30px #00000030;
+  margin: 20px auto 40px auto;
+  padding: 28px;
+  box-shadow: 0 10px 30px rgba(0,0,0,0.12);
   overflow-y: auto;
 }
 
-/* GRID */
-.tasks-grid {
-  display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
-  gap: 25px;
-  margin-top: 20px;
+/* LISTA — una columna */
+.tasks-list {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  margin-top: 16px;
+}
+
+/* TABS */
+.tabs-container {
+  display: flex;
+  gap: 5px;
+  margin-bottom: 24px;
+  background: #f1f5f9;
+  padding: 5px;
+  border-radius: 12px;
+  overflow-x: auto;
+}
+.tabs-container button {
+  flex: 1;
+  padding: 9px 14px;
+  border: none;
+  background: none;
+  border-radius: 9px;
+  cursor: pointer;
+  font-weight: 700;
+  font-size: 0.82rem;
+  color: #64748b;
+  white-space: nowrap;
+  transition: all 0.2s;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+}
+.tabs-container button.active {
+  background: white;
+  color: var(--color-Azul);
+  box-shadow: 0 2px 8px rgba(0,0,0,0.08);
+}
+.tab-count {
+  background: #e2e8f0;
+  border-radius: 20px;
+  padding: 1px 7px;
+  font-size: 0.7rem;
+  font-weight: 800;
+  color: #475569;
+}
+.tabs-container button.active .tab-count {
+  background: #dbeafe;
+  color: var(--color-Azul);
 }
 
 /* LOADING */
 .loading-state {
   text-align: center;
   padding: 60px;
-  color: var(--color-AzulTres);
+  color: var(--color-AzulTres, #2563eb);
 }
-
 .spinner {
-  width: 40px;
-  height: 40px;
-  border: 4px solid #e0e0e0;
-  border-top: 4px solid var(--color-AzulTres);
+  width: 36px;
+  height: 36px;
+  border: 3px solid #e0e0e0;
+  border-top: 3px solid var(--color-AzulTres, #2563eb);
   border-radius: 50%;
   animation: spin 1s linear infinite;
-  margin: 0 auto 15px;
+  margin: 0 auto 14px;
 }
-
-@keyframes spin {
-  0%   { transform: rotate(0deg); }
-  100% { transform: rotate(360deg); }
-}
+@keyframes spin { to { transform: rotate(360deg); } }
 
 /* ERROR */
 .error-banner {
   background: #ffe5e5;
   color: #b91c1c;
-  padding: 15px;
+  padding: 14px;
   border-radius: 10px;
   margin-bottom: 20px;
   display: flex;
@@ -370,36 +440,52 @@ const filteredActivities = computed(() => {
 /* EMPTY */
 .empty-state {
   text-align: center;
-  padding: 60px;
-  color: var(--color-AzulTres);
-  font-size: 1rem;
+  padding: 50px;
+  color: #94a3b8;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 10px;
+  font-size: 0.95rem;
+}
+
+/* PANEL HEADER */
+.panel-header {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-bottom: 8px;
+}
+.panel-header h2 {
+  font-size: 1.1rem;
+  font-weight: 800;
+  color: var(--color-OscuroAzulado, #1e293b);
+  margin: 0;
+}
+.badge {
+  background: var(--color-Azul);
+  color: white;
+  border-radius: 20px;
+  padding: 2px 12px;
+  font-size: 0.8rem;
+  font-weight: 700;
 }
 
 /* BOTÓN CREAR */
 .btn-create-task {
-  margin-top: 12px;
-  padding: 12px 22px;
+  padding: 10px 20px;
   border: none;
-  border-radius: 14px;
-  background: linear-gradient(135deg, #ffffff, #dbeafe);
-  color: var(--color-OscuroAzulado);
+  border-radius: 12px;
+  background: rgba(255,255,255,0.15);
+  color: white;
   font-weight: 700;
-  font-size: 0.95rem;
+  font-size: 0.88rem;
   cursor: pointer;
-  transition: all 0.25s ease;
-  box-shadow: 0 6px 18px rgba(0, 0, 0, 0.15);
-  letter-spacing: 0.5px;
+  transition: background 0.2s;
+  border: 1.5px solid rgba(255,255,255,0.3);
 }
-
 .btn-create-task:hover {
-  transform: translateY(-2px);
-  background: linear-gradient(135deg, #ffffff, #bfdbfe);
-  box-shadow: 0 10px 25px rgba(0, 0, 0, 0.2);
-}
-
-.btn-create-task:active {
-  transform: translateY(0px) scale(0.98);
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.18);
+  background: rgba(255,255,255,0.25);
 }
 
 /* AVATAR */
@@ -407,227 +493,76 @@ const filteredActivities = computed(() => {
   width: 38px;
   height: 38px;
   border-radius: 50%;
-  background: #e1f5ee;
+  background: rgba(255,255,255,0.2);
   display: flex;
   align-items: center;
   justify-content: center;
   font-size: 14px;
-  font-weight: 500;
-  color: #0f6e56;
+  font-weight: 700;
+  color: white;
 }
 
 /* FORMULARIO */
 .task-form {
   display: flex;
   flex-direction: column;
-  gap: 12px;
+  gap: 10px;
 }
-
 .task-form label {
   font-weight: 700;
-  font-size: 0.9rem;
+  font-size: 0.85rem;
   color: #111827;
 }
-
 .task-form input,
 .task-form textarea,
 .task-form select {
   border: 1px solid #d1d5db;
-  border-radius: 12px;
-  padding: 10px;
-  font-size: 0.95rem;
+  border-radius: 10px;
+  padding: 9px 12px;
+  font-size: 0.9rem;
   outline: none;
   width: 100%;
   box-sizing: border-box;
+  transition: border-color 0.2s;
 }
-
+.task-form input:focus,
+.task-form textarea:focus,
+.task-form select:focus {
+  border-color: var(--color-Azul);
+}
 .task-form textarea {
-  resize: none;
-  min-height: 80px;
+  resize: vertical;
+  min-height: 75px;
 }
-
-/* GRID DENTRO DEL FORM */
 .grid-fields {
   display: grid;
   grid-template-columns: 1fr 1fr;
-  gap: 12px;
+  gap: 10px;
 }
-
-.grid-fields label {
-  display: block;
-  margin-bottom: 4px;
-}
-
-/* STATUS */
-.check-row {
-  display: flex;
-  align-items: center;
-  gap: 12px;
-  font-weight: 700;
-}
-
-.select-status {
-  flex: 1;
-}
-
-/* ACCIONES */
+.grid-fields label { display: block; margin-bottom: 4px; }
+.select-status { width: 100%; }
 .actions {
   display: flex;
   justify-content: flex-end;
-  gap: 10px;
-  margin-top: 10px;
+  gap: 8px;
+  margin-top: 8px;
 }
-
 .btn-cancel {
   border: none;
   background: #e5e7eb;
-  padding: 10px 18px;
-  border-radius: 12px;
+  padding: 9px 18px;
+  border-radius: 10px;
   cursor: pointer;
-  font-weight: 800;
+  font-weight: 700;
 }
-
 .btn-save {
   border: none;
   background: #2563eb;
   color: white;
-  padding: 10px 18px;
-  border-radius: 12px;
-  cursor: pointer;
-  font-weight: 800;
-}
-
-.btn-save:hover {
-  background: #1d4ed8;
-}
-
-/* PANEL HEADER */
-.panel-header {
-  display: flex;
-  align-items: center;
-  gap: 12px;
-  margin-bottom: 20px;
-}
-
-.panel-header h2 {
-  font-size: 1.2rem;
-  font-weight: 800;
-  color: var(--color-OscuroAzulado);
-  margin: 0;
-}
-
-.badge {
-  background: var(--color-Azul);
-  color: white;
-  border-radius: 20px;
-  padding: 2px 12px;
-  font-size: 0.85rem;
-  font-weight: 700;
-}
-
-/* GRID DE TAREAS */
-.tasks-grid {
-  display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
-  gap: 18px;
-}
-
-/* TARJETA */
-.task-card {
-  border-radius: 16px;
-  padding: 18px;
-  background: #f8fafc;
-  border: 1px solid #e2e8f0;
-  transition: transform 0.2s, box-shadow 0.2s;
-}
-
-.task-card:hover {
-  transform: translateY(-3px);
-  box-shadow: 0 8px 24px rgba(0,0,0,0.1);
-}
-
-/* STATUS COLORS */
-.task-card.activa  { border-left: 4px solid #2563eb; }
-.task-card.inactiva { border-left: 4px solid #9ca3af; }
-.task-card.cerrada  { border-left: 4px solid #ef4444; }
-
-.task-card-top {
-  display: flex;
-  align-items: center;
-  gap: 6px;
-  margin-bottom: 10px;
-}
-
-.status-dot {
-  width: 8px;
-  height: 8px;
-  border-radius: 50%;
-  background: currentColor;
-}
-
-.activa  .status-dot { background: #2563eb; }
-.inactiva .status-dot { background: #9ca3af; }
-.cerrada  .status-dot { background: #ef4444; }
-
-.status-label {
-  font-size: 0.75rem;
-  font-weight: 700;
-  text-transform: uppercase;
-  letter-spacing: 0.5px;
-  color: #6b7280;
-}
-
-/* CONTENIDO */
-.task-title {
-  font-size: 1rem;
-  font-weight: 700;
-  color: #111827;
-  margin: 0 0 6px 0;
-}
-
-.task-desc {
-  font-size: 0.85rem;
-  color: #6b7280;
-  margin: 0 0 12px 0;
-  line-height: 1.4;
-  display: -webkit-box;
-  -webkit-line-clamp: 2;
-  line-clamp: 2;
-  -webkit-box-orient: vertical;
-  overflow: hidden;
-}
-
-.task-meta {
-  display: flex;
-  gap: 12px;
-  font-size: 0.78rem;
-  color: #9ca3af;
-}
-
-.tabs-container {
-  display: flex;
-  gap: 5px;
-  margin-bottom: 30px;
-  background: #f8fafc;
-  padding: 6px;
-  border-radius: 14px;
-  overflow-x: auto;
-}
-.tabs-container button {
-  flex: 1;
-  padding: 10px 15px;
-  border: none;
-  background: none;
+  padding: 9px 18px;
   border-radius: 10px;
   cursor: pointer;
-  font-weight: bold;
-  color: #64748b;
-  white-space: nowrap;
-  transition: 0.3s;
+  font-weight: 700;
 }
-.tabs-container button.active {
-  background: white;
-  color: var(--color-Azul);
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
-}
+.btn-save:hover { background: #1d4ed8; }
 </style>

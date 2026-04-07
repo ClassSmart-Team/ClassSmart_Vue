@@ -1,156 +1,245 @@
 <script setup lang="ts">
 import { computed } from 'vue'
 
+
 const props = defineProps<{
-  task: any
+  task: any,
+  showActionButton?: boolean 
 }>()
 
+
 const formatDate = (dateStr: string) => {
-  return new Date(dateStr).toLocaleDateString('es-MX', { day: '2-digit', month: 'short' })
+  if (!dateStr) return '—'
+  return new Date(dateStr).toLocaleDateString('es-MX', { day: '2-digit', month: 'short', year: 'numeric' })
 }
 
 const statusColor = computed(() => {
   const s = props.task.status?.toLowerCase()
-  if (s === 'activa')   return 'activa'
-  if (s === 'cerrada')  return 'cerrada'
+  if (s === 'activa')    return 'activa'
+  if (s === 'cerrada')   return 'cerrada'
   if (s === 'cancelada') return 'cancelada'
   return ''
 })
 
 const submissions = computed(() => props.task.submissions ?? [])
-
 const submissionsCount = computed(() => submissions.value.length)
-
 const gradedCount = computed(() =>
   submissions.value.filter((s: any) => s.status === 'Calificada').length
 )
-
 const lateCount = computed(() =>
   submissions.value.filter((s: any) =>
     new Date(s.submission_date) > new Date(props.task.end_date)
   ).length
 )
+const pendingGrade = computed(() => submissionsCount.value - gradedCount.value)
 </script>
 
+
 <template>
-  <div :class="['task-card', statusColor]">
-    <div class="task-info">
+  <div :class="['task-card', statusColor]" style="cursor: pointer;">
+    <div class="status-stripe"></div>
+
+    <div class="card-body">
       <div class="top-row">
-        <span class="status-tag">{{ task.status }}</span>
+        <span :class="['status-tag', statusColor]">{{ task.status }}</span>
+        <span class="group-tag" v-if="task.group?.name">{{ task.group.name }}</span>
       </div>
-      <h4>{{ task.title }}</h4>
+
+      <h4 class="task-title">{{ task.title }}</h4>
       <p class="task-desc">{{ task.description }}</p>
-      <p class="due-date">Límite: {{ formatDate(task.end_date) }}</p>
 
-      <div class="submission-stats">
-    <span> {{ submissionsCount }} entregas</span>
-    <span> {{ gradedCount }} calificadas</span>
-    <span v-if="lateCount"> {{ lateCount }} tardías</span>
+      <div class="dates-row">
+        <span class="date-chip">Inicio: {{ formatDate(task.start_date) }}</span>
+        <span class="date-chip deadline">Límite: {{ formatDate(task.end_date) }}</span>
       </div>
 
+      <div class="stats-row">
+        <div class="stat-pill total">
+          <span class="stat-num">{{ submissionsCount }}</span>
+          <span class="stat-label">entregas</span>
+        </div>
+        </div>
     </div>
 
-    <div class="task-actions">
-      <router-link
-        :to="{ name: 'teacherTasksDetail', params: { id: task.id } }"
-        class="btn-open-task"
-      >
-        Ver Detalles
-      </router-link>
+    <div class="card-action" v-if="showActionButton">
+      <div class="btn-detail">
+        Ver entregas
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M5 12h14M12 5l7 7-7 7"/></svg>
+      </div>
+    </div>
+    <div class="card-action" v-else>
+       <span class="btn-detail" style="background: #e2e8f0; color: #475569;">Editar</span>
     </div>
   </div>
 </template>
 
 <style scoped>
 .task-card {
-  display: grid;
-  grid-template-columns: 1fr auto;
-  align-items: center;
-  gap: 20px;
+  display: flex;
+  align-items: stretch;
   background: white;
-  padding: 18px 25px;
-  border-radius: 16px;
-  border: 1px solid #f1f5f9;
-  border-left: 6px solid #cbd5e1;
-  margin-bottom: 12px;
-  transition: transform 0.2s;
+  border-radius: 14px;
+  border: 1px solid #e8edf3;
+  overflow: hidden;
+  transition: box-shadow 0.2s, transform 0.2s;
+  box-shadow: 0 1px 4px rgba(0,0,0,0.05);
 }
 
 .task-card:hover {
-  transform: scale(1.01);
+  transform: translateY(-2px);
+  box-shadow: 0 6px 20px rgba(0,0,0,0.1);
 }
 
-.activa  { border-left-color: #2563eb; }
-.inactiva { border-left-color: #9ca3af; }
-.cerrada  { border-left-color: #ef4444; }
+/* Franja lateral */
+.status-stripe {
+  width: 5px;
+  flex-shrink: 0;
+  background: #cbd5e1;
+}
+.task-card.activa   .status-stripe { background: #2563eb; }
+.task-card.cerrada  .status-stripe { background: #ef4444; }
+.task-card.cancelada .status-stripe { background: #9ca3af; }
 
+/* Cuerpo */
+.card-body {
+  flex: 1;
+  padding: 16px 18px;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+/* Top row */
 .top-row {
   display: flex;
   align-items: center;
-  gap: 10px;
-  margin-bottom: 4px;
+  gap: 6px;
+  flex-wrap: wrap;
 }
 
 .status-tag {
-  font-size: 0.65rem;
+  font-size: 0.62rem;
   font-weight: 800;
-  color: var(--color-Azul);
   text-transform: uppercase;
-  background: #eff6ff;
+  letter-spacing: 0.6px;
   padding: 2px 8px;
   border-radius: 4px;
+  background: #eff6ff;
+  color: #2563eb;
+}
+.status-tag.cerrada   { background: #fee2e2; color: #dc2626; }
+.status-tag.cancelada { background: #f3f4f6; color: #6b7280; }
+
+.group-tag, .unit-tag {
+  font-size: 0.62rem;
+  font-weight: 600;
+  padding: 2px 8px;
+  border-radius: 4px;
+  background: #f0fdf4;
+  color: #166534;
+}
+.unit-tag {
+  background: #fefce8;
+  color: #854d0e;
 }
 
-.task-info h4 {
+/* Título */
+.task-title {
   margin: 0;
-  font-size: 1.05rem;
+  font-size: 0.97rem;
   color: #1e293b;
   font-weight: 700;
+  line-height: 1.3;
 }
 
 .task-desc {
-  font-size: 0.8rem;
+  font-size: 0.78rem;
   color: #94a3b8;
-  margin: 4px 0;
+  margin: 0;
   display: -webkit-box;
-  line-clamp: 2;
   -webkit-line-clamp: 1;
+  line-clamp: 1;
   -webkit-box-orient: vertical;
   overflow: hidden;
 }
 
-.due-date {
-  font-size: 0.8rem;
-  color: #64748b;
-  margin-top: 4px;
-}
-
-.btn-open-task {
-  display: inline-block;
-  text-decoration: none;
-  padding: 10px 18px;
-  border-radius: 10px;
-  background: #f8fafc;
-  color: var(--color-Azul);
-  font-weight: bold;
-  font-size: 0.8rem;
-  text-align: center;
-  transition: 0.2s;
-  white-space: nowrap;
-}
-
-.btn-open-task:hover {
-  background: var(--color-Azul);
-  color: white;
-}
-
-.submission-stats {
-  margin-top: 6px;
-  font-size: 0.75rem;
-  color: #475569;
+/* Fechas */
+.dates-row {
   display: flex;
-  gap: 10px;
+  gap: 8px;
   flex-wrap: wrap;
 }
 
+.date-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  font-size: 0.72rem;
+  color: #64748b;
+  background: #f8fafc;
+  padding: 3px 8px;
+  border-radius: 6px;
+  border: 1px solid #e2e8f0;
+}
+
+.date-chip.deadline {
+  color: #b45309;
+  background: #fffbeb;
+  border-color: #fde68a;
+}
+
+/* Stats */
+.stats-row {
+  display: flex;
+  gap: 6px;
+  flex-wrap: wrap;
+  margin-top: 2px;
+}
+
+.stat-pill {
+  display: flex;
+  align-items: baseline;
+  gap: 3px;
+  padding: 3px 10px;
+  border-radius: 20px;
+  font-size: 0.72rem;
+  border: 1px solid transparent;
+}
+
+.stat-num {
+  font-weight: 800;
+  font-size: 0.85rem;
+}
+
+.stat-pill.total   { background: #eff6ff; color: #1d4ed8; border-color: #bfdbfe; }
+.stat-pill.graded  { background: #f0fdf4; color: #15803d; border-color: #bbf7d0; }
+.stat-pill.pending { background: #fffbeb; color: #b45309; border-color: #fde68a; }
+.stat-pill.late    { background: #fef2f2; color: #dc2626; border-color: #fecaca; }
+
+/* Acción */
+.card-action {
+  display: flex;
+  align-items: center;
+  padding: 16px 16px 16px 0;
+}
+
+.btn-detail {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  text-decoration: none;
+  padding: 9px 16px;
+  border-radius: 10px;
+  background: #f1f5f9;
+  color: #2563eb;
+  font-weight: 700;
+  font-size: 0.78rem;
+  white-space: nowrap;
+  transition: background 0.2s, color 0.2s;
+}
+
+.btn-detail:hover {
+  background: #2563eb;
+  color: white;
+}
 </style>
