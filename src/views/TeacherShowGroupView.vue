@@ -20,6 +20,7 @@ function submitAddUnit() {
   const { data: dat, onFetchResponse: onaddsubmitresposne } = useapi('units', {
     method: 'POST',
   })
+
     .post(ur.value)
     .json()
   onaddsubmitresposne(() => {
