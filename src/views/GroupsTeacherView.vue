@@ -59,84 +59,76 @@ function showgroup(id:number){
 <template>
   <div class="bg-page">
     <SidebarLayout>
-      <div class="contenido">
 
-        <!-- HEADER -->
-        <div class="header-box header-flex">
-          <div class="left">
-            <div class="avatar">
-              {{ ua.credentials?.user.name.charAt(0) }}{{ ua.credentials?.user.lastname.charAt(0) }}
-            </div>
-
-            <div>
-              <h2>Explorar Grupos</h2>
-              <p v-if="data">{{ data.data.length }} grupos académicos</p>
-            </div>
+      <!-- HEADER -->
+      <div class="header-box header-flex">
+        <div class="left">
+          <div class="avatar">
+            {{ ua.credentials?.user.name.charAt(0) }}{{ ua.credentials?.user.lastname.charAt(0) }}
           </div>
-
-          <button @click="showModal = true" class="btn-create-group">
-            CREAR GRUPO
-          </button>
+          <div>
+            <h2>Explorar Grupos</h2>
+            <p v-if="data">{{ data.data.length }} grupos académicos</p>
+          </div>
         </div>
 
-        <!-- CONTENIDO -->
-        <div class="main-box">
+        <button @click="showModal = true" class="btn-create-group">
+          CREAR GRUPO
+        </button>
+      </div>
 
-          <!-- LOADING -->
-          <div v-if="isFetching" class="loading-state">
-            <div class="spinner"></div>
-            <p>Cargando grupos...</p>
-          </div>
+      <!-- CONTENIDO PRINCIPAL -->
+      <div class="main-box">
 
-          <!-- ERROR -->
-          <div v-if="error" class="error-banner">
-            <span>⚠</span>
-            <p>Error: {{ error }}</p>
-          </div>
-
-          <!-- GRID -->
-          <div v-if="data && data.data" class="groups-grid">
-            <GroupTargect
-              v-for="group in data.data"
-              :key="group.id"
-              :group="group"
-              @click="showgroup(group.id)"
-            />
-          </div>
-
+        <div v-if="isFetching" class="loading-state">
+          <div class="spinner"></div>
+          <p>Cargando grupos...</p>
         </div>
 
-        <!-- MODAL -->
-        <Modal v-model="showModal">
-          <form class="group-form" @submit.prevent="creategroup">
-            <label>Periodo</label>
-            <select v-model="form.period_id">
-              <option v-for="period in periodsData?.data" :key="period.id" :value="period.id">
-                {{ period.name }} - {{ period.year }}
-              </option>
-            </select>
+        <div v-if="error" class="error-banner">
+          <span>⚠</span>
+          <p>Error: {{ error }}</p>
+        </div>
 
-            <label>Nombre del Grupo</label>
-            <input v-model="form.name" type="text" />
-
-            <label>Descripción</label>
-            <textarea v-model="form.description"></textarea>
-
-            <label class="check-row">
-              <input v-model="form.active" type="checkbox" />
-              Grupo activo
-            </label>
-
-            <div class="actions">
-              <button type="button" class="btn-cancel" @click="showModal = false">
-                Cancelar
-              </button>
-              <button type="submit" class="btn-save">Guardar</button>
-            </div>
-          </form>
-        </Modal>
+        <div v-if="data && data.data" class="groups-grid">
+          <GroupTargect
+            v-for="group in data.data"
+            :key="group.id"
+            :group="group"
+            @click="showgroup(group.id)"
+          />
+        </div>
 
       </div>
+
+      <!-- MODAL -->
+      <Modal v-model="showModal">
+        <form class="group-form" @submit.prevent="creategroup">
+          <label>Periodo</label>
+          <select v-model="form.period_id">
+            <option v-for="period in periodsData?.data" :key="period.id" :value="period.id">
+              {{ period.name }} - {{ period.year }}
+            </option>
+          </select>
+
+          <label>Nombre del Grupo</label>
+          <input v-model="form.name" type="text" />
+
+          <label>Descripción</label>
+          <textarea v-model="form.description"></textarea>
+
+          <label class="check-row">
+            <input v-model="form.active" type="checkbox" />
+            Grupo activo
+          </label>
+
+          <div class="actions">
+            <button type="button" class="btn-cancel" @click="showModal = false">Cancelar</button>
+            <button type="submit" class="btn-save">Guardar</button>
+          </div>
+        </form>
+      </Modal>
+
     </SidebarLayout>
   </div>
 </template>

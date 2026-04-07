@@ -16,7 +16,7 @@ import { useAuthStore } from '@/stores/authStore.ts'
 <SidebarLayout>
   <div class="contenido">
 
-      <div class="ContSmall">
+      <div class="header-box header-flex">
         <div class="left">
           <div class="avatar">
             {{ ua.credentials?.user.name.charAt(0) }}{{ ua.credentials?.user.lastname.charAt(0) }}
@@ -45,11 +45,6 @@ import { useAuthStore } from '@/stores/authStore.ts'
 
 <style scoped>
 
-.CenterItems {
-  display: flex;
-  justify-content: center;
-  align-items: center;
-}
 
 .bg-page {
   min-height: 100vh;

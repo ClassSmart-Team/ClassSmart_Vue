@@ -53,31 +53,35 @@ body {
 
 .layout {
   display: flex;
-  align-items: stretch;
-  gap: 30px;
-  padding: 30px;
-  flex-wrap: wrap;
+  min-height: 100vh;
+  box-sizing: border-box;
 }
 
 .contenido {
+  margin-left: 220px; /* ← mismo ancho que la sidebar */
   flex: 1;
   display: flex;
   flex-direction: column;
-  align-items: center;
-  padding: 20px 30px;
+  padding: 24px;
   box-sizing: border-box;
+  min-width: 0;
 }
 
 /* SIDEBAR (para otras vistas que lo usen) */
 .sidebar {
-  background: linear-gradient(180deg, var(--color-Azul), var(--color-AzulTres));
-  width: 220px;
-  position: sticky;
+  position: fixed;
   top: 0;
-  height: auto;
-  border-radius: 15px;
-  padding: 20px;
-  box-shadow: 0 10px 25px #00000040;
+  left: 0;
+  width: 220px;
+  height: 100vh;
+  background: linear-gradient(180deg, var(--color-Azul), var(--color-AzulTres));
+  padding: 24px 16px;
+  box-shadow: 4px 0 20px #00000030;
+  box-sizing: border-box;
+  display: flex;
+  flex-direction: column;
+  z-index: 50;
+  overflow: hidden; /* ← sin scroll de ningún tipo */
 }
 
 .columna {
@@ -129,7 +133,7 @@ button.link {
 
 .header-box {
   background: var(--color-Azul);
-  width: 100%;
+  width: 95%;
   border-radius: 15px;
   padding: 15px 20px;
   color: white;
@@ -138,7 +142,7 @@ button.link {
 
 .main-box {
   background: var(--color-Blanco);
-  width: 100%;
+  width: 95%;
   border-radius: 20px;
   padding: 25px;
   box-shadow: 0 10px 30px #00000030;
@@ -146,13 +150,19 @@ button.link {
 
 
 @media (max-width: 768px) {
-  .layout {
-    flex-direction: column;
-    padding: 15px;
+  .sidebar {
+    position: relative;
+    width: 100%;
+    height: auto;
+    overflow: visible;
   }
 
-  .sidebar {
-    width: 100%;
-    min-height: auto;
+  .layout {
+    flex-direction: column;
+  }
+
+  .contenido {
+    margin-left: 0;
+    padding: 16px;
   }
 }
