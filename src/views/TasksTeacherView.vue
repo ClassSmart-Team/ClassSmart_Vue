@@ -589,6 +589,8 @@ async function deleteTask() {
   background: rgba(255,255,255,0.25);
 }
 
+/* AVATAR */
+
 
 /* FORMULARIO */
 .task-form {

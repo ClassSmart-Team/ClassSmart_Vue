@@ -275,18 +275,7 @@ function showgroup(id:number){
     0 0 0 4px rgba(255, 255, 255, 0.35),
     0 10px 25px rgba(0, 0, 0, 0.2);
 }
-.avatar {
-  width: 38px;
-  height: 38px;
-  border-radius: 50%;
-  background: #e1f5ee;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  font-size: 14px;
-  font-weight: 500;
-  color: #0f6e56;
-}
+
 .group-form {
   display: flex;
   flex-direction: column;

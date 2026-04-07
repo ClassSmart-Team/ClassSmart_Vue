@@ -58,7 +58,7 @@ const formatDate = (dateStr: string) =>
         </div>
 
         <div class="right">
-          <span class="welcome-text">¡Hola, {{ ua.credentials?.user.name }}!</span>
+          <span class="welcome-text">{{ ua.credentials?.user.name }}</span>
         </div>
       </div>
 
@@ -270,19 +270,7 @@ const formatDate = (dateStr: string) =>
 }
 
 /* ── AVATAR ─────────────────────────────────────────────────────────────── */
-.avatar {
-  width: 42px;
-  height: 42px;
-  border-radius: 12px;
-  background: #eff6ff;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  font-size: 14px;
-  font-weight: 800;
-  color: var(--color-Azul);
-  border: 2px solid rgba(255,255,255,0.2);
-}
+
 
 /* ── RESPONSIVE ──────────────────────────────────────────────────────────── */
 @media (max-width: 1050px) {

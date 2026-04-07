@@ -5,6 +5,7 @@ import { useRoute, useRouter } from 'vue-router'
 import { h } from 'vue'
 import type { User } from '@/types/types.ts'
 import type { UnitRequest } from '@/types/types.ts'
+import type{Unit}from '@/types/types.ts'
 const route = useRoute()
 const router = useRouter()
 const id = Number(route.params.id)
@@ -27,13 +28,19 @@ function submitAddUnit() {
     alert(dat.value.message)
     closeAddUnitModal()
     reloadGroup()
+    ur.value = {
+      group_id: id,
+      name: '',
+      order: (data.value?.data?.units?.length || 0) + 1,
+      start_date: '',
+      end_date: '',
+    }
   })
 }
 
-// 🔥 IMPORTANTE: guardamos execute para recargar datos del grupo
 const { data, isFetching, error, execute: reloadGroup } = useapi(`/groups/${id}`).json()
 
-// --- COMPONENTES DE ICONOS NATIVOS (Vue 3 'h') ---
+
 const IconBack = () =>
   h(
     'svg',
@@ -138,14 +145,97 @@ const getInitials = (name: string, lastname: string) => {
 const goBack = () => {
   router.push('/teacher/groups')
 }
+const showDeleteConfirmModal = ref(false)
 
-// --- MODAL STATES ---
+const openDeleteConfirm = () => {
+  showDeleteConfirmModal.value = true
+}
+
+const closeDeleteConfirm = () => {
+  showDeleteConfirmModal.value = false
+}
+
+const executeDelete = async () => {
+  if (!selectedUnit.value) return
+
+  const { data: res, error: err } = await useapi(`/units/${selectedUnit.value.id}`, {
+    method: 'DELETE'
+  }).json()
+
+  if (!err.value) {
+    alert(res.value.message || 'Unidad eliminada')
+    showDeleteConfirmModal.value = false
+    showManageUnitModal.value = false
+    reloadGroup()
+  } else {
+    alert('Error al eliminar')
+  }
+}
+// Estado para controlar el modal de edición
+const showEditUnitModal = ref(false)
+
+// Objeto para los datos que se están editando
+const editUnitForm = ref<UnitRequest>({
+  group_id: id,
+  name: '',
+  order: 0,
+  start_date: '',
+  end_date: '',
+})
+
+// Función para abrir el modal de edición y cargar los datos
+const openEditUnitModal = () => {
+  if (selectedUnit.value) {
+    // Copiamos los datos de la unidad seleccionada al formulario
+    editUnitForm.value = {
+      group_id: id,
+      name: selectedUnit.value.name,
+      order: selectedUnit.value.order,
+      start_date: selectedUnit.value.start_date,
+      end_date: selectedUnit.value.end_date,
+    }
+    showEditUnitModal.value = true
+  }
+}
+
+// Función para enviar la actualización a la API
+const submitEditUnit = async () => {
+  if (!selectedUnit.value) return
+
+  const { data: res, error: err } = await useapi(`/units/${selectedUnit.value.id}`, {
+    method: 'PUT', // O 'PATCH' dependiendo de tu backend
+  })
+    .put(editUnitForm.value)
+    .json()
+
+  if (!err.value) {
+    alert(res.value.message || 'Unidad actualizada correctamente')
+    showEditUnitModal.value = false
+    showManageUnitModal.value = false // Cerramos también el menú de gestión
+    reloadGroup() // Refrescamos la lista principal
+  } else {
+    alert('Error al actualizar la unidad')
+  }
+}
+
+const showManageUnitModal = ref(false)
+const selectedUnit = ref<Unit>()
+
+const openManageUnitModal = (unit:Unit) => {
+  selectedUnit.value = unit
+  showManageUnitModal.value = true
+}
+
+const closeManageUnitModal = () => {
+  showManageUnitModal.value = false
+  selectedUnit.value = undefined
+}
+
 const showAddStudentModal = ref(false)
 const showAddUnitModal = ref(false)
 const showStudentDetailModal = ref(false)
 const selectedStudent = ref<User | null>(null)
 
-// --- FORM STATES ---
 const selectedStudentId = ref<number | null>(null)
 const newUnitForm = ref({
   name: '',
@@ -153,18 +243,15 @@ const newUnitForm = ref({
   end_date: '',
 })
 
-// --- Petición para traer estudiantes disponibles ---
 const { data: studentsData, execute: loadStudents } = useapi(`/groups/available-students/${id}`, {
   method: 'GET',
 }).json()
 
-// Cargar estudiantes al abrir el modal
 const openAddStudentModal = () => {
   showAddStudentModal.value = true
   loadStudents()
 }
 
-// --- FUNCIONES PARA MODAL DE DETALLES DEL ESTUDIANTE ---
 const openStudentDetailModal = (student: User) => {
   selectedStudent.value = student
   showStudentDetailModal.value = true
@@ -203,19 +290,14 @@ const submitAddStudent = async () => {
   }
 
   alert(dd.value.message)
-
-  // 🔥 refrescar lista de alumnos inscritos
   reloadGroup()
-
-  // 🔥 refrescar lista de disponibles
   loadStudents()
-
   closeAddStudentModal()
 }
 </script>
 
 <template>
-  <div class="dashboard-container soft-light-mode">
+  <div class="dashboard-container">
     <div v-if="isFetching" class="state-msg">Cargando detalles del grupo...</div>
     <div v-else-if="error" class="state-msg error">Hubo un error al cargar los datos.</div>
 
@@ -287,16 +369,7 @@ const submitAddStudent = async () => {
         <section class="top-stats">
           <div class="stat-box box-solid-blue">
             <div class="stat-icon-wrapper stat-icon-primary">
-              <svg
-                width="28"
-                height="28"
-                viewBox="0 0 24 24"
-                fill="none"
-                stroke="currentColor"
-                stroke-width="2"
-                stroke-linecap="round"
-                stroke-linejoin="round"
-              >
+              <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
                 <path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20" />
                 <path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z" />
               </svg>
@@ -308,16 +381,7 @@ const submitAddStudent = async () => {
           </div>
           <div class="stat-box box-soft-blue">
             <div class="stat-icon-wrapper stat-icon-secondary">
-              <svg
-                width="28"
-                height="28"
-                viewBox="0 0 24 24"
-                fill="none"
-                stroke="currentColor"
-                stroke-width="2"
-                stroke-linecap="round"
-                stroke-linejoin="round"
-              >
+              <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
                 <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7" />
                 <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z" />
               </svg>
@@ -348,13 +412,66 @@ const submitAddStudent = async () => {
                     <div class="date-tag end"><strong>TÉRMINO</strong> {{ unit.end_date }}</div>
                   </div>
                 </div>
-                <button class="btn-manage-unit">Gestionar</button>
+                <button @click="openManageUnitModal(unit)" class="btn-manage-unit">Gestionar</button>
               </div>
             </div>
           </div>
         </section>
       </main>
     </div>
+
+    <!-- MODAL: GESTIONAR UNIDAD -->
+    <Teleport to="body">
+      <div v-if="showManageUnitModal && selectedUnit" class="modal-overlay" @click.self="closeManageUnitModal">
+        <div class="modal-content">
+          <div class="modal-header">
+            <div>
+              <small style="color: #1d65d8; font-weight: 800; text-transform: uppercase; font-size: 0.65rem; letter-spacing: 0.5px;">Opciones de Unidad</small>
+              <h2 style="margin: 0; font-size: 1.3rem; color: #1e3a5f;">{{ selectedUnit.name }}</h2>
+            </div>
+            <button class="btn-close-modal" @click="closeManageUnitModal">
+              <IconX />
+            </button>
+          </div>
+
+          <div class="modal-body">
+            <div class="manage-menu">
+              <button class="menu-item" @click="openEditUnitModal">
+                <div class="menu-icon edit-bg"><IconCalendar /></div>
+                <div class="menu-text">
+                  <span class="menu-title">Editar Detalles</span>
+                  <p>Cambiar nombre o fechas de entrega.</p>
+                </div>
+              </button>
+
+              <button class="menu-item">
+                <div class="menu-icon activity-bg">
+                  <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>
+                </div>
+                <div class="menu-text">
+                  <span class="menu-title">Ver Actividades</span>
+                  <p>Gestionar tareas asignadas a esta unidad.</p>
+                </div>
+              </button>
+
+              <button class="menu-item danger-item" @click="openDeleteConfirm">
+                <div class="menu-icon delete-bg">
+                  <IconX />
+                </div>
+                <div class="menu-text">
+                  <span class="menu-title">Eliminar Unidad</span>
+                  <p>Borrar definitivamente esta unidad.</p>
+                </div>
+              </button>
+            </div>
+          </div>
+
+          <div class="modal-footer">
+            <button @click="closeManageUnitModal" class="btn-cancel">Cancelar</button>
+          </div>
+        </div>
+      </div>
+    </Teleport>
 
     <!-- MODAL: AGREGAR ESTUDIANTE -->
     <Teleport to="body">
@@ -370,8 +487,6 @@ const submitAddStudent = async () => {
           <div class="modal-body">
             <div class="form-group">
               <label for="student-select">Seleccionar Estudiante</label>
-
-              <!-- 🔥 AQUÍ ESTABA EL ERROR: faltaba v-model -->
               <select v-model="selectedStudentId">
                 <option value="">-- Selecciona un estudiante --</option>
                 <option v-for="student in studentsData?.data" :key="student.id" :value="student.id">
@@ -391,11 +506,7 @@ const submitAddStudent = async () => {
 
     <!-- MODAL: DETALLES DEL ESTUDIANTE -->
     <Teleport to="body">
-      <div
-        v-if="showStudentDetailModal && selectedStudent"
-        class="modal-overlay"
-        @click.self="closeStudentDetailModal"
-      >
+      <div v-if="showStudentDetailModal && selectedStudent" class="modal-overlay" @click.self="closeStudentDetailModal">
         <div class="modal-content">
           <div class="modal-header">
             <h2>Información del Estudiante</h2>
@@ -415,16 +526,7 @@ const submitAddStudent = async () => {
 
             <div class="info-item">
               <div class="info-icon email-icon">
-                <svg
-                  width="18"
-                  height="18"
-                  viewBox="0 0 24 24"
-                  fill="none"
-                  stroke="currentColor"
-                  stroke-width="2"
-                  stroke-linecap="round"
-                  stroke-linejoin="round"
-                >
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
                   <rect x="2" y="4" width="20" height="16" rx="2" />
                   <path d="m22 7-8.97 5.7a1.94 1.94 0 0 1-2.06 0L2 7" />
                 </svg>
@@ -437,45 +539,21 @@ const submitAddStudent = async () => {
 
             <div class="info-item">
               <div class="info-icon phone-icon">
-                <svg
-                  width="18"
-                  height="18"
-                  viewBox="0 0 24 24"
-                  fill="none"
-                  stroke="currentColor"
-                  stroke-width="2"
-                  stroke-linecap="round"
-                  stroke-linejoin="round"
-                >
-                  <path
-                    d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72 12.84 12.84 0 0 0 .7 2.81 2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45 12.84 12.84 0 0 0 2.81.7A2 2 0 0 1 22 16.92z"
-                  />
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                  <path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72 12.84 12.84 0 0 0 .7 2.81 2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45 12.84 12.84 0 0 0 2.81.7A2 2 0 0 1 22 16.92z"/>
                 </svg>
               </div>
               <div class="info-content">
                 <label>Teléfono</label>
-                <a :href="`tel:${selectedStudent.cellphone}`" class="phone-link">
-                  {{ selectedStudent.cellphone }}
-                </a>
+                <a :href="`tel:${selectedStudent.cellphone}`" class="phone-link">{{ selectedStudent.cellphone }}</a>
               </div>
             </div>
 
             <div class="info-item">
               <div class="info-icon id-icon">
-                <svg
-                  width="18"
-                  height="18"
-                  viewBox="0 0 24 24"
-                  fill="none"
-                  stroke="currentColor"
-                  stroke-width="2"
-                  stroke-linecap="round"
-                  stroke-linejoin="round"
-                >
-                  <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2z" />
-                  <text x="12" y="16" text-anchor="middle" font-size="10" fill="currentColor">
-                    ID
-                  </text>
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                  <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2z"/>
+                  <text x="12" y="16" text-anchor="middle" font-size="10" fill="currentColor">ID</text>
                 </svg>
               </div>
               <div class="info-content">
@@ -486,17 +564,8 @@ const submitAddStudent = async () => {
 
             <div class="info-item">
               <div class="info-icon status-icon">
-                <svg
-                  width="18"
-                  height="18"
-                  viewBox="0 0 24 24"
-                  fill="none"
-                  stroke="currentColor"
-                  stroke-width="2"
-                  stroke-linecap="round"
-                  stroke-linejoin="round"
-                >
-                  <polyline points="20 6 9 17 4 12" />
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                  <polyline points="20 6 9 17 4 12"/>
                 </svg>
               </div>
               <div class="info-content">
@@ -527,21 +596,9 @@ const submitAddStudent = async () => {
           <div class="modal-body">
             <div class="form-group">
               <label for="unit-name">Nombre de la Unidad</label>
-              <input
-                id="unit-name"
-                v-model="ur.name"
-                type="text"
-                class="form-input"
-                placeholder="Ej: Introducción a los Conceptos Básicos"
-              />
-              <label for="unit-name">Orden de la Unidad</label>
-              <input
-                id="unit-name"
-                v-model="ur.order"
-                type="number"
-                class="form-input"
-                placeholder="un numero entero papi"
-              />
+              <input id="unit-name" v-model="ur.name" type="text" class="form-input" placeholder="Ej: Introducción a los Conceptos Básicos" />
+              <label for="unit-order">Orden de la Unidad</label>
+              <input id="unit-order" v-model="ur.order" type="number" class="form-input" placeholder="un numero entero" />
             </div>
 
             <div class="form-row">
@@ -564,17 +621,74 @@ const submitAddStudent = async () => {
       </div>
     </Teleport>
   </div>
+
+  <!-- MODAL: CONFIRMAR ELIMINACIÓN -->
+  <Teleport to="body">
+    <div v-if="showDeleteConfirmModal" class="modal-overlay delete-confirm-overlay" @click.self="closeDeleteConfirm">
+      <div class="modal-content modal-alert">
+        <div class="modal-body text-center" style="padding: 40px 30px;">
+          <div class="warning-icon-circle">!</div>
+          <h2 style="color: #c53030; margin-bottom: 10px;">¿Confirmar eliminación?</h2>
+          <p style="color: #4b7ba7; line-height: 1.5;">
+            Estás a punto de eliminar la unidad <strong>"{{ selectedUnit?.name }}"</strong>.
+            Esta acción borrará todas las actividades asociadas y no se puede deshacer.
+          </p>
+          <div class="confirm-actions">
+            <button @click="closeDeleteConfirm" class="btn-cancel">No, cancelar</button>
+            <button @click="executeDelete" class="btn-danger">Sí, eliminar unidad</button>
+          </div>
+        </div>
+      </div>
+    </div>
+  </Teleport>
+  <Teleport to="body">
+    <div v-if="showEditUnitModal" class="modal-overlay" @click.self="showEditUnitModal = false">
+      <div class="modal-content modal-large">
+        <div class="modal-header">
+          <h2>Editar Unidad: {{ selectedUnit?.name }}</h2>
+          <button class="btn-close-modal" @click="showEditUnitModal = false">
+            <IconX />
+          </button>
+        </div>
+
+        <div class="modal-body">
+          <div class="form-group">
+            <label for="edit-unit-name">Nombre de la Unidad</label>
+            <input id="edit-unit-name" v-model="editUnitForm.name" type="text" class="form-input" />
+
+            </div>
+
+
+          </div>
+
+        <div class="modal-footer" style="padding: 20px; display: flex; justify-content: flex-end; gap: 10px;">
+          <button @click="showEditUnitModal = false" class="btn-cancel">Cancelar</button>
+          <button @click="submitEditUnit" class="btn-confirm">Guardar Cambios</button>
+        </div>
+      </div>
+    </div>
+  </Teleport>
 </template>
 
 <style scoped>
-/* --- CONFIGURACIÓN DE COLORES ANTI-CEGUERA (SOFT LIGHT) --- */
-.dashboard-container.soft-light-mode {
-  background-color: #d6e9fa;
-  min-height: 100vh;
-  padding: 30px;
-  color: #242f4e;
+/* =============================================
+   PALETA DE COLORES (tomada de la card)
+   - Fondo página:       #d0e4f7
+   - Fondo cards:        blanco / rgba(255,255,255,0.6)
+   - Header gradiente:   #1d65d8 → #c5c1c1
+   - Texto principal:    #1e3a5f
+   - Texto secundario:   #4b7ba7
+   - Acento azul:        #3b82f6
+   - Verde activo:       rgba(120,251,166,0.79)
+   ============================================= */
+
+
+.dashboard-container {
   font-family: 'Plus Jakarta Sans', Inter, sans-serif;
   font-size: 15px;
+  padding: 30px;
+  min-height: 100vh;
+  background: linear-gradient(180deg,var(--color-AzulDos),var(--color-ComplementoDos));
 }
 
 .main-layout {
@@ -585,71 +699,66 @@ const submitAddStudent = async () => {
   margin: 0 auto;
 }
 
-/* --- TARJETAS SOFT LIGHT --- */
-.soft-card,
-.unit-card-soft {
-  background-color: #9bd3f1;
+/* --- TARJETAS --- */
+.soft-card {
+  background-color: rgba(255, 255, 255, 0.6);
   border-radius: 20px;
   padding: 25px;
-  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.04);
-  border: 1px solid rgba(139, 194, 243, 0.2);
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.08);
+  border: 1px solid rgba(29, 101, 216, 0.12);
+  backdrop-filter: blur(8px);
 }
 
-/* --- BOTÓN REGRESAR ESTILO SOFT --- */
+/* --- BOTÓN REGRESAR --- */
 .btn-back-soft {
   display: flex;
   align-items: center;
   gap: 15px;
-  background-color: #9bd3f1;
-  border: 1px solid rgba(30, 103, 163, 0.1);
+  background-color: rgba(255, 255, 255, 0.6);
+  border: 1px solid rgba(29, 101, 216, 0.15);
   padding: 12px 20px;
   border-radius: 18px;
   cursor: pointer;
   margin-bottom: 25px;
   transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
   width: fit-content;
+  backdrop-filter: blur(8px);
 }
 
 .back-icon-box {
   width: 42px;
   height: 42px;
-  background-color: #d6e9fa;
+  background: linear-gradient(135deg, #1d65d8 0%, #c5c1c1 100%);
   border-radius: 12px;
   display: flex;
   align-items: center;
   justify-content: center;
-  color: #1e67a3;
+  color: white;
   transition: 0.3s;
 }
 
 .back-text small {
-  color: #0c4a7a;
+  color: #4b7ba7;
   font-size: 0.7rem;
   text-transform: uppercase;
   font-weight: 800;
   letter-spacing: 1px;
-  text-align: left;
   display: block;
 }
 
 .back-text span {
-  color: #242f4e;
+  color: #1e3a5f;
   font-weight: 800;
   font-size: 1rem;
 }
 
 .btn-back-soft:hover {
-  background-color: #8bc2f3;
+  background-color: rgba(29, 101, 216, 0.08);
   transform: translateX(-5px);
-  border-color: transparent;
+  border-color: rgba(29, 101, 216, 0.3);
 }
 
-.btn-back-soft:hover .back-icon-box {
-  background-color: #1e67a3;
-  color: #ffffff;
-}
-
-/* --- DETALLES SIDEBAR --- */
+/* --- SIDEBAR --- */
 .sidebar-info {
   display: flex;
   flex-direction: column;
@@ -666,11 +775,11 @@ const submitAddStudent = async () => {
 .group-id {
   font-size: 11px;
   font-weight: 900;
-  background: linear-gradient(135deg, #1e67a3 0%, #0c4a7a 100%);
+  background: linear-gradient(135deg, #1d65d8 0%, #c5c1c1 100%);
   color: white;
   padding: 4px 10px;
   border-radius: 8px;
-  box-shadow: 0 2px 6px rgba(30, 103, 163, 0.2);
+  box-shadow: 0 2px 8px rgba(29, 101, 216, 0.3);
 }
 
 .status-badge {
@@ -680,25 +789,28 @@ const submitAddStudent = async () => {
   border-radius: 99px;
   text-transform: uppercase;
   letter-spacing: 0.5px;
+  background: rgba(255, 255, 255, 0.25);
+  backdrop-filter: blur(10px);
+  color: #1e3a5f;
+  border: 1px solid rgba(255, 255, 255, 0.3);
 }
 
 .status-badge.active {
-  background: linear-gradient(135deg, rgba(34, 197, 94, 0.15) 0%, rgba(34, 197, 94, 0.08) 100%);
+  background: rgba(120, 251, 166, 0.79);
+  border-color: rgba(6, 255, 102, 0.76);
   color: #166534;
-  border: 1.5px solid rgba(34, 197, 94, 0.3);
-  font-weight: 700;
 }
 
 .title {
   font-size: 1.8rem;
-  color: #0c4a7a;
+  color: #1e3a5f;
   font-weight: 800;
   margin: 0 0 10px;
   line-height: 1.2;
 }
 
 .description {
-  color: #666;
+  color: #4b7ba7;
   font-size: 0.95rem;
   line-height: 1.6;
   margin: 0 0 25px;
@@ -709,7 +821,7 @@ const submitAddStudent = async () => {
   display: flex;
   flex-direction: column;
   gap: 15px;
-  border-top: 2px solid #1e67a3;
+  border-top: 2px solid rgba(29, 101, 216, 0.2);
   padding-top: 20px;
 }
 
@@ -723,19 +835,19 @@ const submitAddStudent = async () => {
   color: white;
   width: 40px;
   height: 40px;
-  background: linear-gradient(135deg, #1e67a3 0%, #0c4a7a 100%);
+  background: linear-gradient(135deg, #1d65d8 0%, #3b82f6 100%);
   border-radius: 10px;
   display: flex;
   align-items: center;
   justify-content: center;
   flex-shrink: 0;
-  box-shadow: 0 2px 8px rgba(30, 103, 163, 0.15);
+  box-shadow: 0 2px 8px rgba(29, 101, 216, 0.25);
 }
 
 .meta-item label {
   display: block;
   font-size: 11px;
-  color: #999;
+  color: #4b7ba7;
   font-weight: 700;
   text-transform: uppercase;
   letter-spacing: 0.5px;
@@ -743,11 +855,11 @@ const submitAddStudent = async () => {
 
 .meta-item span {
   font-weight: 700;
-  color: #242f4e;
+  color: #1e3a5f;
   font-size: 0.95rem;
 }
 
-/* ESTUDIANTES CARD */
+/* --- ESTUDIANTES --- */
 .students-card {
   max-height: 650px;
   display: flex;
@@ -762,25 +874,24 @@ const submitAddStudent = async () => {
 }
 
 .card-header-flex h3 {
-  color: #0c4a7a;
+  color: #1e3a5f;
   font-size: 1.1rem;
   font-weight: 700;
   margin: 0;
 }
 
 .count-pill {
-  background: #d6e9fa;
-  color: #0c4a7a;
+  background: rgba(29, 101, 216, 0.1);
+  color: #1d65d8;
   font-weight: 800;
   padding: 4px 12px;
   border-radius: 99px;
   font-size: 0.8rem;
 }
 
-/* BOTÓN INSCRIBIR ESTUDIANTE */
 .btn-inscribe-student {
   width: calc(100% + 50px);
-  background: linear-gradient(135deg, #1e67a3 0%, #0c4a7a 100%);
+  background: linear-gradient(135deg, #1d65d8 0%, #3b82f6 100%);
   border: none;
   color: white;
   padding: 12px 16px;
@@ -794,597 +905,656 @@ const submitAddStudent = async () => {
   gap: 8px;
   transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
   margin: 0 -25px 16px -25px;
-  box-shadow: 0 4px 12px rgba(30, 103, 163, 0.2);
+  box-shadow: 0 4px 12px rgba(29, 101, 216, 0.3);
 }
 
 .btn-inscribe-student:hover {
-  background: linear-gradient(135deg, #0c4a7a 0%, #082a45 100%);
+  background: linear-gradient(135deg, #1552b0 0%, #1d65d8 100%);
   transform: translateY(-2px);
-  box-shadow: 0 6px 16px rgba(30, 103, 163, 0.3);
+  box-shadow: 0 6px 16px rgba(29, 101, 216, 0.4);
 }
 
 .students-scroll {
   overflow-y: auto;
   flex: 1;
-  padding-right: 5px;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  padding-right: 4px;
 }
 
 .student-item {
   display: flex;
-  gap: 15px;
   align-items: center;
-  padding: 12px 0;
-  border-bottom: 1px solid rgba(0, 0, 0, 0.03);
-  transition: all 0.2s;
+  gap: 12px;
+  padding: 10px;
+  border-radius: 12px;
+  background: rgba(29, 101, 216, 0.05);
+  border: 1px solid rgba(29, 101, 216, 0.08);
+  transition: background 0.2s;
 }
 
 .student-item:hover {
-  background: rgba(30, 103, 163, 0.05);
-  padding: 12px 8px;
-  border-radius: 8px;
-  margin: 0 -8px;
+  background: rgba(29, 101, 216, 0.1);
 }
 
 .avatar {
-  width: 38px;
-  height: 38px;
-  background: linear-gradient(135deg, #1e67a3 0%, #0c4a7a 100%);
-  color: white;
-  border-radius: 10px;
+  width: 44px;
+  height: 44px;
+  border-radius: 50%;
+  background: linear-gradient(135deg, #3b82f6 0%, #1d65d8 100%);
   display: flex;
   align-items: center;
   justify-content: center;
-  font-weight: 800;
-  font-size: 0.85rem;
+  color: white;
+  font-weight: 700;
+  font-size: 0.95rem;
   flex-shrink: 0;
-  box-shadow: 0 2px 8px rgba(30, 103, 163, 0.15);
 }
 
 .student-detail .name {
   font-weight: 600;
-  font-size: 0.9rem;
+  color: #1e3a5f;
   margin: 0;
-  color: #242f4e;
-  transition: all 0.2s;
-  cursor: pointer;
-  padding: 4px 8px;
-  border-radius: 6px;
-}
-
-.student-detail .name:hover {
-  color: #1e67a3;
-  background: rgba(30, 103, 163, 0.08);
-  font-weight: 700;
+  font-size: 0.9rem;
 }
 
 .student-detail .email {
-  font-size: 0.8rem;
-  color: #777;
-  margin: 0;
-  font-weight: 500;
+  font-size: 0.78rem;
+  color: #4b7ba7;
+  margin: 2px 0 0;
 }
 
-/* --- ÁREA CENTRAL --- */
+/* --- ÁREA PRINCIPAL --- */
+.content-area {
+  display: flex;
+  flex-direction: column;
+  gap: 24px;
+}
+
+/* --- STATS --- */
 .top-stats {
-  display: grid;
-  grid-template-columns: 1fr 1fr;
-  gap: 20px;
-  margin-bottom: 30px;
+  display: flex;
+  gap: 16px;
 }
 
 .stat-box {
-  padding: 28px;
-  border-radius: 16px;
+  flex: 1;
+  border-radius: 20px;
+  padding: 24px;
   display: flex;
   align-items: center;
-  gap: 20px;
-  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.08);
-  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-  border: 1px solid rgba(255, 255, 255, 0.2);
-}
-
-.stat-box:hover {
-  transform: translateY(-4px);
-  box-shadow: 0 12px 32px rgba(0, 0, 0, 0.12);
+  gap: 16px;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.06);
 }
 
 .box-solid-blue {
-  background: linear-gradient(135deg, #1e67a3 0%, #0c4a7a 100%);
+  background: linear-gradient(135deg, #1d65d8 0%, #c5c1c1 100%);
   color: white;
 }
 
 .box-soft-blue {
-  background: linear-gradient(135deg, #9bd3f1 0%, #8bc2f3 100%);
-  border: 2px solid rgba(30, 103, 163, 0.2);
-  color: #0c4a7a;
+  background: rgba(255, 255, 255, 0.6);
+  border: 1px solid rgba(29, 101, 216, 0.15);
+  backdrop-filter: blur(8px);
 }
 
 .stat-icon-wrapper {
-  width: 60px;
-  height: 60px;
+  width: 56px;
+  height: 56px;
   border-radius: 14px;
   display: flex;
   align-items: center;
   justify-content: center;
   flex-shrink: 0;
-  font-weight: 600;
 }
 
 .stat-icon-primary {
-  background: rgba(255, 255, 255, 0.2);
+  background: rgba(255, 255, 255, 0.25);
+  backdrop-filter: blur(10px);
   color: white;
 }
 
 .stat-icon-secondary {
-  background: rgba(30, 103, 163, 0.15);
-  color: #1e67a3;
+  background: linear-gradient(135deg, #3b82f6 0%, #929db3 100%);
+  color: white;
 }
 
 .stat-text {
   display: flex;
   flex-direction: column;
-  gap: 6px;
+  gap: 2px;
 }
 
-.number {
-  font-size: 2.4rem;
-  font-weight: 900;
-  display: block;
+.stat-text .number {
+  font-size: 2rem;
+  font-weight: 800;
   line-height: 1;
 }
 
-.label {
-  font-size: 0.85rem;
+.box-solid-blue .stat-text .number,
+.box-solid-blue .stat-text .label {
+  color: white;
+}
+
+.box-soft-blue .stat-text .number {
+  color: #1e3a5f;
+}
+
+.stat-text .label {
+  font-size: 0.8rem;
+  font-weight: 600;
   text-transform: uppercase;
-  font-weight: 700;
   letter-spacing: 0.5px;
   opacity: 0.85;
 }
 
-/* TIMELINE */
+.box-soft-blue .stat-text .label {
+  color: #4b7ba7;
+}
+
+/* --- TIMELINE DE UNIDADES --- */
+.units-timeline {
+  background: rgba(255, 255, 255, 0.6);
+  border-radius: 20px;
+  padding: 25px;
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.06);
+  border: 1px solid rgba(29, 101, 216, 0.12);
+  backdrop-filter: blur(8px);
+}
+
 .section-header {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  margin-bottom: 25px;
+  margin-bottom: 24px;
 }
 
 .section-header h2 {
-  color: #0c4a7a;
-  font-size: 1.3rem;
+  font-size: 1.25rem;
+  font-weight: 800;
+  color: #1e3a5f;
   margin: 0;
 }
 
 .btn-primary-add {
-  background: #1e67a3;
-  border: none;
+  background: linear-gradient(135deg, #1d65d8 0%, #3b82f6 100%);
   color: white;
-  padding: 12px 24px;
+  border: none;
+  padding: 10px 18px;
   border-radius: 12px;
   font-weight: 700;
+  font-size: 0.9rem;
   cursor: pointer;
   display: flex;
   align-items: center;
-  gap: 10px;
-  transition: 0.3s;
+  gap: 8px;
+  transition: all 0.2s ease;
+  box-shadow: 0 4px 12px rgba(29, 101, 216, 0.3);
 }
 
 .btn-primary-add:hover {
-  background: #0c4a7a;
+  transform: translateY(-2px);
+  box-shadow: 0 6px 16px rgba(29, 101, 216, 0.4);
 }
 
 .timeline {
   display: flex;
   flex-direction: column;
-  gap: 15px;
+  gap: 14px;
 }
 
 .unit-card-soft {
+  background: rgba(255, 255, 255, 0.6);
+  border-radius: 16px;
+  padding: 18px 20px;
   display: flex;
-  gap: 20px;
-  padding: 20px;
-  border-radius: 20px;
   align-items: center;
-  border-left: 5px solid #1e67a3;
+  gap: 16px;
+  border: 1px solid rgba(29, 101, 216, 0.12);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.04);
+  transition: all 0.2s ease;
+}
+
+.unit-card-soft:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 8px 20px rgba(29, 101, 216, 0.12);
+  border-color: rgba(29, 101, 216, 0.25);
 }
 
 .unit-index-badge {
-  width: 45px;
-  height: 45px;
-  background: #d6e9fa;
-  border: 2px solid #8bc2f3;
-  color: #1e67a3;
-  border-radius: 14px;
+  width: 40px;
+  height: 40px;
+  border-radius: 12px;
+  background: linear-gradient(135deg, #1d65d8 0%, #c5c1c1 100%);
+  color: white;
+  font-weight: 800;
+  font-size: 1.1rem;
   display: flex;
   align-items: center;
   justify-content: center;
-  font-weight: 900;
-  font-size: 1.2rem;
+  flex-shrink: 0;
+  box-shadow: 0 4px 12px rgba(29, 101, 216, 0.3);
 }
 
 .unit-body {
   flex: 1;
   display: flex;
-  justify-content: space-between;
   align-items: center;
-  gap: 20px;
+  justify-content: space-between;
+  gap: 16px;
 }
 
 .unit-main h3 {
-  margin: 0 0 10px 0;
-  font-size: 1.2rem;
-  color: #242f4e;
+  font-size: 1rem;
+  font-weight: 700;
+  color: #1e3a5f;
+  margin: 0 0 8px;
 }
 
 .date-row {
   display: flex;
-  gap: 12px;
+  gap: 10px;
 }
 
 .date-tag {
-  padding: 6px 12px;
+  font-size: 0.75rem;
+  padding: 4px 10px;
   border-radius: 8px;
-  font-size: 0.8rem;
   font-weight: 600;
 }
 
-.date-tag strong {
-  font-size: 0.7rem;
-  margin-right: 6px;
-  opacity: 0.7;
-  font-weight: 800;
-}
-
 .date-tag.start {
-  background: rgba(34, 197, 94, 0.1);
-  color: #166534;
-  border: 1px solid rgba(34, 197, 94, 0.2);
+  background: rgba(59, 130, 246, 0.12);
+  color: #1d65d8;
+  border: 1px solid rgba(59, 130, 246, 0.2);
 }
 
 .date-tag.end {
-  background: rgba(239, 68, 68, 0.1);
-  color: #c53030;
-  border: 1px solid rgba(239, 68, 68, 0.2);
+  background: rgba(74, 222, 128, 0.12);
+  color: #166534;
+  border: 1px solid rgba(74, 222, 128, 0.25);
 }
 
 .btn-manage-unit {
-  background: #ffffff;
-  border: 1px solid #1e67a3;
-  color: #1e67a3;
-  padding: 10px 20px;
+  background: rgba(29, 101, 216, 0.08);
+  color: #1d65d8;
+  border: 1.5px solid rgba(29, 101, 216, 0.2);
+  padding: 8px 16px;
   border-radius: 10px;
   font-weight: 700;
+  font-size: 0.85rem;
   cursor: pointer;
-  transition: 0.3s;
+  transition: all 0.2s ease;
+  flex-shrink: 0;
 }
 
 .btn-manage-unit:hover {
-  background: #1e67a3;
+  background: linear-gradient(135deg, #1d65d8 0%, #3b82f6 100%);
   color: white;
+  border-color: transparent;
+  transform: translateY(-1px);
 }
 
-.state-msg {
-  text-align: center;
-  padding: 100px;
-  color: #666;
-  font-size: 1.2rem;
-}
-
-/* MODALES */
+/* --- MODALES --- */
 .modal-overlay {
   position: fixed;
-  top: 0;
-  left: 0;
-  right: 0;
-  bottom: 0;
-  background: rgba(0, 0, 0, 0.5);
+  inset: 0;
+  background: rgba(30, 58, 95, 0.45);
+  backdrop-filter: blur(6px);
   display: flex;
   align-items: center;
   justify-content: center;
-  z-index: 1000;
-  animation: fadeIn 0.2s ease-out;
-}
-
-@keyframes fadeIn {
-  from {
-    opacity: 0;
-  }
-  to {
-    opacity: 1;
-  }
+  z-index: 999;
+  padding: 20px;
 }
 
 .modal-content {
   background: white;
   border-radius: 20px;
-  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.15);
-  width: 90%;
-  max-width: 500px;
-  animation: slideUp 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  width: 100%;
+  max-width: 480px;
+  box-shadow: 0 20px 60px rgba(30, 58, 95, 0.2);
   overflow: hidden;
 }
 
-.modal-content.modal-large {
+.modal-large {
   max-width: 600px;
-}
-
-@keyframes slideUp {
-  from {
-    opacity: 0;
-    transform: translateY(20px);
-  }
-  to {
-    opacity: 1;
-    transform: translateY(0);
-  }
 }
 
 .modal-header {
   display: flex;
   justify-content: space-between;
-  align-items: center;
-  padding: 25px;
-  border-bottom: 1px solid #e5e7eb;
+  align-items: flex-start;
+  padding: 24px 24px 0;
 }
 
 .modal-header h2 {
-  margin: 0;
-  font-size: 1.4rem;
-  color: #0c4a7a;
+  font-size: 1.25rem;
   font-weight: 800;
+  color: #1e3a5f;
+  margin: 0;
 }
 
 .btn-close-modal {
-  background: none;
-  border: none;
-  cursor: pointer;
-  color: #666;
-  padding: 5px;
+  background: rgba(29, 101, 216, 0.08);
+  border: 1px solid rgba(29, 101, 216, 0.15);
+  color: #4b7ba7;
+  width: 36px;
+  height: 36px;
+  border-radius: 10px;
   display: flex;
   align-items: center;
   justify-content: center;
-  transition: 0.2s;
+  cursor: pointer;
+  transition: all 0.2s;
+  flex-shrink: 0;
 }
 
 .btn-close-modal:hover {
-  color: #0c4a7a;
-  transform: rotate(90deg);
+  background: rgba(239, 68, 68, 0.1);
+  color: #c53030;
+  border-color: rgba(239, 68, 68, 0.2);
 }
 
 .modal-body {
-  padding: 25px;
-}
-
-.form-group {
-  margin-bottom: 20px;
-}
-
-.form-group:last-child {
-  margin-bottom: 0;
-}
-
-.form-group label {
-  display: block;
-  font-size: 0.95rem;
-  font-weight: 700;
-  color: #242f4e;
-  margin-bottom: 8px;
-}
-
-.form-input,
-.form-select {
-  width: 100%;
-  padding: 12px 16px;
-  border: 2px solid #e5e7eb;
-  border-radius: 10px;
-  font-size: 0.95rem;
-  font-family: inherit;
-  transition: all 0.2s;
-  background: white;
-  color: #242f4e;
-}
-
-.form-input:focus,
-.form-select:focus {
-  outline: none;
-  border-color: #1e67a3;
-  background: #f8fbff;
-  box-shadow: 0 0 0 3px rgba(30, 103, 163, 0.1);
-}
-
-.form-select {
-  cursor: pointer;
-  appearance: none;
-  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 12 12'%3E%3Cpath fill='%231e67a3' d='M6 9L1 4h10z'/%3E%3C/svg%3E");
-  background-repeat: no-repeat;
-  background-position: right 12px center;
-  padding-right: 36px;
-}
-
-.form-row {
-  display: grid;
-  grid-template-columns: 1fr 1fr;
-  gap: 15px;
+  padding: 20px 24px;
 }
 
 .modal-footer {
+  padding: 0 24px 24px;
   display: flex;
-  gap: 12px;
-  padding: 20px 25px;
-  border-top: 1px solid #e5e7eb;
   justify-content: flex-end;
+  gap: 10px;
 }
 
-.btn-cancel,
-.btn-confirm {
-  padding: 11px 24px;
-  border-radius: 10px;
-  font-weight: 700;
-  cursor: pointer;
-  transition: all 0.2s;
-  border: none;
-  font-size: 0.95rem;
+/* --- MANAGE MENU --- */
+.manage-menu {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
 }
 
-.btn-cancel {
-  background: #f3f4f6;
-  color: #666;
-}
-
-.btn-cancel:hover {
-  background: #e5e7eb;
-  color: #242f4e;
-}
-
-.btn-confirm {
-  background: #1e67a3;
-  color: white;
-}
-
-.btn-confirm:hover {
-  background: #0c4a7a;
-  transform: translateY(-1px);
-  box-shadow: 0 4px 12px rgba(30, 103, 163, 0.2);
-}
-
-/* SCROLLBAR CUSTOM (SOFT) */
-::-webkit-scrollbar {
-  width: 6px;
-}
-
-::-webkit-scrollbar-thumb {
-  background: #8bc2f3;
-  border-radius: 10px;
-}
-
-::-webkit-scrollbar-track {
-  background: transparent;
-}
-
-/* --- MODAL DE DETALLES DEL ESTUDIANTE --- */
-.student-avatar-large {
-  width: 80px;
-  height: 80px;
-  background: linear-gradient(135deg, #1e67a3 0%, #0c4a7a 100%);
-  color: white;
-  border-radius: 16px;
+.menu-item {
   display: flex;
   align-items: center;
-  justify-content: center;
-  font-weight: 900;
-  font-size: 1.8rem;
-  box-shadow: 0 6px 20px rgba(30, 103, 163, 0.2);
-  margin: 0 auto 20px;
+  gap: 15px;
+  padding: 15px;
+  background: #f8fbff;
+  border: 2px solid rgba(29, 101, 216, 0.1);
+  border-radius: 12px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  text-align: left;
+  width: 100%;
 }
 
-.student-info-section {
-  text-align: center;
-  margin-bottom: 24px;
-  border-bottom: 2px solid #f0f0f0;
-  padding-bottom: 16px;
+.menu-item:hover {
+  border-color: #1d65d8;
+  background: rgba(29, 101, 216, 0.05);
+  transform: translateX(4px);
 }
 
-.student-info-section h3 {
-  margin: 0;
-  font-size: 1.4rem;
-  color: #0c4a7a;
-  font-weight: 800;
-}
-
-.info-item {
-  display: flex;
-  gap: 16px;
-  align-items: flex-start;
-  padding: 16px 0;
-  border-bottom: 1px solid #f5f5f5;
-  transition: all 0.2s;
-}
-
-.info-item:last-child {
-  border-bottom: none;
-}
-
-.info-item:hover {
-  background: #f9fbff;
-  padding: 16px 12px;
-  margin: 0 -12px;
-  border-radius: 8px;
-}
-
-.info-icon {
-  width: 40px;
-  height: 40px;
+.menu-icon {
+  width: 44px;
+  height: 44px;
   border-radius: 10px;
   display: flex;
   align-items: center;
   justify-content: center;
   flex-shrink: 0;
-  font-weight: 600;
 }
 
-.email-icon {
-  background: rgba(59, 130, 246, 0.1);
-  color: #3b82f6;
+.edit-bg { background: rgba(29, 101, 216, 0.1); color: #1d65d8; }
+.activity-bg { background: rgba(74, 222, 128, 0.15); color: #166534; }
+.delete-bg { background: rgba(239, 68, 68, 0.1); color: #c53030; }
+
+.menu-title {
+  display: block;
+  font-weight: 700;
+  color: #1e3a5f;
+  font-size: 0.95rem;
 }
 
-.phone-icon {
-  background: rgba(34, 197, 94, 0.1);
-  color: #22c55e;
+.menu-text p {
+  margin: 2px 0 0;
+  font-size: 0.8rem;
+  color: #4b7ba7;
 }
 
-.id-icon {
-  background: rgba(139, 92, 246, 0.1);
-  color: #8b5cf6;
+.danger-item:hover {
+  border-color: #ef4444;
+  background: rgba(239, 68, 68, 0.04);
 }
 
-.date-icon {
-  background: rgba(249, 115, 22, 0.1);
-  color: #f97316;
+/* --- FORMULARIOS --- */
+.form-group {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  margin-bottom: 16px;
 }
 
-.status-icon {
-  background: rgba(34, 197, 94, 0.1);
-  color: #22c55e;
+.form-group label {
+  font-size: 0.8rem;
+  font-weight: 700;
+  color: #4b7ba7;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
 }
 
-.info-content {
-  flex: 1;
+.form-input,
+select {
+  width: 100%;
+  padding: 10px 14px;
+  border: 1.5px solid rgba(29, 101, 216, 0.2);
+  border-radius: 10px;
+  font-size: 0.95rem;
+  color: #1e3a5f;
+  background: rgba(208, 228, 247, 0.3);
+  transition: border-color 0.2s;
+  box-sizing: border-box;
 }
+
+.form-input:focus,
+select:focus {
+  outline: none;
+  border-color: #1d65d8;
+  background: white;
+}
+
+.form-row {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 16px;
+}
+
+/* --- BOTONES --- */
+.btn-cancel {
+  padding: 10px 20px;
+  background: rgba(29, 101, 216, 0.08);
+  border: 1.5px solid rgba(29, 101, 216, 0.2);
+  border-radius: 10px;
+  color: #4b7ba7;
+  font-weight: 700;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.btn-cancel:hover {
+  background: rgba(29, 101, 216, 0.15);
+  color: #1e3a5f;
+}
+
+.btn-confirm {
+  padding: 10px 20px;
+  background: linear-gradient(135deg, #1d65d8 0%, #3b82f6 100%);
+  border: none;
+  border-radius: 10px;
+  color: white;
+  font-weight: 700;
+  cursor: pointer;
+  transition: all 0.2s;
+  box-shadow: 0 4px 12px rgba(29, 101, 216, 0.3);
+}
+
+.btn-confirm:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 6px 16px rgba(29, 101, 216, 0.4);
+}
+
+.btn-danger {
+  padding: 10px 20px;
+  background: linear-gradient(135deg, #ef4444 0%, #c53030 100%);
+  border: none;
+  border-radius: 10px;
+  color: white;
+  font-weight: 700;
+  cursor: pointer;
+  transition: all 0.2s;
+  box-shadow: 0 4px 12px rgba(239, 68, 68, 0.3);
+}
+
+.btn-danger:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 6px 16px rgba(239, 68, 68, 0.4);
+}
+
+/* --- MODAL DETALLES ESTUDIANTE --- */
+.student-avatar-large {
+  width: 72px;
+  height: 72px;
+  border-radius: 50%;
+  background: linear-gradient(135deg, #3b82f6 0%, #1d65d8 100%);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: white;
+  font-weight: 800;
+  font-size: 1.5rem;
+  margin: 0 auto 16px;
+  box-shadow: 0 8px 24px rgba(29, 101, 216, 0.3);
+}
+
+.student-info-section {
+  text-align: center;
+  margin-bottom: 20px;
+}
+
+.student-info-section h3 {
+  font-size: 1.2rem;
+  font-weight: 800;
+  color: #1e3a5f;
+  margin: 0;
+}
+
+.info-item {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  padding: 12px 0;
+  border-bottom: 1px solid rgba(29, 101, 216, 0.08);
+}
+
+.info-icon {
+  width: 38px;
+  height: 38px;
+  border-radius: 10px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+
+.email-icon { background: rgba(29, 101, 216, 0.1); color: #1d65d8; }
+.phone-icon { background: rgba(74, 222, 128, 0.15); color: #166534; }
+.id-icon { background: rgba(197, 197, 197, 0.2); color: #4b7ba7; }
+.status-icon { background: rgba(120, 251, 166, 0.3); color: #166534; }
 
 .info-content label {
   display: block;
-  font-size: 0.8rem;
-  color: #999;
+  font-size: 0.7rem;
   font-weight: 700;
+  color: #4b7ba7;
   text-transform: uppercase;
   letter-spacing: 0.5px;
-  margin-bottom: 4px;
 }
 
 .info-content p {
-  margin: 0;
-  color: #242f4e;
+  margin: 2px 0 0;
   font-weight: 600;
+  color: #1e3a5f;
   font-size: 0.95rem;
 }
 
 .phone-link {
-  display: inline-flex;
-  align-items: center;
-  gap: 8px;
-  color: #22c55e;
+  color: #1d65d8;
+  font-weight: 600;
   text-decoration: none;
-  font-weight: 700;
-  font-size: 0.95rem;
-  padding: 6px 10px;
-  border-radius: 6px;
-  transition: all 0.2s;
-  background: rgba(34, 197, 94, 0.05);
 }
 
 .phone-link:hover {
-  background: rgba(34, 197, 94, 0.15);
-  color: #16a34a;
   text-decoration: underline;
+}
+
+/* --- DELETE CONFIRM --- */
+.warning-icon-circle {
+  width: 60px;
+  height: 60px;
+  border-radius: 50%;
+  background: rgba(239, 68, 68, 0.1);
+  border: 2px solid rgba(239, 68, 68, 0.3);
+  color: #c53030;
+  font-size: 1.8rem;
+  font-weight: 900;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin: 0 auto 20px;
+}
+
+.confirm-actions {
+  display: flex;
+  gap: 12px;
+  justify-content: center;
+  margin-top: 24px;
+}
+
+.text-center {
+  text-align: center;
+}
+
+/* --- ESTADOS --- */
+.state-msg {
+  text-align: center;
+  padding: 60px;
+  color: #4b7ba7;
+  font-weight: 600;
+  font-size: 1.1rem;
+}
+
+.state-msg.error {
+  color: #c53030;
+}
+
+/* --- RESPONSIVE --- */
+@media (max-width: 1024px) {
+  .main-layout {
+    grid-template-columns: 1fr;
+  }
+}
+
+@media (max-width: 640px) {
+  .dashboard-container {
+    padding: 16px;
+  }
+
+  .top-stats {
+    flex-direction: column;
+  }
+
+  .form-row {
+    grid-template-columns: 1fr;
+  }
 }
 </style>
