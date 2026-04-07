@@ -2,53 +2,77 @@
 import { computed } from 'vue'
 
 const props = defineProps<{
-  task: any,
-  actionType?: 'edit' | 'view'
+  task: any
 }>()
+
+const emit = defineEmits(['edit', 'view'])
 
 const formatDate = (dateStr: string) => {
   if (!dateStr) return '—'
-  return new Date(dateStr).toLocaleDateString('es-MX', { day: '2-digit', month: 'short', year: 'numeric' })
+  return new Date(dateStr).toLocaleDateString('es-MX', {
+    day: '2-digit',
+    month: 'short',
+    year: 'numeric'
+  })
 }
 
 const statusColor = computed(() => {
   const s = props.task.status?.toLowerCase()
-  if (s === 'activa')    return 'activa'
-  if (s === 'cerrada')   return 'cerrada'
+  if (s === 'activa') return 'activa'
+  if (s === 'cerrada') return 'cerrada'
   if (s === 'cancelada') return 'cancelada'
   return ''
 })
 
 const submissions = computed(() => props.task.submissions ?? [])
 const submissionsCount = computed(() => submissions.value.length)
+
 const gradedCount = computed(() =>
   submissions.value.filter((s: any) => s.status === 'Calificada').length
 )
+
 const lateCount = computed(() =>
   submissions.value.filter((s: any) =>
     new Date(s.submission_date) > new Date(props.task.end_date)
   ).length
 )
-const pendingGrade = computed(() => submissionsCount.value - gradedCount.value)
+
+const pendingGrade = computed(() =>
+  submissionsCount.value - gradedCount.value
+)
 </script>
 
 <template>
-  <div :class="['task-card', statusColor]" style="cursor: pointer;">
+  <div
+    :class="['task-card', statusColor]"
+    style="cursor: pointer;"
+    @click="$emit('view', task)"
+  >
     <div class="status-stripe"></div>
 
     <div class="card-body">
       <div class="top-row">
         <span :class="['status-tag', statusColor]">{{ task.status }}</span>
-        <span class="group-tag" v-if="task.group?.name">{{ task.group.name }}</span>
-        <span class="unit-tag" v-if="task.unit?.name">{{ task.unit.name }}</span>
+
+        <span class="group-tag" v-if="task.group?.name">
+          {{ task.group.name }}
+        </span>
+
+        <span class="unit-tag" v-if="task.unit?.name">
+          {{ task.unit.name }}
+        </span>
       </div>
 
       <h4 class="task-title">{{ task.title }}</h4>
       <p class="task-desc">{{ task.description }}</p>
 
       <div class="dates-row">
-        <span class="date-chip">Inicio: {{ formatDate(task.start_date) }}</span>
-        <span class="date-chip deadline">Límite: {{ formatDate(task.end_date) }}</span>
+        <span class="date-chip">
+          Inicio: {{ formatDate(task.start_date) }}
+        </span>
+        <span class="date-chip deadline">
+          Límite: {{ formatDate(task.end_date) }}
+        </span>
       </div>
 
       <div class="stats-row">
@@ -59,19 +83,24 @@ const pendingGrade = computed(() => submissionsCount.value - gradedCount.value)
       </div>
     </div>
 
-
-
+    <!-- 🔥 BOTONES -->
     <div class="card-action">
-      <div
-        class="btn-detail"
-        :style="actionType === 'edit'
-          ? 'background:#e2e8f0; color:#475569;'
-          : ''"
-      >
-        {{ actionType === 'edit' ? 'Editar' : 'Ver detalle' }}
 
+      <!-- EDITAR -->
+      <button
+        class="btn-edit"
+        @click.stop="emit('edit', task)"
+      >
+        Editar
+      </button>
+
+      <!-- VER DETALLE -->
+      <button
+        class="btn-detail"
+        @click.stop="emit('view', task)"
+      >
+        Ver detalle
         <svg
-          v-if="actionType !== 'edit'"
           width="14"
           height="14"
           viewBox="0 0 24 24"
@@ -81,7 +110,8 @@ const pendingGrade = computed(() => submissionsCount.value - gradedCount.value)
         >
           <path d="M5 12h14M12 5l7 7-7 7"/>
         </svg>
-      </div>
+      </button>
+
     </div>
   </div>
 </template>
@@ -233,26 +263,48 @@ const pendingGrade = computed(() => submissionsCount.value - gradedCount.value)
 .card-action {
   display: flex;
   align-items: center;
-  padding: 16px 16px 16px 0;
+  justify-content: flex-end;
+  gap: 8px;
+  padding: 16px;
+  min-width: 170px;
 }
 
 .btn-detail {
   display: inline-flex;
   align-items: center;
   gap: 6px;
-  text-decoration: none;
-  padding: 9px 16px;
+  padding: 9px 14px;
   border-radius: 10px;
-  background: #f1f5f9;
-  color: #2563eb;
+  background: #2563eb;
+  color: white;
   font-weight: 700;
-  font-size: 0.78rem;
-  white-space: nowrap;
-  transition: background 0.2s, color 0.2s;
+  font-size: 0.75rem;
+  border: none;
+  cursor: pointer;
+  transition: all 0.2s ease;
 }
 
 .btn-detail:hover {
-  background: #2563eb;
-  color: white;
+  background: #1d4ed8;
+  transform: translateY(-1px);
+}
+
+.btn-edit {
+  border: none;
+  background: #f1f5f9;
+  color: #334155;
+  padding: 9px 14px;
+  border-radius: 10px;
+  font-weight: 700;
+  font-size: 0.75rem;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  border: 1px solid #e2e8f0;
+}
+
+.btn-edit:hover {
+  background: #e2e8f0;
+  color: #1e293b;
+  transform: translateY(-1px);
 }
 </style>

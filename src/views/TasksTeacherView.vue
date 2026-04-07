@@ -143,6 +143,23 @@ function handleTaskClick(task: any) {
   router.push(`/teacher/tasks/${task.id}`)
 }
 
+
+function handleEditTask(task: any) {
+  editingTask.value = task
+
+  form.value = {
+    title: task.title,
+    description: task.description,
+    start_date: task.start_date?.replace(' ', 'T'),
+    end_date: task.end_date?.replace(' ', 'T'),
+    status: task.status,
+    group_id: task.group_id,
+    unit_id: task.unit_id,
+  }
+
+  showEditModal.value = true
+}
+
 // CRUD
 function createTask() {
   if (!form.value.group_id || !form.value.unit_id) {
@@ -164,6 +181,79 @@ function createTask() {
     form.value = { ...initialTask }
     await reloadTasks()
   })
+}
+const showEditModal = ref(false)
+const editingTask = ref<any>(null)
+
+async function updateTask() {
+  if (!editingTask.value) return
+
+  try {
+    const payload = {
+      ...form.value,
+      group_id: Number(form.value.group_id),
+      unit_id: Number(form.value.unit_id),
+      start_date: form.value.start_date?.replace('T', ' ') + ':00',
+      end_date: form.value.end_date?.replace('T', ' ') + ':00',
+    }
+
+    const res = await fetch(`/api/assignments/${editingTask.value.id}`, {
+      method: 'PATCH', 
+      headers: {
+        'Content-Type': 'application/json',
+        Authorization: `Bearer ${ua.credentials?.token}`,
+      },
+      body: JSON.stringify(payload),
+    })
+
+    if (!res.ok) {
+      console.error(await res.text())
+      alert('Error al actualizar la tarea')
+      return
+    }
+
+    showEditModal.value = false
+    editingTask.value = null
+    form.value = { ...initialTask }
+
+    await reloadTasks()
+
+  } catch (err) {
+    console.error(err)
+    alert('Error inesperado al actualizar')
+  }
+}
+
+async function deleteTask() {
+  if (!editingTask.value) return
+
+  const confirmDelete = confirm('¿Seguro que quieres eliminar esta tarea?')
+  if (!confirmDelete) return
+
+  try {
+    const res = await fetch(`/api/assignments/${editingTask.value.id}`, {
+      method: 'DELETE',
+      headers: {
+        Authorization: `Bearer ${ua.credentials?.token}`,
+      },
+    })
+
+    if (!res.ok) {
+      console.error(await res.text())
+      alert('Error al eliminar')
+      return
+    }
+
+    showEditModal.value = false
+    editingTask.value = null
+    form.value = { ...initialTask }
+
+    await reloadTasks()
+
+  } catch (err) {
+    console.error(err)
+    alert('Error al eliminar')
+  }
 }
 </script>
 
@@ -235,12 +325,13 @@ function createTask() {
           </div>
 
           <TeacherTaskCard
-            v-for="task in filteredActivities"
-            :key="task.id"
-            :task="task"
-            action-type="view"
-            @click="handleTaskClick(task)"
-          />
+  v-for="task in filteredActivities"
+  :key="task.id"
+  :task="task"
+  @view="handleTaskClick"
+  @edit="handleEditTask"
+/>
+          
 
           <div v-if="!loadingSubmissions && filteredActivities.length === 0" class="empty-state">
             <p>No hay tareas en esta categoría.</p>
@@ -284,6 +375,49 @@ function createTask() {
 
     </SidebarLayout>
   </div>
+
+
+<!-- MODAL EDITAR -->
+<Modal v-model="showEditModal">
+  <form @submit.prevent="updateTask" class="task-form">
+    <h3>Editar Tarea</h3>
+
+    <input v-model="form.title" placeholder="Título" required />
+    <textarea v-model="form.description" placeholder="Instrucciones"></textarea>
+
+    <div class="grid-fields">
+      <select v-model="form.group_id" required>
+        <option :value="null" disabled>Grupo</option>
+        <option v-for="g in groupsData?.data ?? []" :key="g.id" :value="g.id">
+          {{ g.name }}
+        </option>
+      </select>
+
+      <select v-model="form.unit_id" required>
+        <option :value="null" disabled>Unidad</option>
+        <option v-for="u in availableUnits" :key="u.id" :value="u.id">
+          {{ u.name }}
+        </option>
+      </select>
+    </div>
+
+    <div class="grid-fields">
+      <input type="datetime-local" v-model="form.start_date" required />
+      <input type="datetime-local" v-model="form.end_date" required />
+    </div>
+
+    <div class="actions">
+  <button type="button" class="btn-delete" @click="deleteTask">
+    Eliminar
+  </button>
+
+  <button type="submit" class="btn-save">
+    Actualizar
+  </button>
+</div>
+  </form>
+</Modal>
+
 </template>
 
 
@@ -455,19 +589,6 @@ function createTask() {
   background: rgba(255,255,255,0.25);
 }
 
-/* AVATAR */
-.avatar {
-  width: 38px;
-  height: 38px;
-  border-radius: 50%;
-  background: rgba(255,255,255,0.2);
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  font-size: 14px;
-  font-weight: 700;
-  color: white;
-}
 
 /* FORMULARIO */
 .task-form {
