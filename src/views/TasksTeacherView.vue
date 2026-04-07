@@ -11,6 +11,19 @@ import { useRouter } from 'vue-router'
 const router = useRouter()
 const ua = useAuthStore()
 
+// TABS
+const tabs = [
+  { key: 'activas', label: 'Activas' },
+  { key: 'tardias', label: 'Tardías' },
+] as const
+
+type TabKey = typeof tabs[number]['key']
+const currentTab = ref<TabKey>('activas')
+
+// FILTRO SOLO GRUPO
+const selectedGroupFilter = ref<number | null>(null)
+
+// ─────────────────────────────
 const initialTask: formtask = {
   title: '',
   description: '',
@@ -22,23 +35,20 @@ const initialTask: formtask = {
 }
 
 const form = ref<formtask>({ ...initialTask })
-const currentTab = ref('pendientes')
 const loadingSubmissions = ref(false)
+const tasksList = ref<any[]>([])
 
-// MODALS
+// MODAL
 const showModal = ref(false)
-const showEditModal = ref(false)
-const selectedTask = ref<any>(null)
 
-// ─────────────────────────────────────────
-// LLAMADAS A API
-// ─────────────────────────────────────────
+// API
 const { data, execute: reloadTasks } = useapi('/assignments', {
   method: 'GET',
 }).json()
 
 const { data: groupsData } = useapi('/groups').json()
 
+// unidades dinámicas SOLO PARA FORM
 const availableUnits = computed(() => {
   const selectedGroupId = form.value.group_id
   if (!selectedGroupId || !groupsData.value?.data) return []
@@ -46,20 +56,25 @@ const availableUnits = computed(() => {
   return group ? group.units : []
 })
 
+// reset unidad form
 watch(() => form.value.group_id, () => {
   form.value.unit_id = null
 })
 
-// ─────────────────────────────────────────
-// CARGAR ENTREGAS (Submissions)
-// ─────────────────────────────────────────
+// ─────────────────────────────
+// LOAD SUBMISSIONS
 async function loadSubmissions(list: any[]) {
-  if (!list.length) return
+  if (!list.length) {
+    tasksList.value = []
+    return
+  }
+
   loadingSubmissions.value = true
+  const tempTasks = JSON.parse(JSON.stringify(list))
 
   try {
     await Promise.all(
-      list.map(async (task: any) => {
+      tempTasks.map(async (task: any) => {
         try {
           const res = await fetch(`/api/submissions?assignment_id=${task.id}`, {
             headers: {
@@ -74,6 +89,8 @@ async function loadSubmissions(list: any[]) {
         }
       })
     )
+
+    tasksList.value = tempTasks
   } finally {
     loadingSubmissions.value = false
   }
@@ -83,11 +100,50 @@ watch(data, (newData) => {
   if (!newData) return
   const list = newData?.data ?? newData ?? []
   loadSubmissions(list)
+}, { immediate: true })
+
+// ─────────────────────────────
+// FILTRO (YA SIN UNIDAD)
+const filteredActivities = computed(() => {
+  return tasksList.value.filter((task: any) => {
+    const now = new Date()
+    const end = new Date(task.end_date)
+
+    const matchesTab =
+      currentTab.value === 'activas' ? end >= now : end < now
+
+const matchesGroup =
+  !selectedGroupFilter.value ||
+  Number(task.group_id) === Number(selectedGroupFilter.value)
+
+    return matchesTab && matchesGroup
+  })
 })
 
-// ─────────────────────────────────────────
-// ACCIONES: CREAR, ACTUALIZAR, ELIMINAR
-// ─────────────────────────────────────────
+// CONTADORES
+const tabCounts = computed(() => {
+  const counts: Record<TabKey, number> = {
+    activas: 0,
+    tardias: 0,
+  }
+
+  const now = new Date()
+
+  for (const task of tasksList.value) {
+    const end = new Date(task.end_date)
+    if (end >= now) counts.activas++
+    else counts.tardias++
+  }
+
+  return counts
+})
+
+// ─────────────────────────────
+function handleTaskClick(task: any) {
+  router.push(`/teacher/tasks/${task.id}`)
+}
+
+// CRUD
 function createTask() {
   if (!form.value.group_id || !form.value.unit_id) {
     alert('Debes seleccionar grupo y unidad')
@@ -109,89 +165,15 @@ function createTask() {
     await reloadTasks()
   })
 }
-
-function updateTask() {
-  // Formateamos fechas antes de enviar por si se editaron en el modal
-  const payload = {
-    ...selectedTask.value,
-    start_date: selectedTask.value.start_date?.replace('T', ' ').substring(0, 19),
-    end_date: selectedTask.value.end_date?.replace('T', ' ').substring(0, 19),
-  }
-
-  const { onFetchResponse } = useapi(`/assignments/${selectedTask.value.id}`, {
-    method: 'PUT',
-  }).put(payload).json()
-
-  onFetchResponse(async () => {
-    showEditModal.value = false
-    await reloadTasks()
-  })
-}
-
-function deleteTask(id: number) {
-  if (!confirm('¿Estás seguro de eliminar esta tarea? Esta acción no se puede deshacer.')) return
-
-  const { onFetchResponse } = useapi(`/assignments/${id}`, {
-    method: 'DELETE',
-  }).json()
-
-  onFetchResponse(async () => {
-    showEditModal.value = false
-    await reloadTasks()
-  })
-}
-
-// ─────────────────────────────────────────
-// FILTROS Y LÓGICA DE NAVEGACIÓN
-// ─────────────────────────────────────────
-const filteredActivities = computed(() => {
-  const list = data.value?.data ?? data.value ?? []
-
-  return list.filter((a: any) => {
-    const subs: any[] = a.submissions ?? []
-    const hasSubmission = subs.length > 0
-    // Calificadas: Tareas donde hay entregas y TODAS están calificadas
-    const allGraded = hasSubmission && subs.every((s: any) => s.status === 'Calificada')
-    // Tardías: Tareas con al menos una entrega después de la fecha límite
-    const isLate = subs.some((s: any) => new Date(s.submission_date) > new Date(a.end_date))
-
-    if (currentTab.value === 'pendientes') return true // Muestra todo lo que el profesor ha subido
-    if (currentTab.value === 'entregadas') return hasSubmission
-    if (currentTab.value === 'calificadas') return allGraded
-    if (currentTab.value === 'tardias') return isLate
-    return false
-  })
-})
-
-const tabCounts = computed(() => {
-  const list = data.value?.data ?? data.value ?? []
-  const counts = { pendientes: list.length, entregadas: 0, calificadas: 0, tardias: 0 }
-
-  for (const a of list) {
-    const subs: any[] = a.submissions ?? []
-    const hasSubmission = subs.length > 0
-    if (hasSubmission) counts.entregadas++
-    if (hasSubmission && subs.every((s: any) => s.status === 'Calificada')) counts.calificadas++
-    if (subs.some((s: any) => new Date(s.submission_date) > new Date(a.end_date))) counts.tardias++
-  }
-  return counts
-})
-
-function handleTaskClick(task: any) {
-  if (currentTab.value === 'pendientes') {
-    // Solo ver/editar/eliminar en un modal
-    selectedTask.value = { ...task }
-    showEditModal.value = true
-  } else {
-    // Redirigir al detalle de la tarea para calificar alumnos
-    router.push(`/teacher/tasks/${task.id}`)
-  }
-}
 </script>
+
+
 
 <template>
   <div class="bg-page">
     <SidebarLayout>
+
+      <!-- HEADER -->
       <div class="ContSmall">
         <div class="left">
           <div class="avatar">
@@ -199,119 +181,112 @@ function handleTaskClick(task: any) {
           </div>
           <div>
             <h1>Explorar Tareas</h1>
-            <p>{{ filteredActivities.length }} tareas encontradas</p>
+            <p v-if="loadingSubmissions">Sincronizando entregas...</p>
+            <p v-else>{{ filteredActivities.length }} tareas filtradas</p>
           </div>
         </div>
+
         <div class="right">
-          <button @click="showModal = true" class="btn-create-task">+ CREAR TAREA</button>
+          <button @click="showModal = true" class="btn-create-task">
+            + CREAR TAREA
+          </button>
         </div>
       </div>
 
       <div class="ContBig">
+
+        <!-- TABS -->
         <div class="tabs-container">
           <button
-            v-for="tab in [
-              { key: 'pendientes', label: 'Pendientes' },
-              { key: 'entregadas', label: 'Entregadas' },
-              { key: 'calificadas', label: 'Calificadas' },
-              { key: 'tardias', label: 'Tardías' },
-            ]"
+            v-for="tab in tabs"
             :key="tab.key"
             @click="currentTab = tab.key"
             :class="{ active: currentTab === tab.key }"
           >
             {{ tab.label }}
-            <span class="tab-count">{{ tabCounts[tab.key as keyof typeof tabCounts] }}</span>
+            <span class="tab-count">
+              {{ tabCounts[tab.key] }}
+            </span>
           </button>
         </div>
 
+        <!--  FILTROS DENTRO DEL TAB -->
+        <div class="filters-container">
+
+          <select v-model="selectedGroupFilter">
+            <option :value="null">Todos los grupos</option>
+            <option
+              v-for="g in groupsData?.data ?? []"
+              :key="g.id"
+              :value="g.id"
+            >
+              {{ g.name }}
+            </option>
+          </select>
+
+        </div>
+
+        <!-- LISTA -->
         <div class="tasks-list">
+
+          <div v-if="loadingSubmissions && tasksList.length === 0" class="loading-state">
+            <div class="spinner"></div>
+            <p>Buscando entregas de alumnos...</p>
+          </div>
+
           <TeacherTaskCard
             v-for="task in filteredActivities"
             :key="task.id"
             :task="task"
-            :show-action-button="currentTab !== 'pendientes'"
+            action-type="view"
             @click="handleTaskClick(task)"
           />
+
+          <div v-if="!loadingSubmissions && filteredActivities.length === 0" class="empty-state">
+            <p>No hay tareas en esta categoría.</p>
+          </div>
+
         </div>
       </div>
 
+      <!-- MODAL -->
       <Modal v-model="showModal">
         <form @submit.prevent="createTask" class="task-form">
           <h3>Nueva Tarea</h3>
-          <input v-model="form.title" placeholder="Título de la tarea" required />
-          <textarea v-model="form.description" placeholder="Instrucciones para los alumnos"></textarea>
+
+          <input v-model="form.title" placeholder="Título" required />
+          <textarea v-model="form.description" placeholder="Instrucciones"></textarea>
 
           <div class="grid-fields">
-            <div>
-              <label>Grupo</label>
-              <select v-model="form.group_id" required>
-                <option :value="null" disabled>Seleccionar Grupo</option>
-                <option v-for="g in groupsData?.data ?? []" :key="g.id" :value="g.id">{{ g.name }}</option>
-              </select>
-            </div>
-            <div>
-              <label>Unidad</label>
-              <select v-model="form.unit_id" required>
-                <option :value="null" disabled>Seleccionar Unidad</option>
-                <option v-for="u in availableUnits" :key="u.id" :value="u.id">{{ u.name }}</option>
-              </select>
-            </div>
+            <select v-model="form.group_id" required>
+              <option :value="null" disabled>Grupo</option>
+              <option v-for="g in groupsData?.data ?? []" :key="g.id" :value="g.id">
+                {{ g.name }}
+              </option>
+            </select>
+
+            <select v-model="form.unit_id" required>
+              <option :value="null" disabled>Unidad</option>
+              <option v-for="u in availableUnits" :key="u.id" :value="u.id">
+                {{ u.name }}
+              </option>
+            </select>
           </div>
 
           <div class="grid-fields">
-            <div>
-              <label>Fecha Inicio</label>
-              <input type="datetime-local" v-model="form.start_date" required />
-            </div>
-            <div>
-              <label>Fecha Límite</label>
-              <input type="datetime-local" v-model="form.end_date" required />
-            </div>
+            <input type="datetime-local" v-model="form.start_date" required />
+            <input type="datetime-local" v-model="form.end_date" required />
           </div>
 
-          <button type="submit" class="btn-save">Publicar Tarea</button>
+          <button type="submit" class="btn-save">Publicar</button>
         </form>
-      </Modal>
-
-      <Modal v-model="showEditModal">
-        <div v-if="selectedTask" class="task-form">
-          <h3>Gestionar Tarea</h3>
-          <p style="font-size: 0.8rem; color: #64748b; margin-bottom: 15px;">
-            Aquí puedes modificar los datos generales de la tarea o eliminarla permanentemente.
-          </p>
-
-          <label>Título</label>
-          <input v-model="selectedTask.title" />
-
-          <label>Descripción</label>
-          <textarea v-model="selectedTask.description"></textarea>
-
-          <div class="grid-fields">
-            <div>
-              <label>Fecha Inicio</label>
-              <input type="datetime-local" v-model="selectedTask.start_date" />
-            </div>
-            <div>
-              <label>Fecha Límite</label>
-              <input type="datetime-local" v-model="selectedTask.end_date" />
-            </div>
-          </div>
-
-          <div class="actions" style="margin-top: 20px;">
-            <button @click="deleteTask(selectedTask.id)" class="btn-cancel" style="background: #fee2e2; color: #dc2626;">
-              Eliminar Tarea
-            </button>
-            <button @click="updateTask" class="btn-save">
-              Guardar Cambios
-            </button>
-          </div>
-        </div>
       </Modal>
 
     </SidebarLayout>
   </div>
 </template>
+
+
 
 <style scoped>
 
@@ -557,4 +532,18 @@ function handleTaskClick(task: any) {
   font-weight: 700;
 }
 .btn-save:hover { background: #1d4ed8; }
+
+.filters-container {
+  display: flex;
+  gap: 10px;
+  margin-bottom: 15px;
+}
+
+.filters-container select {
+  padding: 8px 12px;
+  border-radius: 10px;
+  border: 1px solid #d1d5db;
+  font-size: 0.85rem;
+}
+
 </style>

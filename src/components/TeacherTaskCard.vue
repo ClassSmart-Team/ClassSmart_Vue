@@ -1,12 +1,10 @@
 <script setup lang="ts">
 import { computed } from 'vue'
 
-
 const props = defineProps<{
   task: any,
-  showActionButton?: boolean 
+  actionType?: 'edit' | 'view'
 }>()
-
 
 const formatDate = (dateStr: string) => {
   if (!dateStr) return '—'
@@ -34,7 +32,6 @@ const lateCount = computed(() =>
 const pendingGrade = computed(() => submissionsCount.value - gradedCount.value)
 </script>
 
-
 <template>
   <div :class="['task-card', statusColor]" style="cursor: pointer;">
     <div class="status-stripe"></div>
@@ -43,6 +40,7 @@ const pendingGrade = computed(() => submissionsCount.value - gradedCount.value)
       <div class="top-row">
         <span :class="['status-tag', statusColor]">{{ task.status }}</span>
         <span class="group-tag" v-if="task.group?.name">{{ task.group.name }}</span>
+        <span class="unit-tag" v-if="task.unit?.name">{{ task.unit.name }}</span>
       </div>
 
       <h4 class="task-title">{{ task.title }}</h4>
@@ -58,17 +56,32 @@ const pendingGrade = computed(() => submissionsCount.value - gradedCount.value)
           <span class="stat-num">{{ submissionsCount }}</span>
           <span class="stat-label">entregas</span>
         </div>
-        </div>
-    </div>
-
-    <div class="card-action" v-if="showActionButton">
-      <div class="btn-detail">
-        Ver entregas
-        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M5 12h14M12 5l7 7-7 7"/></svg>
       </div>
     </div>
-    <div class="card-action" v-else>
-       <span class="btn-detail" style="background: #e2e8f0; color: #475569;">Editar</span>
+
+
+
+    <div class="card-action">
+      <div
+        class="btn-detail"
+        :style="actionType === 'edit'
+          ? 'background:#e2e8f0; color:#475569;'
+          : ''"
+      >
+        {{ actionType === 'edit' ? 'Editar' : 'Ver detalle' }}
+
+        <svg
+          v-if="actionType !== 'edit'"
+          width="14"
+          height="14"
+          viewBox="0 0 24 24"
+          fill="none"
+          stroke="currentColor"
+          stroke-width="2.5"
+        >
+          <path d="M5 12h14M12 5l7 7-7 7"/>
+        </svg>
+      </div>
     </div>
   </div>
 </template>
