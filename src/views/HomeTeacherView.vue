@@ -52,17 +52,18 @@ import { useAuthStore } from '@/stores/authStore.ts'
 }
 
 .bg-page {
-  position: fixed;
+  min-height: 100vh;
   inset: 0;
   overflow-x: hidden;
   overflow-y: auto;
-  background: linear-gradient(180deg,var(--color-OscuroAzulado),var(--color-OscuroDos));
+  background: linear-gradient(180deg,var(--color-AzulDos),var(--color-ComplementoDos));
   z-index: -1;
 }
 
 .ContTittle {
   background: var(--color-Azul);
-  width: 400px;
+  width: 100%;
+  max-width: 400px;
   height: 20px;
   border-radius: 10px;
   color: white;
@@ -71,10 +72,10 @@ import { useAuthStore } from '@/stores/authStore.ts'
 }
 .ContSmall {
   background: var(--color-Azul);
-  width: 1000px;
+  width: 100%;
   min-height: 30px;
   border-radius: 20px;
-  margin: 30px auto 0 auto;
+  margin: 20px 0;
   padding: 15px;
   color: white;
 }
@@ -92,10 +93,10 @@ import { useAuthStore } from '@/stores/authStore.ts'
 
 .ContBig {
   background: var(--color-Blanco);
-  width: 1000px;
+  width: 100%;
   min-height: 420px;
   border-radius: 20px;
-  margin: 20px auto;
+  margin: 0;
   padding: 30px;
   box-shadow: 0 10px 30px #00000030;
 }
@@ -124,7 +125,13 @@ import { useAuthStore } from '@/stores/authStore.ts'
   align-items: center;
 }
 
-
+@media (max-width: 768px) {
+  .ContSmall,
+  .ContBig {
+    margin: 15px;
+    padding: 15px;
+  }
+}
 
 
 </style>

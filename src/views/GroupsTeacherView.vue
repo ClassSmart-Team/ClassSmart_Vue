@@ -59,53 +59,68 @@ function showgroup(id:number){
 <template>
   <div class="bg-page">
     <SidebarLayout>
-      <!-- HEADER AZUL -->
-      <div class="ContSmall">
-        <div class="left">
-          <div class="avatar">
-            {{ ua.credentials?.user.name.charAt(0) }}{{ ua.credentials?.user.lastname.charAt(0) }}
+      <div class="contenido">
+
+        <!-- HEADER -->
+        <div class="header-box header-flex">
+          <div class="left">
+            <div class="avatar">
+              {{ ua.credentials?.user.name.charAt(0) }}{{ ua.credentials?.user.lastname.charAt(0) }}
+            </div>
+
+            <div>
+              <h2>Explorar Grupos</h2>
+              <p v-if="data">{{ data.data.length }} grupos académicos</p>
+            </div>
           </div>
-          <h1>Explorar Grupos</h1>
-          <p v-if="data">{{ data.data.length }} grupos académicos</p>
+
+          <button @click="showModal = true" class="btn-create-group">
+            CREAR GRUPO
+          </button>
         </div>
 
-        <div class="right">
-          <button @click="showModal = true" class="btn-create-group">CREAR GRUPO</button>
-        </div>
-      </div>
+        <!-- CONTENIDO -->
+        <div class="main-box">
 
-      <!-- CONTENEDOR GRANDE -->
-      <div class="ContBig CenterItems">
-        <!-- LOADING -->
-        <div v-if="isFetching" class="loading-state">
-          <div class="spinner"></div>
-          <p>Cargando grupos...</p>
+          <!-- LOADING -->
+          <div v-if="isFetching" class="loading-state">
+            <div class="spinner"></div>
+            <p>Cargando grupos...</p>
+          </div>
+
+          <!-- ERROR -->
+          <div v-if="error" class="error-banner">
+            <span>⚠</span>
+            <p>Error: {{ error }}</p>
+          </div>
+
+          <!-- GRID -->
+          <div v-if="data && data.data" class="groups-grid">
+            <GroupTargect
+              v-for="group in data.data"
+              :key="group.id"
+              :group="group"
+              @click="showgroup(group.id)"
+            />
+          </div>
+
         </div>
 
-        <!-- ERROR -->
-        <div v-if="error" class="error-banner">
-          <span>⚠</span>
-          <p>Error al conectar: {{ error }}</p>
-        </div>
+        <!-- MODAL -->
         <Modal v-model="showModal">
           <form class="group-form" @submit.prevent="creategroup">
-            <label>Periodo ID</label>
             <label>Periodo</label>
             <select v-model="form.period_id">
-              <!-- v-for recorre el array data que viene del backend -->
               <option v-for="period in periodsData?.data" :key="period.id" :value="period.id">
                 {{ period.name }} - {{ period.year }}
               </option>
             </select>
 
             <label>Nombre del Grupo</label>
-            <input v-model="form.name" type="text" placeholder="Ej. Grupo chido" />
+            <input v-model="form.name" type="text" />
 
             <label>Descripción</label>
-            <textarea
-              v-model="form.description"
-              placeholder="Ej. Este es un grupo chido"
-            ></textarea>
+            <textarea v-model="form.description"></textarea>
 
             <label class="check-row">
               <input v-model="form.active" type="checkbox" />
@@ -113,21 +128,14 @@ function showgroup(id:number){
             </label>
 
             <div class="actions">
-              <button type="button" class="btn-cancel" @click="showModal = false">Cancelar</button>
-
+              <button type="button" class="btn-cancel" @click="showModal = false">
+                Cancelar
+              </button>
               <button type="submit" class="btn-save">Guardar</button>
             </div>
-          </form></Modal
-        >
-        <!-- GRID DE CARDS -->
-        <div v-if="data && data.data" class="groups-grid">
-          <GroupTargect
-            @click="showgroup(group.id)"
-            v-for="group in data.data"
-            :key="group.id"
-            :group="group"
-          />
-        </div>
+          </form>
+        </Modal>
+
       </div>
     </SidebarLayout>
   </div>
@@ -136,21 +144,21 @@ function showgroup(id:number){
 <style scoped>
 /* FONDO GENERAL */
 .bg-page {
-  position: fixed;
+  min-height: 100vh;
   inset: 0;
   overflow-x: hidden;
   overflow-y: auto;
-  background: linear-gradient(180deg, var(--color-OscuroAzulado), var(--color-OscuroDos));
+  background: linear-gradient(180deg,var(--color-AzulDos),var(--color-ComplementoDos));
   z-index: -1;
 }
 
 /* HEADER */
 .ContSmall {
   background: var(--color-Azul);
-  width: 1000px;
+  width: 100%;
   min-height: 40px;
   border-radius: 20px;
-  margin: 30px auto 0 auto;
+  margin: 20px 0;
   padding: 15px;
   color: white;
 
@@ -184,15 +192,19 @@ function showgroup(id:number){
 /* CONTENEDOR PRINCIPAL */
 .ContBig {
   background: var(--color-Blanco);
-  width: 1000px;
-  height: 400px;
+  width: 100%;
+  min-height: 400px;
   overflow-y: auto;
   border-radius: 20px;
-  margin: 30px auto;
+  margin: 0;
   padding: 30px;
   box-shadow: 0 10px 30px #00000030;
 }
 
+.ContSmall,
+.ContBig {
+  max-width: 1200px;
+}
 /* GRID (adaptado a tu estilo) */
 .groups-grid {
   display: grid;
@@ -354,5 +366,17 @@ function showgroup(id:number){
   outline: none;
   background: white;
   cursor: pointer;
+}
+
+@media (max-width: 768px) {
+  .ContSmall {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 10px;
+  }
+
+  .ContBig {
+    padding: 15px;
+  }
 }
 </style>

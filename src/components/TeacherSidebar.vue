@@ -12,7 +12,6 @@ const logout = () => {
 </script>
 
 <template>
-  <Contenedor>
     <div class="layout">
       <aside class="sidebar">
         <nav class="columna">
@@ -31,11 +30,10 @@ const logout = () => {
         </nav>
       </aside>
 
-      <div class="contenido">
+      <div class="teacher-content">
         <slot />
       </div>
     </div>
-  </Contenedor>
 </template>
 <style scoped>
 .avatar {
@@ -55,5 +53,11 @@ const logout = () => {
   flex-direction: row; /* los elementos van en fila horizontal */
   align-items: center; /* los centra verticalmente entre sí */
   gap: 8px; /* espacio entre la palabra "Perfil" y el avatar */
+}
+
+.teacher-content {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
 }
 </style>

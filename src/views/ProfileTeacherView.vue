@@ -31,17 +31,6 @@ import SidebarLayout from '@/components/TeacherSidebar.vue'
   padding-left: 50px;
 }
 
-
-.bg-page {
-  position: fixed;
-  inset: 0;
-  overflow-x: hidden;
-  overflow-y: auto;
-  background: linear-gradient(180deg,var(--color-OscuroAzulado),var(--color-OscuroDos));
-  z-index: -1;
-}
-
-
 .ContSmall{
   background: var(--color-Azul);
   width: 1000px;
