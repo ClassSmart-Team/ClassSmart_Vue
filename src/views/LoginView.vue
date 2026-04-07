@@ -66,7 +66,12 @@ function login() {
             placeholder="••••••"
           />
         </div>
-
+        <div style ="margin-top: 20px; font-size: 0.9rem; color: var(--color-Texto);">
+        ¿No tienes cuenta? 
+        <a href="/register" style="color: var(--color-AzulCuatro);">
+        Regístrate aquí
+        </a>
+        </div>
         <button type="submit" class="btn-login">
           Entrar
         </button>

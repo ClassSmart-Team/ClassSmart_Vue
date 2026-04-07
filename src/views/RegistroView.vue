@@ -16,7 +16,7 @@ const form = ref<Register>({
 
 function registrar() {
   const { data, onFetchError, onFetchResponse } = useFetch(
-    'https://sutando-user.me/api/register',
+    'https://api.sutando-user.me/api/register',
     {
       method: 'post',
       headers: {
@@ -75,14 +75,7 @@ function registrar() {
 </template>
 
 <style scoped>
-.bg-page {
-  position: fixed;
-  inset: 0;
-  overflow-x: hidden;
-  overflow-y: auto;
-  background: linear-gradient(180deg,var(--color-Azul),var(--color-AzulTres));
-  z-index: -1;
-}
+
 
 .form-container {
   background: var(--color-Contenedor);
