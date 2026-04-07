@@ -456,18 +456,7 @@ function createTask() {
 }
 
 /* AVATAR */
-.avatar {
-  width: 38px;
-  height: 38px;
-  border-radius: 50%;
-  background: rgba(255,255,255,0.2);
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  font-size: 14px;
-  font-weight: 700;
-  color: white;
-}
+
 
 /* FORMULARIO */
 .task-form {

@@ -76,18 +76,6 @@ import { useAuthStore } from '@/stores/authStore.ts'
   box-shadow: 0 10px 30px #00000030;
 }
 
-.avatar {
-  width: 38px;
-  height: 38px;
-  border-radius: 50%;
-  background: #e1f5ee;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  font-size: 14px;
-  font-weight: 500;
-  color: #0f6e56;
-}
 
 .left {
   display: flex;
