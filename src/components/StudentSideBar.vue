@@ -25,39 +25,18 @@ const logout = () => {
           <RouterLink to="/student/messages" class="link"> Mensajes</RouterLink>
           <RouterLink to="/student/notifications" class="link"> Notificaciones</RouterLink>
           <RouterLink to="/settings" class="link"> Configuración</RouterLink>
-          <button class="link" v-on:click="logout">Cerrar Sesión</button>
+          <div class="sidebar-divider"></div>
+          <button class="link btn-logout" v-on:click="logout">Cerrar Sesión</button>
         </nav>
       </aside>
 
-      <div class="student-content">
+      <div class="contenido">
         <slot />
       </div>
     </div>
 </template>
 <style scoped>
-.avatar {
-  width: 38px;
-  height: 38px;
-  border-radius: 50%;
-  background: #e1f5ee;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  font-size: 14px;
-  font-weight: 500;
-  color: #0f6e56;
-}
-.link-perfil {
-  display: flex;
-  flex-direction: row; /* los elementos van en fila horizontal */
-  align-items: center; /* los centra verticalmente entre sí */
-  gap: 8px; /* espacio entre la palabra "Perfil" y el avatar */
-}
-
-
-.student-content {
-  flex: 1;
-  display: flex;
-  flex-direction: column;
+.btn-logout:hover {
+  background: rgb(35, 12, 149)
 }
 </style>

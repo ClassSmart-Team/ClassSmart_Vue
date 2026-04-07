@@ -42,13 +42,7 @@ const logout = () => {
 
 <style scoped>
 /* Solo lo específico de este componente */
-.sidebar-divider {
-  height: 1px;
-  background: rgba(255, 255, 255, 0.25);
-  margin: 12px 0;
-}
-
 .btn-logout:hover {
-  background: rgba(255, 80, 80, 0.2);
+  background: rgb(35, 12, 149)
 }
 </style>

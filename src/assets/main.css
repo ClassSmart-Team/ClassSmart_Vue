@@ -84,6 +84,12 @@ body {
   overflow: hidden; /* ← sin scroll de ningún tipo */
 }
 
+.sidebar-divider {
+  height: 1px;
+  background: rgba(255, 255, 255, 0.25);
+  margin: 12px 0;
+}
+
 .columna {
   display: flex;
   flex-direction: column;

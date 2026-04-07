@@ -7,32 +7,26 @@ const ua = useAuthStore()
 import { useAuthStore } from '@/stores/authStore.ts'
 
 </script>
-
 <template>
 <div class ="bg-page">
-<SidebarLayout>
+  <SidebarLayout>
     <div class="header-box header-flex">
       <div class="left">
         <div class="avatar">
           {{ ua.credentials?.user.name.charAt(0) }}{{ ua.credentials?.user.lastname.charAt(0) }}
         </div>
-          <h1>Bienvenido, {{ ua.credentials?.user.name }}</h1>
-        </div>  
-       </div> 
-       <div class="main-box">
-        <div class="ContTittle center">
-          <h3>Horario de clases</h3>
-        </div>
-      </div>   
-    
+        <h1>Bienvenido, {{ ua.credentials?.user.name }}</h1>
+      </div>  
+    </div> 
+    <div class="main-box">
+      <div class="ContTittle center">
+        <h3>Horario de clases</h3>
+      </div>
+    </div>     
   </SidebarLayout>
 </div>
-
 </template>
-
 <style scoped>
-
-
 .bg-page {
   min-height: 100vh;
   inset: 0;
