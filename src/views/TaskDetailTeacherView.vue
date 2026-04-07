@@ -787,7 +787,6 @@ function saveGrade() {
   color: #94a3b8;
 }
 
-.modal-files { /* mismos estilos que .files-section */ }
 
 .modal-fields {
   display: flex;
