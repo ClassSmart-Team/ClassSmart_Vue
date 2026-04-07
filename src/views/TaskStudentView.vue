@@ -117,14 +117,7 @@ const formatDate = (dateStr: string) =>
 
 <style scoped>
 /* ── FONDO GENERAL ────────────────────────────────────────────────────────── */
-.bg-page {
-  position: fixed;
-  inset: 0;
-  overflow-x: hidden;
-  overflow-y: auto;
-  background: linear-gradient(180deg, var(--color-OscuroAzulado), var(--color-OscuroDos));
-  z-index: -1;
-}
+
 
 /* ── HEADER ─────────────────────────────────────────────────────────────── */
 .ContSmall {
