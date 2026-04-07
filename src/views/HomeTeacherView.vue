@@ -9,36 +9,23 @@ import { useAuthStore } from '@/stores/authStore.ts'
 </script>
 
 <template>
-
 <div class ="bg-page">
-
-
 <SidebarLayout>
-  <div class="contenido">
-
-      <div class="header-box header-flex">
-        <div class="left">
-          <div class="avatar">
-            {{ ua.credentials?.user.name.charAt(0) }}{{ ua.credentials?.user.lastname.charAt(0) }}
-          </div>
-          <h1>Bienvenido, {{ ua.credentials?.user.name }}</h1>
-
-
+    <div class="header-box header-flex">
+      <div class="left">
+        <div class="avatar">
+          {{ ua.credentials?.user.name.charAt(0) }}{{ ua.credentials?.user.lastname.charAt(0) }}
         </div>
-
-          
+          <h1>Bienvenido, {{ ua.credentials?.user.name }}</h1>
+        </div>  
        </div> 
-
-    <div class="ContBig">
-      <div class="ContTittle center">
-        <h3>Horario de clases</h3>
-      </div>
-
-    </div>   
-      
-  </div>
-</SidebarLayout>
-
+       <div class="main-box">
+        <div class="ContTittle center">
+          <h3>Horario de clases</h3>
+        </div>
+      </div>   
+    
+  </SidebarLayout>
 </div>
 
 </template>

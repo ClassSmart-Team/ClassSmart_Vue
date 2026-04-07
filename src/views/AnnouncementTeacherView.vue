@@ -3,23 +3,15 @@ import SidebarLayout from '@/components/TeacherSidebar.vue'
 </script>
 
 <template>
-
 <div class ="bg-page">
-
-
-<SidebarLayout>
-
-  <div class="ContSmall center">
-    <h1>Pagina Anuncios</h1>
-  </div>  
-
-  <div class="ContBig CenterItems" style="margin-top: 80px">
-
-    <h3>Contenido de la pagina </h3>
-  </div>   
-
-</SidebarLayout>
-
+  <SidebarLayout>
+    <div class="header-box header-flex">
+      <h1>Pagina Anuncios</h1>
+    </div>  
+    <div class="main-box">
+      <h3>Contenido de la pagina </h3>
+    </div>
+  </SidebarLayout>
 </div>
 
 </template>
