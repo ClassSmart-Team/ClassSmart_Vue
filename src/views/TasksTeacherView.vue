@@ -4,26 +4,23 @@ import Modal from '@/components/createGroupModal.vue'
 import { useapi } from '@/assets/composables/useApi'
 import { useAuthStore } from '@/stores/authStore.ts'
 import { type formtask } from '@/types/types.ts'
-import { watch, ref, computed } from 'vue'
+import { watch, ref, computed, onMounted } from 'vue'
 import TeacherTaskCard from '@/components/TeacherTaskCard.vue'
 import { useRouter } from 'vue-router'
 
 const router = useRouter()
 const ua = useAuthStore()
 
-// TABS
 const tabs = [
   { key: 'activas', label: 'Activas' },
-  { key: 'tardias', label: 'Tardías' },
+  { key: 'tardias', label: 'No activas' },
 ] as const
 
 type TabKey = typeof tabs[number]['key']
 const currentTab = ref<TabKey>('activas')
 
-// FILTRO SOLO GRUPO
 const selectedGroupFilter = ref<number | null>(null)
 
-// ─────────────────────────────
 const initialTask: formtask = {
   title: '',
   description: '',
@@ -37,18 +34,14 @@ const initialTask: formtask = {
 const form = ref<formtask>({ ...initialTask })
 const loadingSubmissions = ref(false)
 const tasksList = ref<any[]>([])
+const selectedFiles = ref<File[]>([])
 
-// MODAL
 const showModal = ref(false)
-
-// API
-const { data, execute: reloadTasks } = useapi('/assignments', {
-  method: 'GET',
-}).json()
+const showEditModal = ref(false)
+const editingTask = ref<any>(null)
 
 const { data: groupsData } = useapi('/groups').json()
 
-// unidades dinámicas SOLO PARA FORM
 const availableUnits = computed(() => {
   const selectedGroupId = form.value.group_id
   if (!selectedGroupId || !groupsData.value?.data) return []
@@ -56,22 +49,29 @@ const availableUnits = computed(() => {
   return group ? group.units : []
 })
 
-// reset unidad form
-watch(() => form.value.group_id, () => {
-  form.value.unit_id = null
+watch(() => form.value.group_id, (newVal, oldVal) => {
+  if (oldVal !== null) form.value.unit_id = null
 })
 
-// ─────────────────────────────
-// LOAD SUBMISSIONS
+const { data: assignmentsData, execute: fetchAssignments } = useapi('/assignments').json()
+
+async function reloadTasks() {
+  await fetchAssignments()
+}
+
+watch(assignmentsData, (newData) => {
+  if (!newData) return
+  const list = newData?.data ?? newData ?? []
+  loadSubmissions(list)
+}, { immediate: true })
+
 async function loadSubmissions(list: any[]) {
   if (!list.length) {
     tasksList.value = []
     return
   }
-
   loadingSubmissions.value = true
   const tempTasks = JSON.parse(JSON.stringify(list))
-
   try {
     await Promise.all(
       tempTasks.map(async (task: any) => {
@@ -89,181 +89,201 @@ async function loadSubmissions(list: any[]) {
         }
       })
     )
-
     tasksList.value = tempTasks
   } finally {
     loadingSubmissions.value = false
   }
 }
 
-watch(data, (newData) => {
-  if (!newData) return
-  const list = newData?.data ?? newData ?? []
-  loadSubmissions(list)
-}, { immediate: true })
+onMounted(() => {
+  reloadTasks()
+})
 
-// ─────────────────────────────
-// FILTRO (YA SIN UNIDAD)
 const filteredActivities = computed(() => {
   return tasksList.value.filter((task: any) => {
     const now = new Date()
     const end = new Date(task.end_date)
-
+    const vencidaPorFecha = task.status === 'Activa' && end < now
     const matchesTab =
-      currentTab.value === 'activas' ? end >= now : end < now
-
-const matchesGroup =
-  !selectedGroupFilter.value ||
-  Number(task.group_id) === Number(selectedGroupFilter.value)
-
+      currentTab.value === 'activas'
+        ? task.status === 'Activa' && !vencidaPorFecha
+        : task.status !== 'Activa' || vencidaPorFecha
+    const matchesGroup =
+      !selectedGroupFilter.value ||
+      Number(task.group?.id ?? task.group_id) === Number(selectedGroupFilter.value)
     return matchesTab && matchesGroup
   })
 })
 
-// CONTADORES
 const tabCounts = computed(() => {
-  const counts: Record<TabKey, number> = {
-    activas: 0,
-    tardias: 0,
-  }
-
+  const counts: Record<TabKey, number> = { activas: 0, tardias: 0 }
   const now = new Date()
-
   for (const task of tasksList.value) {
     const end = new Date(task.end_date)
-    if (end >= now) counts.activas++
+    const vencidaPorFecha = task.status === 'Activa' && end < now
+    if (task.status === 'Activa' && !vencidaPorFecha) counts.activas++
     else counts.tardias++
   }
-
   return counts
 })
 
-// ─────────────────────────────
+function toBackendDate(value: string): string {
+  const normalized = value.replace('T', ' ')
+  const withoutSeconds = normalized.replace(/(\d{2}:\d{2})(:\d{2})?$/, '$1')
+  return withoutSeconds + ':00'
+}
+
+function buildPayload() {
+  return {
+    title: form.value.title,
+    description: form.value.description,
+    start_date: toBackendDate(form.value.start_date),
+    end_date: toBackendDate(form.value.end_date),
+    group_id: form.value.group_id ? Number(form.value.group_id) : null,
+    unit_id: form.value.unit_id ? Number(form.value.unit_id) : null,
+    status: form.value.status,
+  }
+}
+
 function handleTaskClick(task: any) {
   router.push(`/teacher/tasks/${task.id}`)
 }
 
-
 function handleEditTask(task: any) {
   editingTask.value = task
-
   form.value = {
     title: task.title,
     description: task.description,
-    start_date: task.start_date?.replace(' ', 'T'),
-    end_date: task.end_date?.replace(' ', 'T'),
-    status: task.status,
-    group_id: task.group_id,
-    unit_id: task.unit_id,
+    start_date: task.start_date?.replace(' ', 'T').replace(/(\d{2}:\d{2}):\d{2}$/, '$1') ?? '',
+    end_date: task.end_date?.replace(' ', 'T').replace(/(\d{2}:\d{2}):\d{2}$/, '$1') ?? '',
+    group_id: task.group_id ? Number(task.group_id) : null,
+    unit_id: task.unit_id ? Number(task.unit_id) : null,
+    status: task.status ?? 'Activa',
   }
-
   showEditModal.value = true
 }
 
-// CRUD
-function createTask() {
+function onFilesChange(e: Event) {
+  const input = e.target as HTMLInputElement
+  selectedFiles.value = input.files ? Array.from(input.files) : []
+}
+
+function removeFile(index: number) {
+  selectedFiles.value = selectedFiles.value.filter((_, i) => i !== index)
+}
+
+async function createTask() {
   if (!form.value.group_id || !form.value.unit_id) {
     alert('Debes seleccionar grupo y unidad')
     return
   }
 
-  const payload = {
-    ...form.value,
-    group_id: Number(form.value.group_id),
-    unit_id: Number(form.value.unit_id),
-    start_date: form.value.start_date?.replace('T', ' ') + ':00',
-    end_date: form.value.end_date?.replace('T', ' ') + ':00',
-  }
+  const baseUrl = import.meta.env.VITE_API_URL ?? 'https://api.sutando-user.me/api'
+  const fd = new FormData()
+  
+  // Agregar campos al FormData
+  fd.append('title', form.value.title)
+  fd.append('description', form.value.description)
+  fd.append('start_date', toBackendDate(form.value.start_date))
+  fd.append('end_date', toBackendDate(form.value.end_date))
+  fd.append('group_id', String(form.value.group_id))
+  fd.append('unit_id', String(form.value.unit_id))
+  fd.append('status', form.value.status)
+  
+  // Agregar archivos
+  selectedFiles.value.forEach(f => fd.append('files[]', f))
 
-  const { onFetchResponse } = useapi('/assignments', { method: 'POST' }).post(payload).json()
-  onFetchResponse(async () => {
+  try {
+    const res = await fetch(`${baseUrl}/assignments`, {
+      method: 'POST',
+      headers: {
+        Authorization: `Bearer ${ua.credentials?.token}`,
+        Accept: 'application/json',
+      },
+      body: fd,
+    })
+
+    const text = await res.text()
+    const json = text ? JSON.parse(text) : {}
+
+    if (!res.ok) {
+      alert('Error: ' + JSON.stringify(json?.errors ?? json?.message ?? json))
+      return
+    }
     showModal.value = false
+    
     form.value = { ...initialTask }
+    selectedFiles.value = []
+    const fileInput = document.querySelector('input[type="file"]') as HTMLInputElement
+    if (fileInput) {
+      fileInput.value = ''
+    }
+
     await reloadTasks()
-  })
+
+  } catch (e) {
+    console.error('[createTask] error →', e)
+    alert('Ocurrió un error inesperado al crear la tarea')
+  }
 }
-const showEditModal = ref(false)
-const editingTask = ref<any>(null)
 
 async function updateTask() {
   if (!editingTask.value) return
-
+  if (!form.value.group_id || !form.value.unit_id) {
+    alert('Grupo y unidad son obligatorios')
+    return
+  }
+  const payload = buildPayload()
+  const baseUrl = import.meta.env.VITE_API_URL ?? 'https://api.sutando-user.me/api'
   try {
-    const payload = {
-      ...form.value,
-      group_id: Number(form.value.group_id),
-      unit_id: Number(form.value.unit_id),
-      start_date: form.value.start_date?.replace('T', ' ') + ':00',
-      end_date: form.value.end_date?.replace('T', ' ') + ':00',
-    }
-
-    const res = await fetch(`/api/assignments/${editingTask.value.id}`, {
-      method: 'PATCH', 
+    const res = await fetch(`${baseUrl}/assignments/${editingTask.value.id}`, {
+      method: 'PUT',
       headers: {
         'Content-Type': 'application/json',
+        Accept: 'application/json',
         Authorization: `Bearer ${ua.credentials?.token}`,
       },
       body: JSON.stringify(payload),
     })
-
+    const text = await res.text()
+    const json = text ? JSON.parse(text) : {}
     if (!res.ok) {
-      console.error(await res.text())
-      alert('Error al actualizar la tarea')
+      alert('Error: ' + JSON.stringify(json?.errors ?? json?.message ?? json))
       return
     }
-
     showEditModal.value = false
     editingTask.value = null
     form.value = { ...initialTask }
-
     await reloadTasks()
-
-  } catch (err) {
-    console.error(err)
-    alert('Error inesperado al actualizar')
+  } catch (e) {
+    console.error('[updateTask] error →', e)
   }
 }
 
 async function deleteTask() {
   if (!editingTask.value) return
-
   const confirmDelete = confirm('¿Seguro que quieres eliminar esta tarea?')
   if (!confirmDelete) return
-
-  try {
-    const res = await fetch(`/api/assignments/${editingTask.value.id}`, {
-      method: 'DELETE',
-      headers: {
-        Authorization: `Bearer ${ua.credentials?.token}`,
-      },
-    })
-
-    if (!res.ok) {
-      console.error(await res.text())
-      alert('Error al eliminar')
-      return
-    }
-
+  const { onFetchResponse, onFetchError, error } = useapi(
+    `/assignments/${editingTask.value.id}`
+  ).delete().json()
+  onFetchResponse(async () => {
     showEditModal.value = false
     editingTask.value = null
     form.value = { ...initialTask }
-
     await reloadTasks()
-
-  } catch (err) {
-    console.error(err)
-    alert('Error al eliminar')
-  }
+  })
+  onFetchError(() => {
+    console.error('[deleteTask] error →', error.value)
+    alert('Error al eliminar la tarea')
+  })
 }
 </script>
-
-
 
 <template>
   <div class="bg-page">
     <SidebarLayout>
 
-      <!-- HEADER -->
       <div class="ContSmall">
         <div class="left">
           <div class="avatar">
@@ -275,17 +295,12 @@ async function deleteTask() {
             <p v-else>{{ filteredActivities.length }} tareas filtradas</p>
           </div>
         </div>
-
         <div class="right">
-          <button @click="showModal = true" class="btn-create-task">
-            + CREAR TAREA
-          </button>
+          <button @click="showModal = true" class="btn-create-task">+ CREAR TAREA</button>
         </div>
       </div>
 
       <div class="ContBig">
-
-        <!-- TABS -->
         <div class="tabs-container">
           <button
             v-for="tab in tabs"
@@ -294,137 +309,173 @@ async function deleteTask() {
             :class="{ active: currentTab === tab.key }"
           >
             {{ tab.label }}
-            <span class="tab-count">
-              {{ tabCounts[tab.key] }}
-            </span>
+            <span class="tab-count">{{ tabCounts[tab.key] }}</span>
           </button>
         </div>
 
-        <!--  FILTROS DENTRO DEL TAB -->
         <div class="filters-container">
-
           <select v-model="selectedGroupFilter">
             <option :value="null">Todos los grupos</option>
-            <option
-              v-for="g in groupsData?.data ?? []"
-              :key="g.id"
-              :value="g.id"
-            >
+            <option v-for="g in groupsData?.data ?? []" :key="g.id" :value="Number(g.id)">
               {{ g.name }}
             </option>
           </select>
-
         </div>
 
-        <!-- LISTA -->
         <div class="tasks-list">
-
           <div v-if="loadingSubmissions && tasksList.length === 0" class="loading-state">
             <div class="spinner"></div>
             <p>Buscando entregas de alumnos...</p>
           </div>
-
           <TeacherTaskCard
-  v-for="task in filteredActivities"
-  :key="task.id"
-  :task="task"
-  @view="handleTaskClick"
-  @edit="handleEditTask"
-/>
-          
-
+            v-for="task in filteredActivities"
+            :key="task.id"
+            :task="task"
+            @view="handleTaskClick"
+            @edit="handleEditTask"
+          />
           <div v-if="!loadingSubmissions && filteredActivities.length === 0" class="empty-state">
             <p>No hay tareas en esta categoría.</p>
           </div>
-
         </div>
       </div>
 
-      <!-- MODAL -->
-      <Modal v-model="showModal">
-        <form @submit.prevent="createTask" class="task-form">
-          <h3>Nueva Tarea</h3>
+      <!-- MODAL CREAR -->
+<Modal v-model="showModal">
+  <form @submit.prevent="createTask" class="task-form">
+    <div class="form-header">
+      <div class="header-info">
+        <h3>Nueva Tarea</h3>
+        <p>Configura los detalles de la nueva asignación</p>
+      </div>
+    </div>
 
-          <input v-model="form.title" placeholder="Título" required />
-          <textarea v-model="form.description" placeholder="Instrucciones"></textarea>
+    <div class="form-body">
+      <div class="field-group">
+        <label>Título</label>
+        <input v-model="form.title" placeholder="Ej. Taller de integración" required />
+      </div>
 
-          <div class="grid-fields">
-            <select v-model="form.group_id" required>
-              <option :value="null" disabled>Grupo</option>
-              <option v-for="g in groupsData?.data ?? []" :key="g.id" :value="g.id">
-                {{ g.name }}
-              </option>
-            </select>
+      <div class="field-group">
+        <label>Instrucciones</label>
+        <textarea v-model="form.description" placeholder="Escribe los detalles aquí..."></textarea>
+      </div>
 
-            <select v-model="form.unit_id" required>
-              <option :value="null" disabled>Unidad</option>
-              <option v-for="u in availableUnits" :key="u.id" :value="u.id">
-                {{ u.name }}
-              </option>
-            </select>
+      <div class="grid-fields">
+        <div class="field-group">
+          <label>Grupo</label>
+          <select v-model="form.group_id" required>
+            <option :value="null" disabled>Seleccionar grupo</option>
+            <option v-for="g in groupsData?.data ?? []" :key="g.id" :value="g.id">{{ g.name }}</option>
+          </select>
+        </div>
+        <div class="field-group">
+          <label>Unidad</label>
+          <select v-model="form.unit_id" required>
+            <option :value="null" disabled>Seleccionar unidad</option>
+            <option v-for="u in availableUnits" :key="u.id" :value="u.id">{{ u.name }}</option>
+          </select>
+        </div>
+      </div>
+
+      <div class="grid-fields">
+        <div class="field-group">
+          <label>Fecha de apertura</label>
+          <input type="datetime-local" v-model="form.start_date" required />
+        </div>
+        <div class="field-group">
+          <label>Fecha de cierre</label>
+          <input type="datetime-local" v-model="form.end_date" required />
+        </div>
+      </div>
+
+      <div class="upload-container">
+        <label class="section-label">Material de apoyo</label>
+        <div class="drop-area" @click="($refs.fileInputCreate as HTMLInputElement).click()">
+          <input ref="fileInputCreate" type="file" multiple class="hidden-input" @change="onFilesChange" />
+          <p>Click para seleccionar archivos</p>
+          <span>PDF, Word o Imágenes</span>
+        </div>
+        
+        <div v-if="selectedFiles.length" class="files-preview">
+          <div v-for="(f, i) in selectedFiles" :key="i" class="file-item">
+            <span class="file-name">{{ f.name }}</span>
+            <button type="button" @click="removeFile(i)" class="btn-remove">X</button>
           </div>
+        </div>
+      </div>
+    </div>
 
-          <div class="grid-fields">
-            <input type="datetime-local" v-model="form.start_date" required />
-            <input type="datetime-local" v-model="form.end_date" required />
-          </div>
-
-          <button type="submit" class="btn-save">Publicar</button>
-        </form>
-      </Modal>
+    <div class="form-footer">
+      <button type="button" class="btn-cancel" @click="showModal = false">Cancelar</button>
+      <button type="submit" class="btn-primary">Publicar Tarea</button>
+    </div>
+  </form>
+</Modal>
 
     </SidebarLayout>
   </div>
 
-
-<!-- MODAL EDITAR -->
-<Modal v-model="showEditModal">
-  <form @submit.prevent="updateTask" class="task-form">
-    <h3>Editar Tarea</h3>
-
-    <input v-model="form.title" placeholder="Título" required />
-    <textarea v-model="form.description" placeholder="Instrucciones"></textarea>
-
-    <div class="grid-fields">
-      <select v-model="form.group_id" required>
-        <option :value="null" disabled>Grupo</option>
-        <option v-for="g in groupsData?.data ?? []" :key="g.id" :value="g.id">
-          {{ g.name }}
-        </option>
-      </select>
-
-      <select v-model="form.unit_id" required>
-        <option :value="null" disabled>Unidad</option>
-        <option v-for="u in availableUnits" :key="u.id" :value="u.id">
-          {{ u.name }}
-        </option>
-      </select>
+  <!-- MODAL EDITAR -->
+ <Modal v-model="showEditModal">
+  <form @submit.prevent="updateTask" class="task-form edit-mode">
+    <div class="form-header">
+      <div class="header-info">
+        <h3>Editar Tarea</h3>
+        <p>Modifica los parámetros de la tarea existente</p>
+      </div>
     </div>
 
-    <div class="grid-fields">
-      <input type="datetime-local" v-model="form.start_date" required />
-      <input type="datetime-local" v-model="form.end_date" required />
+    <div class="form-body">
+      <div class="field-group">
+        <label>Título</label>
+        <input v-model="form.title" required />
+      </div>
+
+      <div class="grid-fields">
+        <div class="field-group">
+          <label>Grupo</label>
+          <select v-model="form.group_id" required>
+            <option v-for="g in groupsData?.data ?? []" :key="g.id" :value="g.id">{{ g.name }}</option>
+          </select>
+        </div>
+        <div class="field-group">
+          <label>Unidad</label>
+          <select v-model="form.unit_id" required>
+            <option v-for="u in availableUnits" :key="u.id" :value="u.id">{{ u.name }}</option>
+          </select>
+        </div>
+      </div>
+
+      <div class="status-selection">
+        <label class="section-label">Estado de la entrega</label>
+        <div class="status-grid">
+          <label v-for="opt in [
+            { value: 'Activa', color: '#16a34a' },
+            { value: 'Cerrada', color: '#d97706' },
+            { value: 'Cancelada', color: '#dc2626' }
+          ]" :key="opt.value" class="status-card" :class="{ active: form.status === opt.value }">
+            <input type="radio" v-model="form.status" :value="opt.value" />
+            <span class="status-dot" :style="{ background: opt.color }"></span>
+            {{ opt.value }}
+          </label>
+        </div>
+      </div>
     </div>
 
-    <div class="actions">
-  <button type="button" class="btn-delete" @click="deleteTask">
-    Eliminar
-  </button>
-
-  <button type="submit" class="btn-save">
-    Actualizar
-  </button>
-</div>
+    <div class="form-footer split">
+      <button type="button" class="btn-danger-outline" @click="deleteTask">Eliminar Tarea</button>
+      <div class="footer-right">
+        <button type="button" class="btn-cancel" @click="showEditModal = false">Cerrar</button>
+        <button type="submit" class="btn-primary">Guardar Cambios</button>
+      </div>
+    </div>
   </form>
 </Modal>
-
 </template>
 
-
-
 <style scoped>
-
-/* HEADER */
+/* Estructura Principal */
 .ContSmall {
   background: var(--color-Azul);
   width: 95%;
@@ -439,11 +490,9 @@ async function deleteTask() {
 }
 .ContSmall h1 { margin: 0; font-size: 1.4rem; }
 .ContSmall p  { margin: 0; font-size: 0.85rem; opacity: 0.85; }
-
 .left  { display: flex; align-items: center; gap: 12px; }
 .right { display: flex; align-items: center; }
 
-/* CONTENEDOR PRINCIPAL */
 .ContBig {
   background: var(--color-Blanco, white);
   width: 95%;
@@ -455,15 +504,9 @@ async function deleteTask() {
   overflow-y: auto;
 }
 
-/* LISTA — una columna */
-.tasks-list {
-  display: flex;
-  flex-direction: column;
-  gap: 10px;
-  margin-top: 16px;
-}
+/* Tareas y Tabs */
+.tasks-list { display: flex; flex-direction: column; gap: 10px; margin-top: 16px; }
 
-/* TABS */
 .tabs-container {
   display: flex;
   gap: 5px;
@@ -503,20 +546,12 @@ async function deleteTask() {
   font-weight: 800;
   color: #475569;
 }
-.tabs-container button.active .tab-count {
-  background: #dbeafe;
-  color: var(--color-Azul);
-}
+.tabs-container button.active .tab-count { background: #dbeafe; color: var(--color-Azul); }
 
-/* LOADING */
-.loading-state {
-  text-align: center;
-  padding: 60px;
-  color: var(--color-AzulTres, #2563eb);
-}
+/* Estados de Carga */
+.loading-state { text-align: center; padding: 60px; color: var(--color-AzulTres, #2563eb); }
 .spinner {
-  width: 36px;
-  height: 36px;
+  width: 36px; height: 36px;
   border: 3px solid #e0e0e0;
   border-top: 3px solid var(--color-AzulTres, #2563eb);
   border-radius: 50%;
@@ -525,57 +560,15 @@ async function deleteTask() {
 }
 @keyframes spin { to { transform: rotate(360deg); } }
 
-/* ERROR */
-.error-banner {
-  background: #ffe5e5;
-  color: #b91c1c;
-  padding: 14px;
-  border-radius: 10px;
-  margin-bottom: 20px;
-  display: flex;
-  gap: 10px;
-  align-items: center;
-  font-weight: 600;
-}
-
-/* EMPTY */
 .empty-state {
-  text-align: center;
-  padding: 50px;
-  color: #94a3b8;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  gap: 10px;
-  font-size: 0.95rem;
+  text-align: center; padding: 50px; color: #94a3b8;
+  display: flex; flex-direction: column; align-items: center; gap: 10px; font-size: 0.95rem;
 }
 
-/* PANEL HEADER */
-.panel-header {
-  display: flex;
-  align-items: center;
-  gap: 10px;
-  margin-bottom: 8px;
-}
-.panel-header h2 {
-  font-size: 1.1rem;
-  font-weight: 800;
-  color: var(--color-OscuroAzulado, #1e293b);
-  margin: 0;
-}
-.badge {
-  background: var(--color-Azul);
-  color: white;
-  border-radius: 20px;
-  padding: 2px 12px;
-  font-size: 0.8rem;
-  font-weight: 700;
-}
-
-/* BOTÓN CREAR */
+/* Botón Crear en Header */
 .btn-create-task {
   padding: 10px 20px;
-  border: none;
+  border: 1.5px solid rgba(255,255,255,0.3);
   border-radius: 12px;
   background: rgba(255,255,255,0.15);
   color: white;
@@ -583,90 +576,218 @@ async function deleteTask() {
   font-size: 0.88rem;
   cursor: pointer;
   transition: background 0.2s;
-  border: 1.5px solid rgba(255,255,255,0.3);
 }
-.btn-create-task:hover {
-  background: rgba(255,255,255,0.25);
-}
+.btn-create-task:hover { background: rgba(255,255,255,0.25); }
 
-/* AVATAR */
-
-
-/* FORMULARIO */
+/* --- DISEÑO DE FORMULARIO EN MODALES --- */
 .task-form {
   display: flex;
   flex-direction: column;
-  gap: 10px;
+  gap: 15px;
+  padding: 10px;
 }
-.task-form label {
+
+.form-header {
+  margin-bottom: 10px;
+  border-left: 4px solid var(--color-AzulTres);
+  padding-left: 15px;
+}
+
+.form-header h3 {
+  margin: 0;
+  color: var(--color-AzulCuatro);
+  font-size: 1.3rem;
+}
+
+.form-header p {
+  margin: 4px 0 0;
+  color: #64748b;
+  font-size: 0.85rem;
+}
+
+.form-body {
+  display: flex;
+  flex-direction: column;
+  gap: 18px;
+}
+
+.field-group {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.field-group label, .section-label {
   font-weight: 700;
   font-size: 0.85rem;
-  color: #111827;
+  color: var(--color-AzulCuatro);
 }
-.task-form input,
-.task-form textarea,
-.task-form select {
-  border: 1px solid #d1d5db;
+
+.field-group input, 
+.field-group textarea, 
+.field-group select {
+  border: 2px solid #e2e8f0;
   border-radius: 10px;
-  padding: 9px 12px;
+  padding: 10px 14px;
   font-size: 0.9rem;
-  outline: none;
+  background: #f8fafc;
+  transition: all 0.2s;
   width: 100%;
   box-sizing: border-box;
-  transition: border-color 0.2s;
 }
-.task-form input:focus,
-.task-form textarea:focus,
-.task-form select:focus {
+
+.field-group input:focus, 
+.field-group textarea:focus, 
+.field-group select:focus {
   border-color: var(--color-Azul);
+  background: white;
+  outline: none;
 }
-.task-form textarea {
-  resize: vertical;
-  min-height: 75px;
-}
+
 .grid-fields {
   display: grid;
   grid-template-columns: 1fr 1fr;
-  gap: 10px;
+  gap: 12px;
 }
-.grid-fields label { display: block; margin-bottom: 4px; }
-.select-status { width: 100%; }
-.actions {
+
+/* Sección de Archivos (Modal Crear) */
+.drop-area {
+  border: 2px dashed var(--color-Azul);
+  background: var(--color-Contenedor);
+  border-radius: 12px;
+  padding: 20px;
+  text-align: center;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.drop-area:hover { background: #dbeafe; }
+.drop-area p { margin: 0; font-weight: 700; color: var(--color-AzulTres); font-size: 0.9rem; }
+.drop-area span { font-size: 0.75rem; color: #64748b; }
+.hidden-input { display: none; }
+
+.files-preview {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(140px, 1fr));
+  gap: 8px;
+  margin-top: 10px;
+}
+
+.file-item {
+  background: white;
+  border: 1.5px solid #e2e8f0;
+  padding: 6px 10px;
+  border-radius: 20px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  font-size: 0.75rem;
+}
+
+.btn-remove {
+  background: #fee2e2;
+  color: #ef4444;
+  border: none;
+  border-radius: 50%;
+  width: 18px;
+  height: 18px;
+  cursor: pointer;
+  font-weight: bold;
+}
+
+/* Selector de Estado (Modal Editar) */
+.status-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 10px;
+  margin-top: 5px;
+}
+
+.status-card {
+  border: 2px solid #e2e8f0;
+  border-radius: 10px;
+  padding: 10px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  cursor: pointer;
+  font-size: 0.8rem;
+  font-weight: 700;
+  transition: all 0.2s;
+  background: white;
+}
+
+.status-card input { display: none; }
+
+.status-card.active {
+  border-color: var(--color-AzulTres);
+  background: #eff6ff;
+  color: var(--color-AzulTres);
+}
+
+.status-dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+}
+
+/* Footers de los Modales */
+.form-footer {
+  margin-top: 20px;
   display: flex;
   justify-content: flex-end;
-  gap: 8px;
-  margin-top: 8px;
+  gap: 12px;
+  border-top: 1px solid #f1f5f9;
+  padding-top: 15px;
 }
-.btn-cancel {
-  border: none;
-  background: #e5e7eb;
-  padding: 9px 18px;
-  border-radius: 10px;
-  cursor: pointer;
-  font-weight: 700;
-}
-.btn-save {
-  border: none;
-  background: #2563eb;
-  color: white;
-  padding: 9px 18px;
-  border-radius: 10px;
-  cursor: pointer;
-  font-weight: 700;
-}
-.btn-save:hover { background: #1d4ed8; }
 
-.filters-container {
+.form-footer.split {
+  justify-content: space-between;
+}
+
+.footer-right {
   display: flex;
-  gap: 10px;
-  margin-bottom: 15px;
+  gap: 12px;
 }
 
-.filters-container select {
-  padding: 8px 12px;
+.btn-primary {
+  background: var(--color-AzulTres);
+  color: white;
+  border: none;
+  padding: 10px 24px;
   border-radius: 10px;
-  border: 1px solid #d1d5db;
-  font-size: 0.85rem;
+  font-weight: 700;
+  cursor: pointer;
 }
 
+.btn-cancel {
+  background: #f1f5f9;
+  color: #64748b;
+  border: none;
+  padding: 10px 20px;
+  border-radius: 10px;
+  font-weight: 700;
+  cursor: pointer;
+}
+
+.btn-danger-outline {
+  background: transparent;
+  color: #dc2626;
+  border: 2px solid #fee2e2;
+  padding: 10px 20px;
+  border-radius: 10px;
+  font-weight: 700;
+  cursor: pointer;
+}
+
+.btn-danger-outline:hover { background: #fee2e2; }
+
+/* Filtros Generales */
+.filters-container { display: flex; gap: 10px; margin-bottom: 15px; }
+.filters-container select { 
+  padding: 8px 12px; 
+  border-radius: 10px; 
+  border: 1px solid #d1d5db; 
+  font-size: 0.85rem; 
+}
 </style>
