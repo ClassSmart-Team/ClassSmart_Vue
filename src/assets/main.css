@@ -41,6 +41,7 @@ body {
     sans-serif;
   font-size: 15px;
   background-color: var(--color-Contenedor);
+  overflow-x: hidden;
 }
 
 /* Utilidades globales que aún uses en otras vistas */
