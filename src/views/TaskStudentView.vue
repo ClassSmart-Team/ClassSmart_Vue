@@ -2,7 +2,7 @@
 import SidebarLayout from '@/components/StudentSideBar.vue' 
 import { useapi } from '@/assets/composables/useApi'
 import { useAuthStore } from '@/stores/authStore.ts'
-import { ref, computed } from 'vue'
+import { ref, computed, watch } from 'vue'
 import StudentTaskCard from '@/components/StudentTaskCard.vue' 
 
 // ── Auth ─────────────────────────────────────────────────────────────────────
@@ -12,11 +12,18 @@ const ua = useAuthStore()
 const currentTab = ref('pendientes')
 
 // ── GET tareas ───────────────────────────────────────────────────────────────
+const { data, error, isFetching } = useapi('/my-assignments', { method: 'GET' }).json()
 
+// ── Debug ─────────────────────────────────────────────────────────────────────
+watch(data, (val) => {
+  const list = val?.data ?? val ?? []
+ 
 
-const { data, error, isFetching } = useapi('/my-assignments', {
-  method: 'GET',
-}).json()
+    list.forEach((a: any) => {
+  console.log('TASK:', a)
+  console.log('submission:', a.submission)
+})
+})
 
 // ── Filtros de actividades ───────────────────────────────────────────────────
 const filteredActivities = computed(() => {
@@ -25,19 +32,33 @@ const filteredActivities = computed(() => {
   return list.filter((a: any) => {
     const hasSubmission = !!a.submission
     const isGraded = a.submission?.status === 'Calificada'
+
     const isLate =
       hasSubmission &&
+      a.submission?.submission_date &&
+      a.end_date &&
       new Date(a.submission.submission_date) > new Date(a.end_date)
 
-    // Lógica de Tabs para el Alumno
-    if (currentTab.value === 'pendientes') return !hasSubmission
-    if (currentTab.value === 'entregadas') return hasSubmission && !isGraded && !isLate
-    if (currentTab.value === 'calificadas') return isGraded
-    if (currentTab.value === 'tardias') return isLate
-    return false
+    switch (currentTab.value) {
+      case 'pendientes':
+        return !hasSubmission
+
+      case 'completadas':
+        return hasSubmission && !isGraded
+
+      case 'calificadas':
+        return hasSubmission && isGraded
+
+      case 'tardias':
+        return isLate
+
+      default:
+        return false
+    }
   })
 })
 
+// ── Utils ─────────────────────────────────────────────────────────────────────
 const formatDate = (dateStr: string) => 
   new Date(dateStr).toLocaleDateString('es-MX', { day: '2-digit', month: 'short' })
 </script>
@@ -46,6 +67,7 @@ const formatDate = (dateStr: string) =>
   <div class="bg-page">
     <SidebarLayout>
 
+      <!-- HEADER -->
       <div class="ContSmall">
         <div class="left">
           <div class="avatar">
@@ -62,33 +84,38 @@ const formatDate = (dateStr: string) =>
         </div>
       </div>
 
+      <!-- CONTENIDO -->
       <div class="ContBig CenterItems">
 
+        <!-- TABS -->
         <div class="tabs-container">
           <button @click="currentTab = 'pendientes'" :class="{ active: currentTab === 'pendientes' }">
             Por entregar
           </button>
-          <button @click="currentTab = 'entregadas'" :class="{ active: currentTab === 'entregadas' }">
-            En revisión
+          <button @click="currentTab = 'completadas'" :class="{ active: currentTab === 'completadas' }">
+            Completadas
           </button>
           <button @click="currentTab = 'calificadas'" :class="{ active: currentTab === 'calificadas' }">
-            Completadas
+            Calificadas
           </button>
           <button @click="currentTab = 'tardias'" :class="{ active: currentTab === 'tardias' }">
             Fuera de tiempo
           </button>
         </div>
 
+        <!-- LOADING -->
         <div v-if="isFetching" class="loading-state">
           <div class="spinner"></div>
           <p>Buscando tus tareas...</p>
         </div>
 
+        <!-- ERROR -->
         <div v-if="error" class="error-banner">
           <span>⚠</span>
           <p>Hubo un problema al cargar las tareas.</p>
         </div>
 
+        <!-- DATA -->
         <div v-if="!isFetching && !error">
           
           <div class="panel-header">
@@ -96,11 +123,13 @@ const formatDate = (dateStr: string) =>
             <span class="badge">{{ filteredActivities.length }}</span>
           </div>
 
+          <!-- EMPTY -->
           <div v-if="!filteredActivities.length" class="empty-state">
             <div class="empty-icon">📂</div>
             <p>No tienes tareas en esta sección por ahora.</p>
           </div>
 
+          <!-- GRID -->
           <div v-else class="tasks-grid">
             <StudentTaskCard
               v-for="task in filteredActivities"
@@ -116,9 +145,6 @@ const formatDate = (dateStr: string) =>
 </template>
 
 <style scoped>
-/* ── FONDO GENERAL ────────────────────────────────────────────────────────── */
-
-
 /* ── HEADER ─────────────────────────────────────────────────────────────── */
 .ContSmall {
   background: var(--color-Azul);
@@ -200,7 +226,7 @@ const formatDate = (dateStr: string) =>
   box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
 }
 
-/* ── GRID Y TARJETAS ─────────────────────────────────────────────────────── */
+/* ── GRID ─────────────────────────────────────────────────────────────── */
 .tasks-grid {
   display: grid;
   grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
@@ -231,7 +257,7 @@ const formatDate = (dateStr: string) =>
   font-weight: 800;
 }
 
-/* ── ESTADOS (LOADING/EMPTY) ──────────────────────────────────────────────── */
+/* ── STATES ─────────────────────────────────────────────────────────────── */
 .loading-state, .empty-state {
   text-align: center;
   padding: 80px 20px;
@@ -268,9 +294,6 @@ const formatDate = (dateStr: string) =>
   gap: 12px;
   font-weight: 700;
 }
-
-/* ── AVATAR ─────────────────────────────────────────────────────────────── */
-
 
 /* ── RESPONSIVE ──────────────────────────────────────────────────────────── */
 @media (max-width: 1050px) {

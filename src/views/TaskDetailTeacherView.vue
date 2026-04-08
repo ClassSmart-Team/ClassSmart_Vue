@@ -57,7 +57,8 @@ const fileIcon = (type: string = '') => {
 }
 
 const openFile = (f: any) => {
-  window.open(f.url ?? `/storage/${f.file_path}`, '_blank')
+  const url = `https://api.sutando-user.me/api/files/${f.id}/view`
+  window.open(url, '_blank')
 }
 
 function openGrade(sub: any) {

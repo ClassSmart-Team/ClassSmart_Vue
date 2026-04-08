@@ -150,17 +150,23 @@ function handleTaskClick(task: any) {
 }
 
 function handleEditTask(task: any) {
-  editingTask.value = task
+  editingTask.value = task;
+  
+  
   form.value = {
     title: task.title,
-    description: task.description,
-    start_date: task.start_date?.replace(' ', 'T').replace(/(\d{2}:\d{2}):\d{2}$/, '$1') ?? '',
-    end_date: task.end_date?.replace(' ', 'T').replace(/(\d{2}:\d{2}):\d{2}$/, '$1') ?? '',
-    group_id: task.group_id ? Number(task.group_id) : null,
-    unit_id: task.unit_id ? Number(task.unit_id) : null,
+    description: task.description || '', 
+    start_date: task.start_date?.replace(' ', 'T').substring(0, 16) ?? '',
+    end_date: task.end_date?.replace(' ', 'T').substring(0, 16) ?? '',
+    group_id: task.group_id ? Number(task.group_id) : (task.group?.id || null),
     status: task.status ?? 'Activa',
-  }
-  showEditModal.value = true
+    unit_id: null 
+  };
+
+  setTimeout(() => {
+    form.value.unit_id = task.unit_id ? Number(task.unit_id) : (task.unit?.id || null);
+    showEditModal.value = true;
+  }, 50);
 }
 
 function onFilesChange(e: Event) {
@@ -417,7 +423,7 @@ async function deleteTask() {
   </div>
 
   <!-- MODAL EDITAR -->
- <Modal v-model="showEditModal">
+<Modal v-model="showEditModal">
   <form @submit.prevent="updateTask" class="task-form edit-mode">
     <div class="form-header">
       <div class="header-info">
@@ -432,6 +438,11 @@ async function deleteTask() {
         <input v-model="form.title" required />
       </div>
 
+      <div class="field-group">
+        <label>Instrucciones</label>
+        <textarea v-model="form.description" placeholder="Escribe los detalles aquí..."></textarea>
+      </div>
+
       <div class="grid-fields">
         <div class="field-group">
           <label>Grupo</label>
@@ -444,6 +455,17 @@ async function deleteTask() {
           <select v-model="form.unit_id" required>
             <option v-for="u in availableUnits" :key="u.id" :value="u.id">{{ u.name }}</option>
           </select>
+        </div>
+      </div>
+
+      <div class="grid-fields">
+        <div class="field-group">
+          <label>Fecha de apertura</label>
+          <input type="datetime-local" v-model="form.start_date" required />
+        </div>
+        <div class="field-group">
+          <label>Fecha de cierre</label>
+          <input type="datetime-local" v-model="form.end_date" required />
         </div>
       </div>
 
@@ -472,6 +494,9 @@ async function deleteTask() {
     </div>
   </form>
 </Modal>
+
+
+
 </template>
 
 <style scoped>
