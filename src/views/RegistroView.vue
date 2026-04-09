@@ -102,7 +102,7 @@ function registrar() {
 
     <div class="visual-section-dark">
       <div class="welcome-text">
-        <h2 class="branding-dark">ClassSmart<span>App</span></h2>
+        <h2 class="branding-dark">ClassSmart</h2>
         <p>Tu futuro educativo comienza aquí.</p>
       </div>
     </div>
