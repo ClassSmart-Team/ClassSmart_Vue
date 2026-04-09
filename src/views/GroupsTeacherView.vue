@@ -60,7 +60,6 @@ function showgroup(id:number){
   <div class="bg-page">
     <SidebarLayout>
 
-      <!-- HEADER -->
       <div class="header-box header-flex">
         <div class="left">
           <div class="avatar">
@@ -72,12 +71,13 @@ function showgroup(id:number){
           </div>
         </div>
 
-        <button @click="showModal = true" class="btn-create-group">
-          CREAR GRUPO
-        </button>
+        <div class="right">
+          <button @click="showModal = true" class="btn-create-group">
+            CREAR GRUPO
+          </button>
+        </div>
       </div>
 
-      <!-- CONTENIDO PRINCIPAL -->
       <div class="main-box">
 
         <div v-if="isFetching" class="loading-state">
@@ -101,7 +101,6 @@ function showgroup(id:number){
 
       </div>
 
-      <!-- MODAL -->
       <Modal v-model="showModal">
         <form class="group-form" @submit.prevent="creategroup">
           <label>Periodo</label>
@@ -145,29 +144,22 @@ function showgroup(id:number){
 }
 
 /* HEADER */
-.ContSmall {
+.header-box {
   background: var(--color-Azul);
   width: 100%;
+  max-width: 1200px;
   min-height: 40px;
   border-radius: 20px;
-  margin: 20px 0;
-  padding: 15px;
+  margin: 20px auto;
+  padding: 15px 25px;
   color: white;
+}
 
+/* Esta clase es la que hace la magia de mover el botón a la derecha */
+.header-flex {
   display: flex;
   justify-content: space-between;
   align-items: center;
-}
-
-.ContSmall h1 {
-  margin: 0;
-  font-size: 1.5rem;
-}
-
-.ContSmall p {
-  margin: 0;
-  font-size: 0.9rem;
-  opacity: 0.9;
 }
 
 .left {
@@ -182,22 +174,19 @@ function showgroup(id:number){
 }
 
 /* CONTENEDOR PRINCIPAL */
-.ContBig {
+.main-box {
   background: var(--color-Blanco);
   width: 100%;
+  max-width: 1200px;
   min-height: 400px;
   overflow-y: auto;
   border-radius: 20px;
-  margin: 0;
+  margin: 0 auto;
   padding: 30px;
   box-shadow: 0 10px 30px #00000030;
 }
 
-.ContSmall,
-.ContBig {
-  max-width: 1200px;
-}
-/* GRID (adaptado a tu estilo) */
+/* GRID */
 .groups-grid {
   display: grid;
   grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
@@ -223,12 +212,8 @@ function showgroup(id:number){
 }
 
 @keyframes spin {
-  0% {
-    transform: rotate(0deg);
-  }
-  100% {
-    transform: rotate(360deg);
-  }
+  0% { transform: rotate(0deg); }
+  100% { transform: rotate(360deg); }
 }
 
 /* ERROR */
@@ -243,8 +228,8 @@ function showgroup(id:number){
   align-items: center;
   font-weight: 600;
 }
+
 .btn-create-group {
-  margin-top: 12px;
   padding: 12px 22px;
   border: none;
   border-radius: 14px;
@@ -267,13 +252,6 @@ function showgroup(id:number){
 .btn-create-group:active {
   transform: translateY(0px) scale(0.98);
   box-shadow: 0 4px 12px rgba(0, 0, 0, 0.18);
-}
-
-.btn-create-group:focus {
-  outline: none;
-  box-shadow:
-    0 0 0 4px rgba(255, 255, 255, 0.35),
-    0 10px 25px rgba(0, 0, 0, 0.2);
 }
 
 .group-form {
@@ -336,9 +314,6 @@ function showgroup(id:number){
   font-weight: 800;
 }
 
-.btn-save:hover {
-  background: #1d4ed8;
-}
 .group-form select {
   border: 1px solid #d1d5db;
   border-radius: 12px;
@@ -350,14 +325,10 @@ function showgroup(id:number){
 }
 
 @media (max-width: 768px) {
-  .ContSmall {
+  .header-flex {
     flex-direction: column;
     align-items: flex-start;
-    gap: 10px;
-  }
-
-  .ContBig {
-    padding: 15px;
+    gap: 15px;
   }
 }
 </style>
