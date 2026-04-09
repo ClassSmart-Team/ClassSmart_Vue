@@ -40,7 +40,21 @@ import ProfileStudentView from '@/views/ProfileStudentView.vue'
 const router = createRouter({
   history: createWebHistory(import.meta.env.BASE_URL),
   routes: [
-    //ADMINISTRADOR//
+
+    //Auth / Rutas "publicas"
+    {
+      path: '/register',
+      name: 'Register',
+      component: RegistroView,
+    },
+
+    {
+      path: '/login',
+      name: 'Login',
+      component: LoginView,
+    },
+
+    //Admin
     {
       path: '/adminRegister',
       name: 'AdminRegister',
@@ -59,19 +73,6 @@ const router = createRouter({
       component: AdminUsersView,
       meta: { requiresAuth: true, rol: 1 },
     },
-
-    {
-      path: '/register',
-      name: 'Register',
-      component: RegistroView,
-    },
-
-    {
-      path: '/login',
-      name: 'Login',
-      component: LoginView,
-    },
-
     //TEACHER
 
     {
@@ -100,8 +101,6 @@ const router = createRouter({
       name: 'tasks',
       component: TasksTeacherView,
       meta: { requiresAuth: true, rol: 2 },
-
-
     },
 
     {
@@ -165,7 +164,7 @@ const router = createRouter({
   path: '/student/tasks/:id',
   name: 'studentTasksDetail',
   component: TaskDetailStudentView,
-  meta: { requiresAuth: true, rol: [3] },
+  meta: { requiresAuth: true, rol: 3 },
 },
 
 
@@ -174,90 +173,90 @@ const router = createRouter({
       path: '/parent/home',
       name: 'parentHome',
       component: HomeParentView,
-      meta: { requiresAuth: true, role: 4 },
+      meta: { requiresAuth: true, rol: 4 },
     },
 
     {
       path: '/parent/profile',
       name: 'parentProfile',
       component: ProfileParentView,
-      meta: { requiresAuth: true, role: 4 },
+      meta: { requiresAuth: true, rol: 4 },
     },
 
     {
       path: '/parent/students',
       name: 'parentStudents',
       component: StudentsParentView,
-      meta: { requiresAuth: true, role: 4 },
+      meta: { requiresAuth: true, rol: 4 },
     },
 
     {
       path: '/parent/groups',
       name: 'parentGroups',
       component: GroupsParentView,
-      meta: { requiresAuth: true, role: 4 },
+      meta: { requiresAuth: true, rol: 4 },
     },
 
     {
       path: '/parent/groups/:id',
       name: 'parentGroupDetail',
       component: ShowGroup,
-      meta: { requiresAuth: true, role: 4 },
+      meta: { requiresAuth: true, rol: 4 },
     },
 
     {
       path: '/parent/tasks',
       name: 'parentTasks',
       component: TasksParentView,
-      meta: { requiresAuth: true, role: 4 },
+      meta: { requiresAuth: true, rol: 4 },
     },
 
     {
       path: '/parent/tasks/:id',
       name: 'parentTasksDetail',
       component: TaskDetailView,
-      meta: { requiresAuth: true, role: 4 },
+      meta: { requiresAuth: true, rol: 4 },
     },
 
     {
       path: '/parent/forum',
       name: 'parentForum',
       component: ForumParentView,
-      meta: { requiresAuth: true, role: 4 },
+      meta: { requiresAuth: true, rol: 4 },
     },
     {
       path: '/teacher/show/group/:id',
       name: 'teachershowgroup',
       component: TeacherShowGroupView,
-      meta: { requiresAuth: true, role: 4 },
+      meta: { requiresAuth: true, rol: 4 },
     },
     {
       path: '/parent/forum/:id',
       name: 'parentForumDetail',
       component: ForumDetailView,
       props: true,
-      meta: { requiresAuth: true, role: 4 },
+      meta: { requiresAuth: true, rol: 4 },
     },
 
     {
       path: '/parent/grades',
       name: 'parentGrades',
       component: GradesParentView,
-      meta: { requiresAuth: true, role: 4 },
+      meta: { requiresAuth: true, rol: 4 },
     },
 
     {
       path: '/parent/notifications',
       name: 'parentNotifications',
       component: NotificationParentView,
-      meta: { requiresAuth: true, role: 4 },
+      meta: { requiresAuth: true, rol: 4 },
     },
 
     {
       path: '/parent/settings',
       name: 'parentSettings',
       component: SettingsParentView,
-      meta: { requiresAuth: true, role: 4 },
+      meta: { requiresAuth: true, rol: 4 },
     },
 
     {
@@ -265,7 +264,7 @@ const router = createRouter({
       name: 'group-detail',
       component: ShowGroup,
       props: true, // Esto permite recibir el :id como una prop en la vista de detalle
-      meta: { requiresAuth: true, role: 4 },
+      meta: { requiresAuth: true, rol: 4 },
     },
 
 
@@ -275,45 +274,55 @@ const router = createRouter({
 
 router.beforeEach((to, from, next) => {
   const authStore = useAuthStore()
-  if (to.path === '/') {
-    if (!authStore.credentials) {
+  const user = authStore.credentials
+
+  // 🚫 Evitar que usuarios logueados entren a login
+  if (to.name === 'Login' && user) {
+    const role = user.user.role.id
+
+    switch (role) {
+      case 1: return next({ name: 'AdminHome' })
+      case 2: return next({ name: 'home' })
+      case 3: return next({ name: 'studentHome' })
+      case 4: return next({ name: 'parentHome' })
+      default: return next()
+    }
+  }
+
+  // 🔐 Rutas protegidas
+  if (to.matched.some(r => r.meta.requiresAuth)) {
+    if (!user) {
       return next({ name: 'Login' })
     }
 
-    // Redirigir según el rol que ya tienes mapeado
-    const userRole = authStore.credentials.user.role.id
-    switch (userRole) {
-      case 1: return next({ name: 'AdminHomeView' })
-      case 2: return next({ name: 'home' }) // Home de Teacher
+    if (to.meta.rol) {
+      const role = user.user.role.id
+      const allowedRoles = Array.isArray(to.meta.rol) ? to.meta.rol : [to.meta.rol]
+
+      if (!allowedRoles.includes(role)) {
+        return next({ name: 'Login' })
+      }
+    }
+  }
+
+  // 🔁 Redirección desde "/"
+  if (to.path === '/') {
+    if (!user) {
+      return next({ name: 'Login' })
+    }
+
+    const role = user.user.role.id
+
+    switch (role) {
+      case 1: return next({ name: 'AdminHome' })
+      case 2: return next({ name: 'home' })
       case 3: return next({ name: 'studentHome' })
       case 4: return next({ name: 'parentHome' })
       default: return next({ name: 'Login' })
     }
   }
-  if (to.matched.some((r) => r.meta.requiresAuth)) {
-    if (!authStore.credentials) {
-      return next({ name: 'Login' })
-    }
-
-    if (to.matched.some((record) => record.meta.rol)) {
-      const userRole = authStore.credentials.user.role.id
-      const rolMeta = to.meta.rol
-
-      if ((Array.isArray(rolMeta) && rolMeta.indexOf(userRole) !== -1) || userRole === rolMeta) {
-        return next()  // ← agregué return
-      } else {
-        return next({ name: 'Login' })  // ← agregué return
-      }
-    }
-
-    return next() // ← este se ejecuta solo si no hay meta.rol
-  }
-
-
-  if (to.name === 'login' && authStore.credentials) {
-    return next({ name: 'home' })
-  }
 
   return next()
 })
+
 export default router
