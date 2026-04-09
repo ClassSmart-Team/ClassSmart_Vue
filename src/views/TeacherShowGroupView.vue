@@ -1,14 +1,16 @@
 <script setup lang="ts">
-import { ref } from 'vue'
+import { ref, onMounted, onUnmounted } from 'vue'
 import { useapi } from '@/assets/composables/useApi.ts'
 import { useRoute, useRouter } from 'vue-router'
 import { h } from 'vue'
 import type { User } from '@/types/types.ts'
 import type { UnitRequest } from '@/types/types.ts'
-import type{Unit}from '@/types/types.ts'
+import type { Unit } from '@/types/types.ts'
+
 const route = useRoute()
 const router = useRouter()
 const id = Number(route.params.id)
+
 const ur = ref<UnitRequest>({
   group_id: id,
   name: '',
@@ -17,11 +19,39 @@ const ur = ref<UnitRequest>({
   end_date: '',
 })
 
+// --- MENÚS HAMBURGUESA ---
+const showStudentMenu = ref(false)
+const showUnitsMenu = ref(false)
+
+const toggleStudentMenu = () => {
+  showStudentMenu.value = !showStudentMenu.value
+  showUnitsMenu.value = false
+}
+
+const toggleUnitsMenu = () => {
+  showUnitsMenu.value = !showUnitsMenu.value
+  showStudentMenu.value = false
+}
+
+const closeAllMenus = (e: MouseEvent) => {
+  const target = e.target as HTMLElement
+  if (!target.closest('.dropdown-wrapper')) {
+    showStudentMenu.value = false
+    showUnitsMenu.value = false
+  }
+}
+
+onMounted(() => document.addEventListener('click', closeAllMenus))
+onUnmounted(() => document.removeEventListener('click', closeAllMenus))
+
+// --- FETCH GRUPO ---
+const { data, isFetching, error, execute: reloadGroup } = useapi(`/groups/${id}`).json()
+
+// --- AGREGAR UNIDAD ---
 function submitAddUnit() {
   const { data: dat, onFetchResponse: onaddsubmitresposne } = useapi('units', {
     method: 'POST',
   })
-
     .post(ur.value)
     .json()
   onaddsubmitresposne(() => {
@@ -38,113 +68,129 @@ function submitAddUnit() {
   })
 }
 
-const { data, isFetching, error, execute: reloadGroup } = useapi(`/groups/${id}`).json()
-
-
+// --- ICONS ---
 const IconBack = () =>
-  h(
-    'svg',
-    {
-      width: '20',
-      height: '20',
-      viewBox: '0 0 24 24',
-      fill: 'none',
-      stroke: 'currentColor',
-      'stroke-width': '2.5',
-      'stroke-linecap': 'round',
-      'stroke-linejoin': 'round',
-    },
-    [
-      h('line', { x1: '19', y1: '12', x2: '5', y2: '12' }),
-      h('polyline', { points: '12 19 5 12 12 5' }),
-    ],
-  )
+  h('svg', { width: '20', height: '20', viewBox: '0 0 24 24', fill: 'none', stroke: 'currentColor', 'stroke-width': '2.5', 'stroke-linecap': 'round', 'stroke-linejoin': 'round' }, [
+    h('line', { x1: '19', y1: '12', x2: '5', y2: '12' }),
+    h('polyline', { points: '12 19 5 12 12 5' }),
+  ])
 
 const IconUser = () =>
-  h(
-    'svg',
-    {
-      width: '18',
-      height: '18',
-      viewBox: '0 0 24 24',
-      fill: 'none',
-      stroke: 'currentColor',
-      'stroke-width': '2',
-      'stroke-linecap': 'round',
-      'stroke-linejoin': 'round',
-    },
-    [
-      h('path', { d: 'M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2' }),
-      h('circle', { cx: '12', cy: '7', r: '4' }),
-    ],
-  )
+  h('svg', { width: '18', height: '18', viewBox: '0 0 24 24', fill: 'none', stroke: 'currentColor', 'stroke-width': '2', 'stroke-linecap': 'round', 'stroke-linejoin': 'round' }, [
+    h('path', { d: 'M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2' }),
+    h('circle', { cx: '12', cy: '7', r: '4' }),
+  ])
 
 const IconCalendar = () =>
-  h(
-    'svg',
-    {
-      width: '18',
-      height: '18',
-      viewBox: '0 0 24 24',
-      fill: 'none',
-      stroke: 'currentColor',
-      'stroke-width': '2',
-      'stroke-linecap': 'round',
-      'stroke-linejoin': 'round',
-    },
-    [
-      h('rect', { x: '3', y: '4', width: '18', height: '18', rx: '2', ry: '2' }),
-      h('line', { x1: '16', y1: '2', x2: '16', y2: '6' }),
-      h('line', { x1: '8', y1: '2', x2: '8', y2: '6' }),
-      h('line', { x1: '3', y1: '10', x2: '21', y2: '10' }),
-    ],
-  )
+  h('svg', { width: '18', height: '18', viewBox: '0 0 24 24', fill: 'none', stroke: 'currentColor', 'stroke-width': '2', 'stroke-linecap': 'round', 'stroke-linejoin': 'round' }, [
+    h('rect', { x: '3', y: '4', width: '18', height: '18', rx: '2', ry: '2' }),
+    h('line', { x1: '16', y1: '2', x2: '16', y2: '6' }),
+    h('line', { x1: '8', y1: '2', x2: '8', y2: '6' }),
+    h('line', { x1: '3', y1: '10', x2: '21', y2: '10' }),
+  ])
 
 const IconPlus = () =>
-  h(
-    'svg',
-    {
-      width: '18',
-      height: '18',
-      viewBox: '0 0 24 24',
-      fill: 'none',
-      stroke: 'currentColor',
-      'stroke-width': '2.5',
-      'stroke-linecap': 'round',
-      'stroke-linejoin': 'round',
-    },
-    [
-      h('line', { x1: '12', y1: '5', x2: '12', y2: '19' }),
-      h('line', { x1: '5', y1: '12', x2: '19', y2: '12' }),
-    ],
-  )
+  h('svg', { width: '18', height: '18', viewBox: '0 0 24 24', fill: 'none', stroke: 'currentColor', 'stroke-width': '2.5', 'stroke-linecap': 'round', 'stroke-linejoin': 'round' }, [
+    h('line', { x1: '12', y1: '5', x2: '12', y2: '19' }),
+    h('line', { x1: '5', y1: '12', x2: '19', y2: '12' }),
+  ])
 
 const IconX = () =>
-  h(
-    'svg',
-    {
-      width: '20',
-      height: '20',
-      viewBox: '0 0 24 24',
-      fill: 'none',
-      stroke: 'currentColor',
-      'stroke-width': '2.5',
-      'stroke-linecap': 'round',
-      'stroke-linejoin': 'round',
-    },
-    [
-      h('line', { x1: '18', y1: '6', x2: '6', y2: '18' }),
-      h('line', { x1: '6', y1: '6', x2: '18', y2: '18' }),
-    ],
-  )
+  h('svg', { width: '20', height: '20', viewBox: '0 0 24 24', fill: 'none', stroke: 'currentColor', 'stroke-width': '2.5', 'stroke-linecap': 'round', 'stroke-linejoin': 'round' }, [
+    h('line', { x1: '18', y1: '6', x2: '6', y2: '18' }),
+    h('line', { x1: '6', y1: '6', x2: '18', y2: '18' }),
+  ])
 
-const getInitials = (name: string, lastname: string) => {
-  return `${name.charAt(0)}${lastname.charAt(0)}`.toUpperCase()
+const IconHamburger = () =>
+  h('svg', { width: '18', height: '18', viewBox: '0 0 24 24', fill: 'none', stroke: 'currentColor', 'stroke-width': '2.5', 'stroke-linecap': 'round', 'stroke-linejoin': 'round' }, [
+    h('line', { x1: '3', y1: '6', x2: '21', y2: '6' }),
+    h('line', { x1: '3', y1: '12', x2: '21', y2: '12' }),
+    h('line', { x1: '3', y1: '18', x2: '21', y2: '18' }),
+  ])
+
+const IconTask = () =>
+  h('svg', { width: '16', height: '16', viewBox: '0 0 24 24', fill: 'none', stroke: 'currentColor', 'stroke-width': '2', 'stroke-linecap': 'round', 'stroke-linejoin': 'round' }, [
+    h('path', { d: 'M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z' }),
+    h('polyline', { points: '14 2 14 8 20 8' }),
+  ])
+
+const IconEdit = () =>
+  h('svg', { width: '18', height: '18', viewBox: '0 0 24 24', fill: 'none', stroke: 'currentColor', 'stroke-width': '2', 'stroke-linecap': 'round', 'stroke-linejoin': 'round' }, [
+    h('path', { d: 'M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7' }),
+    h('path', { d: 'M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z' }),
+  ])
+
+const getInitials = (name: string, lastname: string) => `${name.charAt(0)}${lastname.charAt(0)}`.toUpperCase()
+
+const goBack = () => router.push('/teacher/groups')
+
+// --- EDITAR GRUPO ---
+const showEditGroupModal = ref(false)
+
+const editGroupForm = ref({
+  name: '',
+  description: '',
+  active:false
+})
+
+const openEditGroupModal = () => {
+  editGroupForm.value = {
+    name: data.value?.data?.name || '',
+    description: data.value?.data?.description || '',
+    active: data.value.data.active // <--- AQUÍ LO PONES
+  }
+  showEditGroupModal.value = true
 }
 
-const goBack = () => {
-  router.push('/teacher/groups')
+const closeEditGroupModal = () => {
+  showEditGroupModal.value = false
 }
+
+const submitEditGroup = async () => {
+  const { data: res, error: err } = await useapi(`/groups/${id}`, {
+    method: 'PUT',
+  })
+    .put(editGroupForm.value)
+    .json()
+  if (!err.value) {
+    alert(res.value.message || 'Grupo actualizado correctamente')
+    showEditGroupModal.value = false
+    reloadGroup()
+  } else {
+    alert('Error al actualizar el grupo')
+  }
+}
+
+// --- ELIMINAR ESTUDIANTE ---
+const showDeleteStudentModal = ref(false)
+const studentToDelete = ref<User | null>(null)
+
+const openDeleteStudentModal = () => {
+  showDeleteStudentModal.value = true
+  showStudentMenu.value = false
+}
+
+const closeDeleteStudentModal = () => {
+  showDeleteStudentModal.value = false
+  studentToDelete.value = null
+}
+
+const submitDeleteStudent = async () => {
+  if (!studentToDelete.value) return
+  const { data: res, error: err } = await useapi(`/groups/${id}/students`, {
+    method: 'DELETE',
+    body: JSON.stringify({ student_id: studentToDelete.value.id }),
+  }).json()
+  if (!err.value) {
+    alert(res.value.message || 'Estudiante eliminado del grupo')
+    closeDeleteStudentModal()
+    reloadGroup()
+  } else {
+    alert('Error al eliminar al estudiante')
+  }
+}
+
+// --- ELIMINAR UNIDAD ---
 const showDeleteConfirmModal = ref(false)
 
 const openDeleteConfirm = () => {
@@ -157,11 +203,9 @@ const closeDeleteConfirm = () => {
 
 const executeDelete = async () => {
   if (!selectedUnit.value) return
-
   const { data: res, error: err } = await useapi(`/units/${selectedUnit.value.id}`, {
-    method: 'DELETE'
+    method: 'DELETE',
   }).json()
-
   if (!err.value) {
     alert(res.value.message || 'Unidad eliminada')
     showDeleteConfirmModal.value = false
@@ -171,10 +215,10 @@ const executeDelete = async () => {
     alert('Error al eliminar')
   }
 }
-// Estado para controlar el modal de edición
+
+// --- EDITAR UNIDAD ---
 const showEditUnitModal = ref(false)
 
-// Objeto para los datos que se están editando
 const editUnitForm = ref<UnitRequest>({
   group_id: id,
   name: '',
@@ -183,14 +227,11 @@ const editUnitForm = ref<UnitRequest>({
   end_date: '',
 })
 
-// Función para abrir el modal de edición y cargar los datos
 const openEditUnitModal = () => {
   if (selectedUnit.value) {
-    // Copiamos los datos de la unidad seleccionada al formulario
     editUnitForm.value = {
       group_id: id,
       name: selectedUnit.value.name,
-      order: selectedUnit.value.order,
       start_date: selectedUnit.value.start_date,
       end_date: selectedUnit.value.end_date,
     }
@@ -198,30 +239,28 @@ const openEditUnitModal = () => {
   }
 }
 
-// Función para enviar la actualización a la API
 const submitEditUnit = async () => {
   if (!selectedUnit.value) return
-
   const { data: res, error: err } = await useapi(`/units/${selectedUnit.value.id}`, {
-    method: 'PUT', // O 'PATCH' dependiendo de tu backend
+    method: 'PUT',
   })
     .put(editUnitForm.value)
     .json()
-
   if (!err.value) {
     alert(res.value.message || 'Unidad actualizada correctamente')
     showEditUnitModal.value = false
-    showManageUnitModal.value = false // Cerramos también el menú de gestión
-    reloadGroup() // Refrescamos la lista principal
+    showManageUnitModal.value = false
+    reloadGroup()
   } else {
     alert('Error al actualizar la unidad')
   }
 }
 
+// --- GESTIONAR UNIDAD ---
 const showManageUnitModal = ref(false)
 const selectedUnit = ref<Unit>()
 
-const openManageUnitModal = (unit:Unit) => {
+const openManageUnitModal = (unit: Unit) => {
   selectedUnit.value = unit
   showManageUnitModal.value = true
 }
@@ -231,17 +270,13 @@ const closeManageUnitModal = () => {
   selectedUnit.value = undefined
 }
 
+// --- AGREGAR ESTUDIANTE ---
 const showAddStudentModal = ref(false)
 const showAddUnitModal = ref(false)
 const showStudentDetailModal = ref(false)
 const selectedStudent = ref<User | null>(null)
-
 const selectedStudentId = ref<number | null>(null)
-const newUnitForm = ref({
-  name: '',
-  start_date: '',
-  end_date: '',
-})
+const newUnitForm = ref({ name: '', start_date: '', end_date: '' })
 
 const { data: studentsData, execute: loadStudents } = useapi(`/groups/available-students/${id}`, {
   method: 'GET',
@@ -249,6 +284,7 @@ const { data: studentsData, execute: loadStudents } = useapi(`/groups/available-
 
 const openAddStudentModal = () => {
   showAddStudentModal.value = true
+  showStudentMenu.value = false
   loadStudents()
 }
 
@@ -269,6 +305,7 @@ const closeAddStudentModal = () => {
 
 const openAddUnitModal = () => {
   showAddUnitModal.value = true
+  showUnitsMenu.value = false
 }
 
 const closeAddUnitModal = () => {
@@ -278,21 +315,23 @@ const closeAddUnitModal = () => {
 
 const submitAddStudent = async () => {
   if (!selectedStudentId.value) return
-
   const { data: dd, error: err } = await useapi(`/groups/${id}/students`, {
     method: 'POST',
     body: JSON.stringify({ student_id: selectedStudentId.value }),
   }).json()
-
   if (err.value) {
     alert('Error al inscribir estudiante')
     return
   }
-
   alert(dd.value.message)
   reloadGroup()
   loadStudents()
   closeAddStudentModal()
+}
+
+function addSubmision() {
+  showUnitsMenu.value = false
+  router.push({ name: 'tasks' })
 }
 </script>
 
@@ -303,15 +342,20 @@ const submitAddStudent = async () => {
 
     <div v-else-if="data?.data" class="main-layout">
       <aside class="sidebar-info">
-        <button @click="goBack" class="btn-back-soft">
-          <div class="back-icon-box">
-            <IconBack />
-          </div>
-          <div class="back-text">
-            <small>Panel</small>
-            <span>Mis Grupos</span>
-          </div>
-        </button>
+
+        <!-- BOTÓN VOLVER + BOTÓN EDITAR GRUPO -->
+        <div class="back-row">
+          <button @click="goBack" class="btn-back-soft">
+            <div class="back-icon-box"><IconBack /></div>
+            <div class="back-text">
+              <small>Panel</small>
+              <span>Mis Grupos</span>
+            </div>
+          </button>
+          <button @click="openEditGroupModal" class="btn-edit-group" title="Editar grupo">
+            <IconEdit />
+          </button>
+        </div>
 
         <div class="soft-card group-card">
           <div class="card-header-top">
@@ -322,7 +366,6 @@ const submitAddStudent = async () => {
           </div>
           <h1 class="title">{{ data.data.name }}</h1>
           <p class="description">{{ data.data.description }}</p>
-
           <div class="meta-list">
             <div class="meta-item">
               <div class="meta-icon-wrapper"><IconCalendar /></div>
@@ -341,23 +384,49 @@ const submitAddStudent = async () => {
           </div>
         </div>
 
+        <!-- CARD ESTUDIANTES -->
         <div class="soft-card students-card">
           <div class="card-header-flex">
-            <h3>Estudiantes Inscritos</h3>
-            <span class="count-pill">{{ data.data.students_count }}</span>
+            <div class="header-left">
+              <h3>Estudiantes Inscritos</h3>
+              <span class="count-pill">{{ data.data.students_count }}</span>
+            </div>
+
+            <!-- MENÚ HAMBURGUESA ESTUDIANTES -->
+            <div class="dropdown-wrapper">
+              <button
+                class="btn-hamburger"
+                :class="{ active: showStudentMenu }"
+                @click.stop="toggleStudentMenu"
+              >
+                <IconHamburger />
+              </button>
+              <Transition name="dropdown">
+                <div v-if="showStudentMenu" class="dropdown-menu">
+                  <button class="dropdown-item" @click="openAddStudentModal">
+                    <div class="dropdown-item-icon di-blue"><IconPlus /></div>
+                    <span class="dropdown-item-label">Inscribir estudiante</span>
+                  </button>
+                  <div class="dropdown-divider"></div>
+                  <button class="dropdown-item danger" @click="openDeleteStudentModal">
+                    <div class="dropdown-item-icon di-red"><IconX /></div>
+                    <span class="dropdown-item-label">Quitar estudiante</span>
+                  </button>
+                </div>
+              </Transition>
+            </div>
           </div>
 
-          <button @click="openAddStudentModal" class="btn-inscribe-student">
-            <IconPlus /> Inscribir Estudiante
-          </button>
-
           <div class="students-scroll">
-            <div v-for="student in data.data.students" :key="student.id" class="student-item">
+            <div
+              v-for="student in data.data.students"
+              :key="student.id"
+              class="student-item"
+              @click="openStudentDetailModal(student)"
+            >
               <div class="avatar">{{ getInitials(student.name, student.lastname) }}</div>
               <div class="student-detail">
-                <p class="name" @click="openStudentDetailModal(student)" style="cursor: pointer">
-                  {{ student.name }} {{ student.lastname }}
-                </p>
+                <p class="name">{{ student.name }} {{ student.lastname }}</p>
                 <p class="email">{{ student.email }}</p>
               </div>
             </div>
@@ -396,9 +465,30 @@ const submitAddStudent = async () => {
         <section class="units-timeline">
           <div class="section-header">
             <h2>Estructura del Programa</h2>
-            <button @click="openAddUnitModal" class="btn-primary-add">
-              <IconPlus /> Agregar Unidad
-            </button>
+
+            <!-- MENÚ HAMBURGUESA UNIDADES -->
+            <div class="dropdown-wrapper">
+              <button
+                class="btn-hamburger"
+                :class="{ active: showUnitsMenu }"
+                @click.stop="toggleUnitsMenu"
+              >
+                <IconHamburger />
+              </button>
+              <Transition name="dropdown">
+                <div v-if="showUnitsMenu" class="dropdown-menu">
+                  <button class="dropdown-item" @click="openAddUnitModal">
+                    <div class="dropdown-item-icon di-blue"><IconPlus /></div>
+                    <span class="dropdown-item-label">Agregar unidad</span>
+                  </button>
+                  <div class="dropdown-divider"></div>
+                  <button class="dropdown-item" @click="addSubmision">
+                    <div class="dropdown-item-icon di-blue"><IconTask /></div>
+                    <span class="dropdown-item-label">Agregar tarea</span>
+                  </button>
+                </div>
+              </Transition>
+            </div>
           </div>
 
           <div class="timeline">
@@ -420,6 +510,116 @@ const submitAddStudent = async () => {
       </main>
     </div>
 
+    <!-- MODAL: EDITAR GRUPO -->
+    <Teleport to="body">
+      <div v-if="showEditGroupModal" class="modal-overlay" @click.self="closeEditGroupModal">
+        <div class="modal-content modal-large">
+          <div class="modal-header">
+            <div>
+              <small style="color: #1d65d8; font-weight: 800; text-transform: uppercase; font-size: 0.65rem; letter-spacing: 0.5px;">Configuración</small>
+              <h2 style="margin: 0; font-size: 1.3rem; color: #1e3a5f">Actualizar datos del grupo</h2>
+            </div>
+            <button class="btn-close-modal" @click="closeEditGroupModal"><IconX /></button>
+          </div>
+
+          <div class="modal-body">
+            <div class="form-group">
+              <label>Nombre del Grupo</label>
+              <input v-model="editGroupForm.name" type="text" class="form-input" placeholder="Ej: Matemáticas 3A" />
+            </div>
+
+            <div class="form-group">
+              <label>Descripción</label>
+              <textarea v-model="editGroupForm.description" class="form-input" rows="3" placeholder="Descripción del grupo..." style="resize: vertical;"></textarea>
+            </div>
+
+            <div class="form-group" style="margin-top: 10px;">
+              <label>Estado del Grupo</label>
+              <div
+                @click="editGroupForm.active = !editGroupForm.active"
+                style="
+              display: flex;
+              align-items: center;
+              gap: 12px;
+              padding: 15px;
+              border-radius: 12px;
+              cursor: pointer;
+              transition: 0.3s;
+            "
+                :style="{ backgroundColor: editGroupForm.active ? 'rgba(120, 251, 166, 0.15)' : 'rgba(29, 101, 216, 0.05)' }"
+              >
+                <div style="
+              width: 44px;
+              height: 24px;
+              border-radius: 20px;
+              position: relative;
+              transition: 0.3s;
+            "
+                     :style="{ backgroundColor: editGroupForm.active ? '#166534' : '#4b7ba7' }">
+                  <div style="
+                width: 18px;
+                height: 18px;
+                background: white;
+                border-radius: 50%;
+                position: absolute;
+                top: 3px;
+                transition: 0.3s;
+              "
+                       :style="{ left: editGroupForm.active ? '23px' : '3px' }"></div>
+                </div>
+
+                <div>
+              <span style="display: block; font-weight: 700; font-size: 0.9rem;" :style="{ color: editGroupForm.active ? '#166534' : '#1e3a5f' }">
+                {{ editGroupForm.active ? 'Grupo Activo' : 'Grupo Inactivo' }}
+              </span>
+                  <small style="color: #4b7ba7; font-size: 0.75rem;">
+                    {{ editGroupForm.active ? 'Los estudiantes pueden ver el contenido.' : 'El grupo estará oculto para los estudiantes.' }}
+                  </small>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <div class="modal-footer">
+            <button @click="closeEditGroupModal" class="btn-cancel">Cancelar</button>
+            <button @click="submitEditGroup" class="btn-confirm">Guardar Cambios</button>
+          </div>
+        </div>
+      </div>
+    </Teleport>
+
+    <!-- MODAL: ELIMINAR ESTUDIANTE -->
+    <Teleport to="body">
+      <div v-if="showDeleteStudentModal" class="modal-overlay" @click.self="closeDeleteStudentModal">
+        <div class="modal-content">
+          <div class="modal-header">
+            <h2 style="color: #c53030;">Eliminar Estudiante</h2>
+            <button class="btn-close-modal" @click="closeDeleteStudentModal"><IconX /></button>
+          </div>
+          <div class="modal-body">
+            <div class="form-group">
+              <label>Selecciona el estudiante a remover del grupo</label>
+              <select v-model="studentToDelete" class="form-input">
+                <option :value="null">-- Selecciona un estudiante --</option>
+                <option v-for="student in data.data.students" :key="student.id" :value="student">
+                  {{ student.name }} {{ student.lastname }}
+                </option>
+              </select>
+            </div>
+            <p v-if="studentToDelete" style="margin-top: 15px; color: #4b7ba7; font-size: 0.9rem;">
+              Esta acción quitará a <strong>{{ studentToDelete.name }}</strong> de este grupo. No se borrarán sus datos personales, solo su inscripción.
+            </p>
+          </div>
+          <div class="modal-footer">
+            <button @click="closeDeleteStudentModal" class="btn-cancel">Cancelar</button>
+            <button @click="submitDeleteStudent" class="btn-confirm" style="background: #c53030;" :disabled="!studentToDelete">
+              Confirmar Eliminación
+            </button>
+          </div>
+        </div>
+      </div>
+    </Teleport>
+
     <!-- MODAL: GESTIONAR UNIDAD -->
     <Teleport to="body">
       <div v-if="showManageUnitModal && selectedUnit" class="modal-overlay" @click.self="closeManageUnitModal">
@@ -427,13 +627,10 @@ const submitAddStudent = async () => {
           <div class="modal-header">
             <div>
               <small style="color: #1d65d8; font-weight: 800; text-transform: uppercase; font-size: 0.65rem; letter-spacing: 0.5px;">Opciones de Unidad</small>
-              <h2 style="margin: 0; font-size: 1.3rem; color: #1e3a5f;">{{ selectedUnit.name }}</h2>
+              <h2 style="margin: 0; font-size: 1.3rem; color: #1e3a5f">{{ selectedUnit.name }}</h2>
             </div>
-            <button class="btn-close-modal" @click="closeManageUnitModal">
-              <IconX />
-            </button>
+            <button class="btn-close-modal" @click="closeManageUnitModal"><IconX /></button>
           </div>
-
           <div class="modal-body">
             <div class="manage-menu">
               <button class="menu-item" @click="openEditUnitModal">
@@ -443,21 +640,20 @@ const submitAddStudent = async () => {
                   <p>Cambiar nombre o fechas de entrega.</p>
                 </div>
               </button>
-
               <button class="menu-item">
                 <div class="menu-icon activity-bg">
-                  <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>
+                  <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z" />
+                    <polyline points="14 2 14 8 20 8" />
+                  </svg>
                 </div>
                 <div class="menu-text">
                   <span class="menu-title">Ver Actividades</span>
                   <p>Gestionar tareas asignadas a esta unidad.</p>
                 </div>
               </button>
-
               <button class="menu-item danger-item" @click="openDeleteConfirm">
-                <div class="menu-icon delete-bg">
-                  <IconX />
-                </div>
+                <div class="menu-icon delete-bg"><IconX /></div>
                 <div class="menu-text">
                   <span class="menu-title">Eliminar Unidad</span>
                   <p>Borrar definitivamente esta unidad.</p>
@@ -465,7 +661,6 @@ const submitAddStudent = async () => {
               </button>
             </div>
           </div>
-
           <div class="modal-footer">
             <button @click="closeManageUnitModal" class="btn-cancel">Cancelar</button>
           </div>
@@ -479,11 +674,8 @@ const submitAddStudent = async () => {
         <div class="modal-content">
           <div class="modal-header">
             <h2>Inscribir Estudiante</h2>
-            <button class="btn-close-modal" @click="closeAddStudentModal">
-              <IconX />
-            </button>
+            <button class="btn-close-modal" @click="closeAddStudentModal"><IconX /></button>
           </div>
-
           <div class="modal-body">
             <div class="form-group">
               <label for="student-select">Seleccionar Estudiante</label>
@@ -495,7 +687,6 @@ const submitAddStudent = async () => {
               </select>
             </div>
           </div>
-
           <div class="modal-footer">
             <button @click="closeAddStudentModal" class="btn-cancel">Cancelar</button>
             <button @click="submitAddStudent" class="btn-confirm">Inscribir</button>
@@ -510,20 +701,15 @@ const submitAddStudent = async () => {
         <div class="modal-content">
           <div class="modal-header">
             <h2>Información del Estudiante</h2>
-            <button class="btn-close-modal" @click="closeStudentDetailModal">
-              <IconX />
-            </button>
+            <button class="btn-close-modal" @click="closeStudentDetailModal"><IconX /></button>
           </div>
-
           <div class="modal-body">
             <div class="student-avatar-large">
               {{ getInitials(selectedStudent.name, selectedStudent.lastname) }}
             </div>
-
             <div class="student-info-section">
               <h3>{{ selectedStudent.name }} {{ selectedStudent.lastname }}</h3>
             </div>
-
             <div class="info-item">
               <div class="info-icon email-icon">
                 <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
@@ -536,11 +722,10 @@ const submitAddStudent = async () => {
                 <p>{{ selectedStudent.email }}</p>
               </div>
             </div>
-
             <div class="info-item">
               <div class="info-icon phone-icon">
                 <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                  <path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72 12.84 12.84 0 0 0 .7 2.81 2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45 12.84 12.84 0 0 0 2.81.7A2 2 0 0 1 22 16.92z"/>
+                  <path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72 12.84 12.84 0 0 0 .7 2.81 2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45 12.84 12.84 0 0 0 2.81.7A2 2 0 0 1 22 16.92z" />
                 </svg>
               </div>
               <div class="info-content">
@@ -548,24 +733,10 @@ const submitAddStudent = async () => {
                 <a :href="`tel:${selectedStudent.cellphone}`" class="phone-link">{{ selectedStudent.cellphone }}</a>
               </div>
             </div>
-
-            <div class="info-item">
-              <div class="info-icon id-icon">
-                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                  <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2z"/>
-                  <text x="12" y="16" text-anchor="middle" font-size="10" fill="currentColor">ID</text>
-                </svg>
-              </div>
-              <div class="info-content">
-                <label>ID del Estudiante</label>
-                <p>#{{ String(selectedStudent.id).padStart(4, '0') }}</p>
-              </div>
-            </div>
-
             <div class="info-item">
               <div class="info-icon status-icon">
                 <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                  <polyline points="20 6 9 17 4 12"/>
+                  <polyline points="20 6 9 17 4 12" />
                 </svg>
               </div>
               <div class="info-content">
@@ -574,7 +745,6 @@ const submitAddStudent = async () => {
               </div>
             </div>
           </div>
-
           <div class="modal-footer">
             <button @click="closeStudentDetailModal" class="btn-cancel">Cerrar</button>
           </div>
@@ -588,19 +758,13 @@ const submitAddStudent = async () => {
         <div class="modal-content modal-large">
           <div class="modal-header">
             <h2>Agregar Unidad Temática</h2>
-            <button class="btn-close-modal" @click="closeAddUnitModal">
-              <IconX />
-            </button>
+            <button class="btn-close-modal" @click="closeAddUnitModal"><IconX /></button>
           </div>
-
           <div class="modal-body">
             <div class="form-group">
               <label for="unit-name">Nombre de la Unidad</label>
               <input id="unit-name" v-model="ur.name" type="text" class="form-input" placeholder="Ej: Introducción a los Conceptos Básicos" />
-              <label for="unit-order">Orden de la Unidad</label>
-              <input id="unit-order" v-model="ur.order" type="number" class="form-input" placeholder="un numero entero" />
-            </div>
-
+             </div>
             <div class="form-row">
               <div class="form-group">
                 <label for="unit-start">Fecha de Inicio</label>
@@ -612,7 +776,6 @@ const submitAddStudent = async () => {
               </div>
             </div>
           </div>
-
           <div class="modal-footer">
             <button @click="closeAddUnitModal" class="btn-cancel">Cancelar</button>
             <button @click="submitAddUnit" class="btn-confirm">Crear Unidad</button>
@@ -626,12 +789,11 @@ const submitAddStudent = async () => {
   <Teleport to="body">
     <div v-if="showDeleteConfirmModal" class="modal-overlay delete-confirm-overlay" @click.self="closeDeleteConfirm">
       <div class="modal-content modal-alert">
-        <div class="modal-body text-center" style="padding: 40px 30px;">
+        <div class="modal-body text-center" style="padding: 40px 30px">
           <div class="warning-icon-circle">!</div>
-          <h2 style="color: #c53030; margin-bottom: 10px;">¿Confirmar eliminación?</h2>
-          <p style="color: #4b7ba7; line-height: 1.5;">
-            Estás a punto de eliminar la unidad <strong>"{{ selectedUnit?.name }}"</strong>.
-            Esta acción borrará todas las actividades asociadas y no se puede deshacer.
+          <h2 style="color: #c53030; margin-bottom: 10px">¿Confirmar eliminación?</h2>
+          <p style="color: #4b7ba7; line-height: 1.5">
+            Estás a punto de eliminar la unidad <strong>"{{ selectedUnit?.name }}"</strong>. Esta acción borrará todas las actividades asociadas y no se puede deshacer.
           </p>
           <div class="confirm-actions">
             <button @click="closeDeleteConfirm" class="btn-cancel">No, cancelar</button>
@@ -641,55 +803,37 @@ const submitAddStudent = async () => {
       </div>
     </div>
   </Teleport>
+
+  <!-- MODAL: EDITAR UNIDAD -->
   <Teleport to="body">
     <div v-if="showEditUnitModal" class="modal-overlay" @click.self="showEditUnitModal = false">
       <div class="modal-content modal-large">
         <div class="modal-header">
           <h2>Editar Unidad: {{ selectedUnit?.name }}</h2>
-          <button class="btn-close-modal" @click="showEditUnitModal = false">
-            <IconX />
-          </button>
+          <button class="btn-close-modal" @click="showEditUnitModal = false"><IconX /></button>
         </div>
-
         <div class="modal-body">
           <div class="form-group">
             <label for="edit-unit-name">Nombre de la Unidad</label>
             <input id="edit-unit-name" v-model="editUnitForm.name" type="text" class="form-input" />
-
-            </div>
-
-
           </div>
-
-        <div class="modal-footer" style="padding: 20px; display: flex; justify-content: flex-end; gap: 10px;">
+        </div>
+        <div class="modal-footer" style="padding: 20px; display: flex; justify-content: flex-end; gap: 10px">
           <button @click="showEditUnitModal = false" class="btn-cancel">Cancelar</button>
           <button @click="submitEditUnit" class="btn-confirm">Guardar Cambios</button>
         </div>
       </div>
     </div>
-
   </Teleport>
 </template>
 
 <style scoped>
-/* =============================================
-   PALETA DE COLORES (tomada de la card)
-   - Fondo página:       #d0e4f7
-   - Fondo cards:        blanco / rgba(255,255,255,0.6)
-   - Header gradiente:   #1d65d8 → #c5c1c1
-   - Texto principal:    #1e3a5f
-   - Texto secundario:   #4b7ba7
-   - Acento azul:        #3b82f6
-   - Verde activo:       rgba(120,251,166,0.79)
-   ============================================= */
-
-
 .dashboard-container {
   font-family: 'Plus Jakarta Sans', Inter, sans-serif;
   font-size: 15px;
   padding: 30px;
   min-height: 100vh;
-  background: linear-gradient(180deg,var(--color-AzulDos),var(--color-ComplementoDos));
+  background: linear-gradient(180deg, var(--color-AzulDos), var(--color-ComplementoDos));
 }
 
 .main-layout {
@@ -700,7 +844,6 @@ const submitAddStudent = async () => {
   margin: 0 auto;
 }
 
-/* --- TARJETAS --- */
 .soft-card {
   background-color: rgba(255, 255, 255, 0.6);
   border-radius: 20px;
@@ -710,7 +853,14 @@ const submitAddStudent = async () => {
   backdrop-filter: blur(8px);
 }
 
-/* --- BOTÓN REGRESAR --- */
+/* BACK ROW */
+.back-row {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin-bottom: 25px;
+}
+
 .btn-back-soft {
   display: flex;
   align-items: center;
@@ -720,9 +870,8 @@ const submitAddStudent = async () => {
   padding: 12px 20px;
   border-radius: 18px;
   cursor: pointer;
-  margin-bottom: 25px;
   transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-  width: fit-content;
+  flex: 1;
   backdrop-filter: blur(8px);
 }
 
@@ -736,6 +885,7 @@ const submitAddStudent = async () => {
   justify-content: center;
   color: white;
   transition: 0.3s;
+  flex-shrink: 0;
 }
 
 .back-text small {
@@ -759,7 +909,29 @@ const submitAddStudent = async () => {
   border-color: rgba(29, 101, 216, 0.3);
 }
 
-/* --- SIDEBAR --- */
+/* BOTÓN EDITAR GRUPO */
+.btn-edit-group {
+  width: 66px;
+  height: 66px;
+  background-color: rgba(255, 255, 255, 0.6);
+  border: 1px solid rgba(29, 101, 216, 0.2);
+  border-radius: 18px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  color: #1d65d8;
+  backdrop-filter: blur(8px);
+  transition: all 0.2s ease;
+  flex-shrink: 0;
+}
+
+.btn-edit-group:hover {
+  background: rgba(29, 101, 216, 0.12);
+  border-color: rgba(29, 101, 216, 0.4);
+  transform: scale(1.05);
+}
+
 .sidebar-info {
   display: flex;
   flex-direction: column;
@@ -777,6 +949,16 @@ const submitAddStudent = async () => {
   font-size: 11px;
   font-weight: 900;
   background: linear-gradient(135deg, #1d65d8 0%, #c5c1c1 100%);
+  color: white;
+  padding: 4px 10px;
+  border-radius: 8px;
+  box-shadow: 0 2px 8px rgba(29, 101, 216, 0.3);
+}
+
+.desactivate-group {
+  font-size: 11px;
+  font-weight: 900;
+  background: linear-gradient(135deg, #4e0007 0%, #ff5858 100%);
   color: white;
   padding: 4px 10px;
   border-radius: 8px;
@@ -860,7 +1042,7 @@ const submitAddStudent = async () => {
   font-size: 0.95rem;
 }
 
-/* --- ESTUDIANTES --- */
+/* STUDENTS CARD */
 .students-card {
   max-height: 650px;
   display: flex;
@@ -872,6 +1054,12 @@ const submitAddStudent = async () => {
   justify-content: space-between;
   align-items: center;
   margin-bottom: 16px;
+}
+
+.header-left {
+  display: flex;
+  align-items: center;
+  gap: 10px;
 }
 
 .card-header-flex h3 {
@@ -890,31 +1078,120 @@ const submitAddStudent = async () => {
   font-size: 0.8rem;
 }
 
-.btn-inscribe-student {
-  width: calc(100% + 50px);
-  background: linear-gradient(135deg, #1d65d8 0%, #3b82f6 100%);
-  border: none;
-  color: white;
-  padding: 12px 16px;
-  border-radius: 12px;
-  font-weight: 700;
-  font-size: 0.95rem;
-  cursor: pointer;
+/* HAMBURGER BUTTON */
+.btn-hamburger {
+  width: 36px;
+  height: 36px;
+  background: rgba(29, 101, 216, 0.08);
+  border: 1.5px solid rgba(29, 101, 216, 0.2);
+  border-radius: 10px;
   display: flex;
   align-items: center;
   justify-content: center;
-  gap: 8px;
-  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-  margin: 0 -25px 16px -25px;
-  box-shadow: 0 4px 12px rgba(29, 101, 216, 0.3);
+  cursor: pointer;
+  color: #1d65d8;
+  transition: all 0.2s ease;
+  flex-shrink: 0;
 }
 
-.btn-inscribe-student:hover {
-  background: linear-gradient(135deg, #1552b0 0%, #1d65d8 100%);
-  transform: translateY(-2px);
-  box-shadow: 0 6px 16px rgba(29, 101, 216, 0.4);
+.btn-hamburger:hover {
+  background: rgba(29, 101, 216, 0.15);
+  border-color: rgba(29, 101, 216, 0.4);
 }
 
+.btn-hamburger.active {
+  background: linear-gradient(135deg, #1d65d8, #3b82f6);
+  border-color: transparent;
+  color: white;
+}
+
+/* DROPDOWN */
+.dropdown-wrapper {
+  position: relative;
+}
+
+.dropdown-menu {
+  position: absolute;
+  top: calc(100% + 8px);
+  right: 0;
+  background: white;
+  border: 1px solid rgba(29, 101, 216, 0.15);
+  border-radius: 14px;
+  box-shadow: 0 12px 32px rgba(30, 58, 95, 0.15);
+  min-width: 200px;
+  z-index: 200;
+  overflow: hidden;
+}
+
+.dropdown-enter-active,
+.dropdown-leave-active {
+  transition: opacity 0.15s ease, transform 0.15s ease;
+}
+
+.dropdown-enter-from,
+.dropdown-leave-to {
+  opacity: 0;
+  transform: translateY(-6px);
+}
+
+.dropdown-item {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 12px 14px;
+  cursor: pointer;
+  transition: background 0.15s;
+  border: none;
+  background: none;
+  width: 100%;
+  text-align: left;
+}
+
+.dropdown-item:hover {
+  background: rgba(29, 101, 216, 0.06);
+}
+
+.dropdown-item.danger:hover {
+  background: rgba(239, 68, 68, 0.06);
+}
+
+.dropdown-item-icon {
+  width: 32px;
+  height: 32px;
+  border-radius: 8px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+
+.di-blue {
+  background: rgba(29, 101, 216, 0.1);
+  color: #1d65d8;
+}
+
+.di-red {
+  background: rgba(239, 68, 68, 0.1);
+  color: #c53030;
+}
+
+.dropdown-item-label {
+  font-size: 0.88rem;
+  font-weight: 700;
+  color: #1e3a5f;
+}
+
+.dropdown-item.danger .dropdown-item-label {
+  color: #c53030;
+}
+
+.dropdown-divider {
+  height: 1px;
+  background: rgba(29, 101, 216, 0.08);
+  margin: 4px 0;
+}
+
+/* STUDENTS LIST */
 .students-scroll {
   overflow-y: auto;
   flex: 1;
@@ -933,6 +1210,7 @@ const submitAddStudent = async () => {
   background: rgba(29, 101, 216, 0.05);
   border: 1px solid rgba(29, 101, 216, 0.08);
   transition: background 0.2s;
+  cursor: pointer;
 }
 
 .student-item:hover {
@@ -966,14 +1244,13 @@ const submitAddStudent = async () => {
   margin: 2px 0 0;
 }
 
-/* --- ÁREA PRINCIPAL --- */
+/* CONTENT AREA */
 .content-area {
   display: flex;
   flex-direction: column;
   gap: 24px;
 }
 
-/* --- STATS --- */
 .top-stats {
   display: flex;
   gap: 16px;
@@ -1054,7 +1331,7 @@ const submitAddStudent = async () => {
   color: #4b7ba7;
 }
 
-/* --- TIMELINE DE UNIDADES --- */
+/* UNITS */
 .units-timeline {
   background: rgba(255, 255, 255, 0.6);
   border-radius: 20px;
@@ -1076,27 +1353,6 @@ const submitAddStudent = async () => {
   font-weight: 800;
   color: #1e3a5f;
   margin: 0;
-}
-
-.btn-primary-add {
-  background: linear-gradient(135deg, #1d65d8 0%, #3b82f6 100%);
-  color: white;
-  border: none;
-  padding: 10px 18px;
-  border-radius: 12px;
-  font-weight: 700;
-  font-size: 0.9rem;
-  cursor: pointer;
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  transition: all 0.2s ease;
-  box-shadow: 0 4px 12px rgba(29, 101, 216, 0.3);
-}
-
-.btn-primary-add:hover {
-  transform: translateY(-2px);
-  box-shadow: 0 6px 16px rgba(29, 101, 216, 0.4);
 }
 
 .timeline {
@@ -1197,7 +1453,7 @@ const submitAddStudent = async () => {
   transform: translateY(-1px);
 }
 
-/* --- MODALES --- */
+/* MODALES */
 .modal-overlay {
   position: fixed;
   inset: 0;
@@ -1269,7 +1525,7 @@ const submitAddStudent = async () => {
   gap: 10px;
 }
 
-/* --- MANAGE MENU --- */
+/* MANAGE MENU */
 .manage-menu {
   display: flex;
   flex-direction: column;
@@ -1328,7 +1584,7 @@ const submitAddStudent = async () => {
   background: rgba(239, 68, 68, 0.04);
 }
 
-/* --- FORMULARIOS --- */
+/* FORMULARIOS */
 .form-group {
   display: flex;
   flex-direction: column;
@@ -1370,7 +1626,7 @@ select:focus {
   gap: 16px;
 }
 
-/* --- BOTONES --- */
+/* BOTONES */
 .btn-cancel {
   padding: 10px 20px;
   background: rgba(29, 101, 216, 0.08);
@@ -1421,7 +1677,7 @@ select:focus {
   box-shadow: 0 6px 16px rgba(239, 68, 68, 0.4);
 }
 
-/* --- MODAL DETALLES ESTUDIANTE --- */
+/* MODAL DETALLES ESTUDIANTE */
 .student-avatar-large {
   width: 72px;
   height: 72px;
@@ -1469,7 +1725,6 @@ select:focus {
 
 .email-icon { background: rgba(29, 101, 216, 0.1); color: #1d65d8; }
 .phone-icon { background: rgba(74, 222, 128, 0.15); color: #166534; }
-.id-icon { background: rgba(197, 197, 197, 0.2); color: #4b7ba7; }
 .status-icon { background: rgba(120, 251, 166, 0.3); color: #166534; }
 
 .info-content label {
@@ -1498,7 +1753,7 @@ select:focus {
   text-decoration: underline;
 }
 
-/* --- DELETE CONFIRM --- */
+/* DELETE CONFIRM */
 .warning-icon-circle {
   width: 60px;
   height: 60px;
@@ -1525,7 +1780,7 @@ select:focus {
   text-align: center;
 }
 
-/* --- ESTADOS --- */
+/* ESTADOS */
 .state-msg {
   text-align: center;
   padding: 60px;
@@ -1538,7 +1793,7 @@ select:focus {
   color: #c53030;
 }
 
-/* --- RESPONSIVE --- */
+/* RESPONSIVE */
 @media (max-width: 1024px) {
   .main-layout {
     grid-template-columns: 1fr;
@@ -1549,11 +1804,9 @@ select:focus {
   .dashboard-container {
     padding: 16px;
   }
-
   .top-stats {
     flex-direction: column;
   }
-
   .form-row {
     grid-template-columns: 1fr;
   }

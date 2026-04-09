@@ -52,7 +52,7 @@ const router = createRouter({
       meta: { requiresAuth: true, rol: 1 },
     }
     ,
-    
+
     {
       path: '/register',
       name: 'Register',
@@ -254,12 +254,28 @@ const router = createRouter({
       meta: { requiresAuth: true, role: 4 },
     },
 
+
+
       ],
 })
 
 router.beforeEach((to, from, next) => {
   const authStore = useAuthStore()
+  if (to.path === '/') {
+    if (!authStore.credentials) {
+      return next({ name: 'Login' })
+    }
 
+    // Redirigir según el rol que ya tienes mapeado
+    const userRole = authStore.credentials.user.role.id
+    switch (userRole) {
+      case 1: return next({ name: 'AdminHomeView' })
+      case 2: return next({ name: 'home' }) // Home de Teacher
+      case 3: return next({ name: 'studentHome' })
+      case 4: return next({ name: 'parentHome' })
+      default: return next({ name: 'Login' })
+    }
+  }
   if (to.matched.some((r) => r.meta.requiresAuth)) {
     if (!authStore.credentials) {
       return next({ name: 'Login' })

@@ -103,6 +103,11 @@ export interface Unit{
   group_id: number
   group?:Group
   assignments_count?:number
+  start_date: string
+  end_date: string
+  created_at: string | null
+  updated_at: string | null
+
 }
 
 export interface FormTask{
