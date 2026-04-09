@@ -31,6 +31,8 @@ import AdminUsersView from '@/views/AdminUsersView.vue'
 import ProfileStudentView from '@/views/ProfileStudentView.vue'
 import AdminRolesView from '@/views/AdminRolesView.vue'
 import AdminGroupsView from '@/views/AdminGroupsView.vue'
+import AdminAssignmentsView from '@/views/AdminAssignmentsView.vue'
+import AdminAnnouncementsView from '@/views/AdminAnnouncementsView.vue'
 
 //ROLES//
 //1-admin
@@ -86,6 +88,19 @@ const router = createRouter({
       component: AdminGroupsView,
       meta: { requiresAuth: true, rol: 1 },
     },
+    {
+      path: '/admin/assignments',
+      name: 'AdminAssignments',
+      component: AdminAssignmentsView,
+      meta: { requiresAuth: true, rol: 1 },
+    },
+    {
+      path: '/admin/announcements',
+      name: 'AdminAnnouncements',
+      component: AdminAnnouncementsView,
+      meta: { requiresAuth: true, rol: 1 },
+    },
+
     //TEACHER
 
     {

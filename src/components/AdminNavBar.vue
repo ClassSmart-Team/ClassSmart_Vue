@@ -25,7 +25,7 @@ const adminModules = [
   { key: 'users', label: 'Usuarios', to: '/admin/users' },
   { key: 'roles', label: 'Roles', to: '/admin/roles' },
   { key: 'groups', label: 'Grupos', to: '/admin/groups' },
-  { key: 'tasks', label: 'Tareas', to: '/admin/tasks' },
+  { key: 'tasks', label: 'Tareas', to: '/admin/assignments' },
   { key: 'announcements', label: 'Anuncios', to: '/admin/announcements' },
 ]
 </script>
