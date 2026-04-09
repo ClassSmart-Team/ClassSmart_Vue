@@ -124,6 +124,13 @@ const router = createRouter({
       meta: { requiresAuth: true, rol: 2 },
     },
 
+        {
+      path: '/teacher/show/group/:id',
+      name: 'teachershowgroup',
+      component: TeacherShowGroupView,
+      meta: { requiresAuth: true, rol: 2 },
+    },
+
     {
       path: '/teacher/tasks',
       name: 'tasks',
@@ -137,6 +144,7 @@ const router = createRouter({
     component: TaskDetailTeacherView,
     meta: { requiresAuth: true, rol: [1, 2] },
     },
+
 
     {
       path: '/teacher/announcements',
@@ -252,12 +260,7 @@ const router = createRouter({
       component: ForumParentView,
       meta: { requiresAuth: true, rol: 4 },
     },
-    {
-      path: '/teacher/show/group/:id',
-      name: 'teachershowgroup',
-      component: TeacherShowGroupView,
-      meta: { requiresAuth: true, rol: 4 },
-    },
+
     {
       path: '/parent/forum/:id',
       name: 'parentForumDetail',

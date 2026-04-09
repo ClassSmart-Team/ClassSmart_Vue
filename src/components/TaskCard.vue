@@ -2,15 +2,14 @@
 import { computed } from 'vue'
 
 const props = defineProps<{
-  activity: any
+  task: any
 }>()
 
-// Lógica de estado basada en los modelos de Laravel
 const computedStatus = computed(() => {
-  const sub = props.activity.submission
+  const sub = props.task.submission
   if (!sub) return 'pendiente'
   if (sub.status === 'Calificada') return 'calificada'
-  if (new Date(sub.submission_date) > new Date(props.activity.end_date)) return 'tardia'
+  if (new Date(sub.submission_date) > new Date(props.task.end_date)) return 'tardia'
   return 'entregada'
 })
 
@@ -23,23 +22,23 @@ const formatDate = (dateStr: string) => {
   <div :class="['activity-card', computedStatus]">
     <div class="activity-info">
       <div class="top-row">
-        <span class="subject-tag">{{ activity.subject }}</span>
+        <span class="subject-tag">{{ task.subject }}</span>
         <span v-if="computedStatus === 'tardia'" class="late-badge">Fuera de tiempo</span>
       </div>
-      <h4>{{ activity.title }}</h4>
-      <p class="due-date"> Límite: {{ formatDate(activity.end_date) }}</p>
+      <h4>{{ task.title }}</h4>
+      <p class="due-date">Límite: {{ formatDate(task.end_date) }}</p>
     </div>
 
     <div class="activity-status-box">
       <div v-if="computedStatus === 'calificada'" class="grade-container">
         <span class="grade-label">Nota</span>
-        <span class="grade-value">{{ activity.submission.grade }}</span>
+        <span class="grade-value">{{ task.submission.grade }}</span>
       </div>
     </div>
 
     <div class="activity-actions">
       <router-link
-        :to="{ name: 'parentTasksDetail', params: { id: activity.id } }"
+        :to="{ name: 'parentTasksDetail', params: { id: task.id } }"
         class="btn-open-task"
       >
         {{ computedStatus === 'calificada' ? 'Ver Retroalimentación' : 'Ver Detalles' }}
@@ -68,20 +67,10 @@ const formatDate = (dateStr: string) => {
   border-color: var(--color-AzulTres);
 }
 
-/* Colores de Borde basados en Submission Status */
-.pendiente {
-  border-left-color: #f59e0b;
-}
-.entregada {
-  border-left-color: var(--color-AzulTres);
-}
-.tardia {
-  border-left-color: #ef4444;
-  background: #fffafb;
-}
-.calificada {
-  border-left-color: #10b981;
-}
+.pendiente  { border-left-color: #f59e0b; }
+.entregada  { border-left-color: var(--color-AzulTres); }
+.tardia     { border-left-color: #ef4444; background: #fffafb; }
+.calificada { border-left-color: #10b981; }
 
 .top-row {
   display: flex;
@@ -89,6 +78,7 @@ const formatDate = (dateStr: string) => {
   gap: 10px;
   margin-bottom: 4px;
 }
+
 .subject-tag {
   font-size: 0.65rem;
   font-weight: 800;
@@ -98,6 +88,7 @@ const formatDate = (dateStr: string) => {
   padding: 2px 8px;
   border-radius: 4px;
 }
+
 .late-badge {
   font-size: 0.6rem;
   color: #ef4444;
@@ -111,6 +102,7 @@ const formatDate = (dateStr: string) => {
   color: #1e293b;
   font-weight: 700;
 }
+
 .due-date {
   font-size: 0.8rem;
   color: #64748b;
@@ -122,6 +114,7 @@ const formatDate = (dateStr: string) => {
   padding: 0 15px;
   border-left: 1px solid #f1f5f9;
 }
+
 .grade-label {
   display: block;
   font-size: 0.6rem;
@@ -129,16 +122,16 @@ const formatDate = (dateStr: string) => {
   text-transform: uppercase;
   font-weight: bold;
 }
+
 .grade-value {
   font-size: 1.4rem;
   font-weight: 900;
   color: #10b981;
 }
 
-/* AJUSTES PARA QUE EL LINK SE VEA COMO BOTÓN */
 .btn-open-task {
   display: inline-block;
-  text-decoration: none; /* Elimina el subrayado */
+  text-decoration: none;
   padding: 10px 18px;
   border-radius: 10px;
   background: #f8fafc;

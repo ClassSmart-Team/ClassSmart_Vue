@@ -28,20 +28,20 @@ watch(data, (val) => {
 // ── Filtros de actividades ───────────────────────────────────────────────────
 const filteredActivities = computed(() => {
   const list = data.value?.data ?? data.value ?? []
+  const now = new Date()
 
   return list.filter((a: any) => {
     const hasSubmission = !!a.submission
     const isGraded = a.submission?.status === 'Calificada'
-
+    const isExpired = new Date(a.end_date) < now
     const isLate =
       hasSubmission &&
       a.submission?.submission_date &&
-      a.end_date &&
       new Date(a.submission.submission_date) > new Date(a.end_date)
 
     switch (currentTab.value) {
       case 'pendientes':
-        return !hasSubmission
+        return !hasSubmission && !isExpired
 
       case 'completadas':
         return hasSubmission && !isGraded
@@ -50,7 +50,7 @@ const filteredActivities = computed(() => {
         return hasSubmission && isGraded
 
       case 'tardias':
-        return isLate
+        return !hasSubmission && isExpired
 
       default:
         return false
@@ -131,6 +131,8 @@ const formatDate = (dateStr: string) =>
 
           <!-- GRID -->
           <div v-else class="tasks-grid">
+
+            
             <StudentTaskCard
               v-for="task in filteredActivities"
               :key="task.id"
