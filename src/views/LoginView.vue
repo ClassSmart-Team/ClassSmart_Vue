@@ -51,7 +51,7 @@ function login() {
   <div class="login-page">
     <div class="visual-section">
       <div class="welcome-text">
-        <h2 class="branding">ClassSmart<span>App</span></h2>
+        <h2 class="branding">ClassSmart</h2>
         <p>Tu portal educativo.</p>
       </div>
     </div>
