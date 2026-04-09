@@ -28,6 +28,7 @@ import HomeStudentView from "@/views/HomeStudentView.vue";
 import TaskDetailStudentView from "@/views/TaskDetailStudentView.vue";
 import TaskStudentView from "@/views/TaskStudentView.vue";
 import AdminUsersView from '@/views/AdminUsersView.vue'
+import ProfileStudentView from '@/views/ProfileStudentView.vue'
 
 
 //ROLES//
@@ -142,6 +143,13 @@ const router = createRouter({
       path: '/student/home',
       name: 'studentHome',
       component: HomeStudentView,
+      meta: { requiresAuth: true, rol: 3 },
+    },
+
+     {
+      path: '/student/profile',
+      name: 'studentProfile',
+      component: ProfileStudentView,
       meta: { requiresAuth: true, rol: 3 },
     },
 
