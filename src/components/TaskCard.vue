@@ -6,11 +6,9 @@ const props = defineProps<{
 }>()
 
 const computedStatus = computed(() => {
-  const sub = props.task.submission
-  if (!sub) return 'pendiente'
-  if (sub.status === 'Calificada') return 'calificada'
-  if (new Date(sub.submission_date) > new Date(props.task.end_date)) return 'tardia'
-  return 'entregada'
+  if (props.task.submissions_count > 0) return 'entregada'
+  if (new Date(props.task.end_date) < new Date()) return 'tardia'
+  return 'pendiente'
 })
 
 const formatDate = (dateStr: string) => {
@@ -22,26 +20,20 @@ const formatDate = (dateStr: string) => {
   <div :class="['activity-card', computedStatus]">
     <div class="activity-info">
       <div class="top-row">
-        <span class="subject-tag">{{ task.subject }}</span>
+        <span class="subject-tag">{{ task.group?.name }}</span>
+        <span v-if="computedStatus === 'entregada'" class="done-badge">Entregada</span>
         <span v-if="computedStatus === 'tardia'" class="late-badge">Fuera de tiempo</span>
       </div>
       <h4>{{ task.title }}</h4>
       <p class="due-date">Límite: {{ formatDate(task.end_date) }}</p>
     </div>
 
-    <div class="activity-status-box">
-      <div v-if="computedStatus === 'calificada'" class="grade-container">
-        <span class="grade-label">Nota</span>
-        <span class="grade-value">{{ task.submission.grade }}</span>
-      </div>
-    </div>
-
     <div class="activity-actions">
       <router-link
-        :to="{ name: 'parentTasksDetail', params: { id: task.id } }"
+        :to="{ name: 'studentTasksDetail', params: { id: task.id } }"
         class="btn-open-task"
       >
-        {{ computedStatus === 'calificada' ? 'Ver Retroalimentación' : 'Ver Detalles' }}
+        {{ computedStatus === 'entregada' ? 'Ver Entrega' : 'Ver Detalles' }}
       </router-link>
     </div>
   </div>
@@ -50,7 +42,7 @@ const formatDate = (dateStr: string) => {
 <style scoped>
 .activity-card {
   display: grid;
-  grid-template-columns: 1fr auto auto;
+  grid-template-columns: 1fr auto;
   align-items: center;
   gap: 20px;
   background: white;
@@ -61,23 +53,16 @@ const formatDate = (dateStr: string) => {
   margin-bottom: 12px;
   transition: transform 0.2s;
 }
-
 .activity-card:hover {
   transform: scale(1.01);
-  border-color: var(--color-AzulTres);
+  box-shadow: 0 4px 12px rgba(0,0,0,0.06);
 }
 
-.pendiente  { border-left-color: #f59e0b; }
-.entregada  { border-left-color: var(--color-AzulTres); }
-.tardia     { border-left-color: #ef4444; background: #fffafb; }
-.calificada { border-left-color: #10b981; }
+.pendiente { border-left-color: #f59e0b; }
+.entregada { border-left-color: #3b82f6; }
+.tardia    { border-left-color: #ef4444; background: #fffafb; }
 
-.top-row {
-  display: flex;
-  align-items: center;
-  gap: 10px;
-  margin-bottom: 4px;
-}
+.top-row { display: flex; align-items: center; gap: 8px; margin-bottom: 4px; }
 
 .subject-tag {
   font-size: 0.65rem;
@@ -88,7 +73,12 @@ const formatDate = (dateStr: string) => {
   padding: 2px 8px;
   border-radius: 4px;
 }
-
+.done-badge {
+  font-size: 0.6rem;
+  color: #3b82f6;
+  font-weight: bold;
+  text-transform: uppercase;
+}
 .late-badge {
   font-size: 0.6rem;
   color: #ef4444;
@@ -96,38 +86,8 @@ const formatDate = (dateStr: string) => {
   text-transform: uppercase;
 }
 
-.activity-info h4 {
-  margin: 0;
-  font-size: 1.05rem;
-  color: #1e293b;
-  font-weight: 700;
-}
-
-.due-date {
-  font-size: 0.8rem;
-  color: #64748b;
-  margin-top: 4px;
-}
-
-.grade-container {
-  text-align: center;
-  padding: 0 15px;
-  border-left: 1px solid #f1f5f9;
-}
-
-.grade-label {
-  display: block;
-  font-size: 0.6rem;
-  color: #94a3b8;
-  text-transform: uppercase;
-  font-weight: bold;
-}
-
-.grade-value {
-  font-size: 1.4rem;
-  font-weight: 900;
-  color: #10b981;
-}
+.activity-info h4 { margin: 0; font-size: 1.05rem; color: #1e293b; font-weight: 700; }
+.due-date { font-size: 0.8rem; color: #64748b; margin-top: 4px; }
 
 .btn-open-task {
   display: inline-block;
@@ -140,22 +100,14 @@ const formatDate = (dateStr: string) => {
   font-size: 0.8rem;
   text-align: center;
   transition: 0.2s;
+  white-space: nowrap;
 }
-
 .btn-open-task:hover {
   background: var(--color-Azul);
   color: white;
 }
 
 @media (max-width: 768px) {
-  .activity-card {
-    grid-template-columns: 1fr;
-    gap: 15px;
-  }
-  .activity-status-box {
-    justify-self: start;
-    padding: 0;
-    border: none;
-  }
+  .activity-card { grid-template-columns: 1fr; gap: 15px; }
 }
 </style>

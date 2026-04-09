@@ -14,6 +14,12 @@ const taskId = route.params.id
 const { data, error, isFetching, execute: reload } = useapi(`/my-assignments/${taskId}`).json()
 const task = computed(() => data.value?.data ?? data.value ?? null)
 
+const submission = computed(() => {
+  return task.value?.submissions?.[0] ?? null
+})
+
+const isGraded = computed(() => submission.value?.status === 'Calificada')
+
 // ── Estado de entrega ─────────────────────────────────────────────────────────
 const selectedFile  = ref<File | null>(null)
 const isSubmitting  = ref(false)
@@ -25,8 +31,6 @@ function onFileChange(e: Event) {
   selectedFile.value = input.files?.[0] ?? null
 }
 
-// Con archivos DEBES usar FormData + fetch nativo
-// useapi/useFetch fuerza JSON y rompe el multipart/form-data
 async function submitTask() {
   if (!selectedFile.value) {
     submitError.value = 'Selecciona un archivo antes de entregar.'
@@ -48,7 +52,6 @@ async function submitTask() {
       headers: {
         Authorization: `Bearer ${token}`,
         Accept: 'application/json',
-
       },
       body: fd,
     })
@@ -78,8 +81,8 @@ const formatDate = (d: string) =>
   })
 
 const isLate = computed(() => {
-  if (!task.value?.submission) return false
-  return new Date(task.value.submission.submission_date) > new Date(task.value.end_date)
+  if (!submission.value) return false
+  return new Date(submission.value.submission_date) > new Date(task.value.end_date)
 })
 
 const timeLeft = computed(() => {
@@ -91,6 +94,8 @@ const timeLeft = computed(() => {
   return days > 0 ? `${days}d ${hours}h restantes` : `${hours}h restantes`
 })
 </script>
+
+
 
 <template>
   <SidebarLayout>
@@ -149,33 +154,33 @@ const timeLeft = computed(() => {
         <div
           class="ContBig submission-section"
           :class="{
-            graded:    task.submission?.status === 'Calificada',
-            submitted: task.submission && task.submission.status !== 'Calificada',
+            graded: isGraded,
+            submitted: submission && !isGraded,
           }"
         >
 
-          <!-- YA FUE CALIFICADA -->
-          <template v-if="task.submission?.status === 'Calificada'">
+          <!-- CALIFICADA -->
+          <template v-if="isGraded">
             <div class="submission-header">
               <div>
                 <h3>Resultado</h3>
                 <span class="status-ok">Calificada</span>
               </div>
               <div class="grade-display">
-                <span class="score">{{ task.submission.grade }}</span>
+                <span class="score">{{ submission?.grade }}</span>
                 <span class="sep">/</span>
                 <span class="total">{{ task.points ?? 100 }}</span>
               </div>
             </div>
 
-            <div v-if="task.submission.feedback" class="feedback-box">
+            <div v-if="submission?.feedback" class="feedback-box">
               <strong>💬 Retroalimentación del profesor</strong>
-              <p>{{ task.submission.feedback }}</p>
+              <p>{{ submission?.feedback }}</p>
             </div>
           </template>
 
-          <!-- YA ENTREGADA, PENDIENTE DE CALIFICAR -->
-          <template v-else-if="task.submission">
+          <!-- ENTREGADA -->
+          <template v-else-if="submission">
             <div class="submission-header">
               <div>
                 <h3>Tu entrega</h3>
@@ -184,9 +189,9 @@ const timeLeft = computed(() => {
               </div>
             </div>
 
-            <div v-if="task.submission.files?.length" class="student-files">
+            <div v-if="submission?.files?.length" class="student-files">
               <div
-                v-for="file in task.submission.files"
+                v-for="file in submission.files"
                 :key="file.id"
                 class="student-file-item"
               >
@@ -197,11 +202,11 @@ const timeLeft = computed(() => {
             </div>
 
             <p class="sub-date">
-              Entregado: {{ formatDate(task.submission.submission_date) }}
+              Entregado: {{ formatDate(submission?.submission_date) }}
             </p>
           </template>
 
-          <!-- AÚN NO ENTREGADA -->
+          <!-- NO ENTREGADA -->
           <template v-else>
             <h3>Entregar tarea</h3>
 
@@ -257,6 +262,10 @@ const timeLeft = computed(() => {
 
   </SidebarLayout>
 </template>
+
+
+
+
 
 <style scoped>
 .detail-container {

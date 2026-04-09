@@ -23,8 +23,18 @@ const statusColor = computed(() => {
   return ''
 })
 
-// Badge de calificación para el alumno
+
 const grade = computed(() => props.task.submission?.grade)
+
+const submission = computed(() => {
+  // Buscamos en 'submissions' (plural) o 'submission' (singular) según como venga de la API
+  return props.task.submissions?.[0] || props.task.submission || null
+})
+
+const isGraded = computed(() => {
+  return submission.value && 
+         (submission.value.status === 'Calificada' || submission.value.grade !== null)
+})
 </script>
 
 <template>
@@ -32,14 +42,14 @@ const grade = computed(() => props.task.submission?.grade)
     <div class="task-info">
       <div class="top-row">
         <span class="status-tag">{{ task.status }}</span>
-        <span v-if="grade !== undefined && !isAdmin" class="grade-tag">
-          Nota: {{ grade }}
-        </span>
+<span v-if="isGraded" class="grade-tag">
+  Nota: {{ submission.grade }}
+</span>
       </div>
       
       <h4>{{ task.title }}</h4>
       <p class="task-desc">{{ task.description }}</p>
-      <p class="due-date">Límite: {{ formatDate(task.end_date) }}</p>
+      <p class="due-date">Límitee: {{ formatDate(task.end_date) }}</p>
     </div>
 
     <div class="task-actions">
@@ -155,5 +165,23 @@ const grade = computed(() => props.task.submission?.grade)
 @media (max-width: 480px) {
   .task-card { grid-template-columns: 1fr; gap: 15px; }
   .btn-open-task { width: 100%; display: block; }
+}
+
+.grade-tag {
+  font-size: 0.7rem;
+  font-weight: 800;
+  color: #ffffff;
+  background: linear-gradient(135deg, #10b981 0%, #059669 100%);
+  padding: 4px 12px;
+  border-radius: 8px;
+  box-shadow: 0 4px 10px rgba(16, 185, 129, 0.2);
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.grade-tag::before {
+  content: '★';
+  font-size: 0.8rem;
 }
 </style>

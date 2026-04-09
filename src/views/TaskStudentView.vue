@@ -2,52 +2,28 @@
 import SidebarLayout from '@/components/StudentSideBar.vue' 
 import { useapi } from '@/assets/composables/useApi'
 import { useAuthStore } from '@/stores/authStore.ts'
-import { ref, computed, watch } from 'vue'
+import { ref, computed } from 'vue'
 import StudentTaskCard from '@/components/StudentTaskCard.vue' 
 
-// ── Auth ─────────────────────────────────────────────────────────────────────
 const ua = useAuthStore()
-
-// ── Estado ────────────────────────────────────────────────────────────────────
 const currentTab = ref('pendientes')
 
-// ── GET tareas ───────────────────────────────────────────────────────────────
 const { data, error, isFetching } = useapi('/my-assignments', { method: 'GET' }).json()
 
-// ── Debug ─────────────────────────────────────────────────────────────────────
-watch(data, (val) => {
-  const list = val?.data ?? val ?? []
- 
-
-    list.forEach((a: any) => {
-  console.log('TASK:', a)
-  console.log('submission:', a.submission)
-})
-})
-
-// ── Filtros de actividades ───────────────────────────────────────────────────
 const filteredActivities = computed(() => {
   const list = data.value?.data ?? data.value ?? []
   const now = new Date()
 
   return list.filter((a: any) => {
-    const hasSubmission = !!a.submission
-    const isGraded = a.submission?.status === 'Calificada'
+    const hasSubmission = a.submissions_count > 0
     const isExpired = new Date(a.end_date) < now
-    const isLate =
-      hasSubmission &&
-      a.submission?.submission_date &&
-      new Date(a.submission.submission_date) > new Date(a.end_date)
 
     switch (currentTab.value) {
       case 'pendientes':
         return !hasSubmission && !isExpired
 
       case 'completadas':
-        return hasSubmission && !isGraded
-
-      case 'calificadas':
-        return hasSubmission && isGraded
+        return hasSubmission
 
       case 'tardias':
         return !hasSubmission && isExpired
@@ -58,7 +34,6 @@ const filteredActivities = computed(() => {
   })
 })
 
-// ── Utils ─────────────────────────────────────────────────────────────────────
 const formatDate = (dateStr: string) => 
   new Date(dateStr).toLocaleDateString('es-MX', { day: '2-digit', month: 'short' })
 </script>
@@ -78,7 +53,6 @@ const formatDate = (dateStr: string) =>
             <p v-if="data">{{ filteredActivities.length }} tareas encontradas</p>
           </div>
         </div>
-
         <div class="right">
           <span class="welcome-text">{{ ua.credentials?.user.name }}</span>
         </div>
@@ -94,9 +68,6 @@ const formatDate = (dateStr: string) =>
           </button>
           <button @click="currentTab = 'completadas'" :class="{ active: currentTab === 'completadas' }">
             Completadas
-          </button>
-          <button @click="currentTab = 'calificadas'" :class="{ active: currentTab === 'calificadas' }">
-            Calificadas
           </button>
           <button @click="currentTab = 'tardias'" :class="{ active: currentTab === 'tardias' }">
             Fuera de tiempo
@@ -117,27 +88,23 @@ const formatDate = (dateStr: string) =>
 
         <!-- DATA -->
         <div v-if="!isFetching && !error">
-          
           <div class="panel-header">
             <h2>{{ currentTab.toUpperCase() }}</h2>
             <span class="badge">{{ filteredActivities.length }}</span>
           </div>
 
-          <!-- EMPTY -->
           <div v-if="!filteredActivities.length" class="empty-state">
             <div class="empty-icon">📂</div>
             <p>No tienes tareas en esta sección por ahora.</p>
           </div>
 
-          <!-- GRID -->
           <div v-else class="tasks-grid">
-
-            
             <StudentTaskCard
-              v-for="task in filteredActivities"
-              :key="task.id"
-              :task="task"
-            />
+  v-for="task in filteredActivities"
+  :key="task.id"
+  :task="task"
+  :class="{ 'has-grade': task.submissions?.[0]?.grade !== null }"
+/>
           </div>
         </div>
 
@@ -147,7 +114,6 @@ const formatDate = (dateStr: string) =>
 </template>
 
 <style scoped>
-/* ── HEADER ─────────────────────────────────────────────────────────────── */
 .ContSmall {
   background: var(--color-Azul);
   width: 1000px;
@@ -160,25 +126,9 @@ const formatDate = (dateStr: string) =>
   justify-content: space-between;
   align-items: center;
 }
-
-.ContSmall h1 {
-  margin: 0;
-  font-size: 1.5rem;
-  letter-spacing: -0.5px;
-}
-
-.ContSmall p {
-  margin: 0;
-  font-size: 0.9rem;
-  opacity: 0.8;
-}
-
-.left {
-  display: flex;
-  align-items: center;
-  gap: 15px;
-}
-
+.ContSmall h1 { margin: 0; font-size: 1.5rem; letter-spacing: -0.5px; }
+.ContSmall p  { margin: 0; font-size: 0.9rem; opacity: 0.8; }
+.left { display: flex; align-items: center; gap: 15px; }
 .welcome-text {
   font-weight: 600;
   font-size: 0.9rem;
@@ -187,7 +137,6 @@ const formatDate = (dateStr: string) =>
   border-radius: 10px;
 }
 
-/* ── CONTENEDOR PRINCIPAL ────────────────────────────────────────────────── */
 .ContBig {
   background: var(--color-Blanco);
   width: 1000px;
@@ -199,7 +148,6 @@ const formatDate = (dateStr: string) =>
   overflow-y: auto;
 }
 
-/* ── TABS ───────────────────────────────────────────────────────────────── */
 .tabs-container {
   display: flex;
   gap: 8px;
@@ -208,7 +156,6 @@ const formatDate = (dateStr: string) =>
   padding: 6px;
   border-radius: 16px;
 }
-
 .tabs-container button {
   flex: 1;
   padding: 12px 10px;
@@ -221,27 +168,18 @@ const formatDate = (dateStr: string) =>
   font-size: 0.85rem;
   transition: all 0.2s ease;
 }
-
 .tabs-container button.active {
   background: white;
   color: var(--color-Azul);
   box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
 }
 
-/* ── GRID ─────────────────────────────────────────────────────────────── */
 .tasks-grid {
   display: grid;
   grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
   gap: 20px;
 }
-
-.panel-header {
-  display: flex;
-  align-items: center;
-  gap: 12px;
-  margin-bottom: 25px;
-}
-
+.panel-header { display: flex; align-items: center; gap: 12px; margin-bottom: 25px; }
 .panel-header h2 {
   font-size: 1.1rem;
   font-weight: 800;
@@ -249,7 +187,6 @@ const formatDate = (dateStr: string) =>
   margin: 0;
   letter-spacing: 0.5px;
 }
-
 .badge {
   background: var(--color-Azul);
   color: white;
@@ -259,13 +196,11 @@ const formatDate = (dateStr: string) =>
   font-weight: 800;
 }
 
-/* ── STATES ─────────────────────────────────────────────────────────────── */
 .loading-state, .empty-state {
   text-align: center;
   padding: 80px 20px;
   color: #94a3b8;
 }
-
 .spinner {
   width: 45px;
   height: 45px;
@@ -275,16 +210,8 @@ const formatDate = (dateStr: string) =>
   animation: spin 1s linear infinite;
   margin: 0 auto 20px;
 }
-
-.empty-icon {
-  font-size: 3rem;
-  margin-bottom: 15px;
-  opacity: 0.5;
-}
-
-@keyframes spin {
-  to { transform: rotate(360deg); }
-}
+.empty-icon { font-size: 3rem; margin-bottom: 15px; opacity: 0.5; }
+@keyframes spin { to { transform: rotate(360deg); } }
 
 .error-banner {
   background: #fee2e2;
@@ -297,7 +224,6 @@ const formatDate = (dateStr: string) =>
   font-weight: 700;
 }
 
-/* ── RESPONSIVE ──────────────────────────────────────────────────────────── */
 @media (max-width: 1050px) {
   .ContSmall, .ContBig { width: 95%; }
 }
