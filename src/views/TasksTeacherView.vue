@@ -152,7 +152,6 @@ function handleTaskClick(task: any) {
 function handleEditTask(task: any) {
   editingTask.value = task;
   
-  
   form.value = {
     title: task.title,
     description: task.description || '', 
@@ -169,9 +168,14 @@ function handleEditTask(task: any) {
   }, 50);
 }
 
+
 function onFilesChange(e: Event) {
   const input = e.target as HTMLInputElement
-  selectedFiles.value = input.files ? Array.from(input.files) : []
+  if (input.files) {
+    const newFiles = Array.from(input.files)
+    selectedFiles.value = [...selectedFiles.value, ...newFiles]
+    input.value = ''
+  }
 }
 
 function removeFile(index: number) {
@@ -187,17 +191,17 @@ async function createTask() {
   const baseUrl = import.meta.env.VITE_API_URL ?? 'https://api.sutando-user.me/api'
   const fd = new FormData()
   
-  // Agregar campos al FormData
   fd.append('title', form.value.title)
-  fd.append('description', form.value.description)
+  fd.append('description', form.value.description || '')
   fd.append('start_date', toBackendDate(form.value.start_date))
   fd.append('end_date', toBackendDate(form.value.end_date))
   fd.append('group_id', String(form.value.group_id))
   fd.append('unit_id', String(form.value.unit_id))
   fd.append('status', form.value.status)
-  
-  // Agregar archivos
-  selectedFiles.value.forEach(f => fd.append('files[]', f))
+
+  selectedFiles.value.forEach((f) => {
+    fd.append('files[]', f)
+  })
 
   try {
     const res = await fetch(`${baseUrl}/assignments`, {
@@ -216,15 +220,10 @@ async function createTask() {
       alert('Error: ' + JSON.stringify(json?.errors ?? json?.message ?? json))
       return
     }
-    showModal.value = false
     
+    showModal.value = false
     form.value = { ...initialTask }
     selectedFiles.value = []
-    const fileInput = document.querySelector('input[type="file"]') as HTMLInputElement
-    if (fileInput) {
-      fileInput.value = ''
-    }
-
     await reloadTasks()
 
   } catch (e) {
@@ -346,157 +345,152 @@ async function deleteTask() {
         </div>
       </div>
 
-      <!-- MODAL CREAR -->
-<Modal v-model="showModal">
-  <form @submit.prevent="createTask" class="task-form">
-    <div class="form-header">
-      <div class="header-info">
-        <h3>Nueva Tarea</h3>
-        <p>Configura los detalles de la nueva asignación</p>
-      </div>
-    </div>
-
-    <div class="form-body">
-      <div class="field-group">
-        <label>Título</label>
-        <input v-model="form.title" placeholder="Ej. Taller de integración" required />
-      </div>
-
-      <div class="field-group">
-        <label>Instrucciones</label>
-        <textarea v-model="form.description" placeholder="Escribe los detalles aquí..."></textarea>
-      </div>
-
-      <div class="grid-fields">
-        <div class="field-group">
-          <label>Grupo</label>
-          <select v-model="form.group_id" required>
-            <option :value="null" disabled>Seleccionar grupo</option>
-            <option v-for="g in groupsData?.data ?? []" :key="g.id" :value="g.id">{{ g.name }}</option>
-          </select>
-        </div>
-        <div class="field-group">
-          <label>Unidad</label>
-          <select v-model="form.unit_id" required>
-            <option :value="null" disabled>Seleccionar unidad</option>
-            <option v-for="u in availableUnits" :key="u.id" :value="u.id">{{ u.name }}</option>
-          </select>
-        </div>
-      </div>
-
-      <div class="grid-fields">
-        <div class="field-group">
-          <label>Fecha de apertura</label>
-          <input type="datetime-local" v-model="form.start_date" required />
-        </div>
-        <div class="field-group">
-          <label>Fecha de cierre</label>
-          <input type="datetime-local" v-model="form.end_date" required />
-        </div>
-      </div>
-
-      <div class="upload-container">
-        <label class="section-label">Material de apoyo</label>
-        <div class="drop-area" @click="($refs.fileInputCreate as HTMLInputElement).click()">
-          <input ref="fileInputCreate" type="file" multiple class="hidden-input" @change="onFilesChange" />
-          <p>Click para seleccionar archivos</p>
-          <span>PDF, Word o Imágenes</span>
-        </div>
-        
-        <div v-if="selectedFiles.length" class="files-preview">
-          <div v-for="(f, i) in selectedFiles" :key="i" class="file-item">
-            <span class="file-name">{{ f.name }}</span>
-            <button type="button" @click="removeFile(i)" class="btn-remove">X</button>
+      <Modal v-model="showModal">
+        <form @submit.prevent="createTask" class="task-form">
+          <div class="form-header">
+            <div class="header-info">
+              <h3>Nueva Tarea</h3>
+              <p>Configura los detalles de la nueva asignación</p>
+            </div>
           </div>
-        </div>
-      </div>
-    </div>
 
-    <div class="form-footer">
-      <button type="button" class="btn-cancel" @click="showModal = false">Cancelar</button>
-      <button type="submit" class="btn-primary">Publicar Tarea</button>
-    </div>
-  </form>
-</Modal>
+          <div class="form-body">
+            <div class="field-group">
+              <label>Título</label>
+              <input v-model="form.title" placeholder="Ej. Taller de integración" required />
+            </div>
+
+            <div class="field-group">
+              <label>Instrucciones</label>
+              <textarea v-model="form.description" placeholder="Escribe los detalles aquí..."></textarea>
+            </div>
+
+            <div class="grid-fields">
+              <div class="field-group">
+                <label>Grupo</label>
+                <select v-model="form.group_id" required>
+                  <option :value="null" disabled>Seleccionar grupo</option>
+                  <option v-for="g in groupsData?.data ?? []" :key="g.id" :value="g.id">{{ g.name }}</option>
+                </select>
+              </div>
+              <div class="field-group">
+                <label>Unidad</label>
+                <select v-model="form.unit_id" required>
+                  <option :value="null" disabled>Seleccionar unidad</option>
+                  <option v-for="u in availableUnits" :key="u.id" :value="u.id">{{ u.name }}</option>
+                </select>
+              </div>
+            </div>
+
+            <div class="grid-fields">
+              <div class="field-group">
+                <label>Fecha de apertura</label>
+                <input type="datetime-local" v-model="form.start_date" required />
+              </div>
+              <div class="field-group">
+                <label>Fecha de cierre</label>
+                <input type="datetime-local" v-model="form.end_date" required />
+              </div>
+            </div>
+
+            <div class="upload-container">
+              <label class="section-label">Material de apoyo</label>
+              <div class="drop-area" @click="($refs.fileInputCreate as HTMLInputElement).click()">
+                <input ref="fileInputCreate" type="file" multiple class="hidden-input" @change="onFilesChange" />
+                <p>Click para seleccionar archivos</p>
+                <span>PDF, Word o Imágenes</span>
+              </div>
+              
+              <div v-if="selectedFiles.length" class="files-preview">
+                <div v-for="(f, i) in selectedFiles" :key="i" class="file-item">
+                  <span class="file-name text-truncate" style="max-width: 100px;">{{ f.name }}</span>
+                  <button type="button" @click="removeFile(i)" class="btn-remove">X</button>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <div class="form-footer">
+            <button type="button" class="btn-cancel" @click="showModal = false">Cancelar</button>
+            <button type="submit" class="btn-primary">Publicar Tarea</button>
+          </div>
+        </form>
+      </Modal>
 
     </SidebarLayout>
   </div>
 
-  <!-- MODAL EDITAR -->
-<Modal v-model="showEditModal">
-  <form @submit.prevent="updateTask" class="task-form edit-mode">
-    <div class="form-header">
-      <div class="header-info">
-        <h3>Editar Tarea</h3>
-        <p>Modifica los parámetros de la tarea existente</p>
-      </div>
-    </div>
-
-    <div class="form-body">
-      <div class="field-group">
-        <label>Título</label>
-        <input v-model="form.title" required />
+  <Modal v-model="showEditModal">
+    <form @submit.prevent="updateTask" class="task-form edit-mode">
+      <div class="form-header">
+        <div class="header-info">
+          <h3>Editar Tarea</h3>
+          <p>Modifica los parámetros de la tarea existente</p>
+        </div>
       </div>
 
-      <div class="field-group">
-        <label>Instrucciones</label>
-        <textarea v-model="form.description" placeholder="Escribe los detalles aquí..."></textarea>
-      </div>
-
-      <div class="grid-fields">
+      <div class="form-body">
         <div class="field-group">
-          <label>Grupo</label>
-          <select v-model="form.group_id" required>
-            <option v-for="g in groupsData?.data ?? []" :key="g.id" :value="g.id">{{ g.name }}</option>
-          </select>
+          <label>Título</label>
+          <input v-model="form.title" required />
         </div>
+
         <div class="field-group">
-          <label>Unidad</label>
-          <select v-model="form.unit_id" required>
-            <option v-for="u in availableUnits" :key="u.id" :value="u.id">{{ u.name }}</option>
-          </select>
+          <label>Instrucciones</label>
+          <textarea v-model="form.description" placeholder="Escribe los detalles aquí..."></textarea>
+        </div>
+
+        <div class="grid-fields">
+          <div class="field-group">
+            <label>Grupo</label>
+            <select v-model="form.group_id" required>
+              <option v-for="g in groupsData?.data ?? []" :key="g.id" :value="g.id">{{ g.name }}</option>
+            </select>
+          </div>
+          <div class="field-group">
+            <label>Unidad</label>
+            <select v-model="form.unit_id" required>
+              <option v-for="u in availableUnits" :key="u.id" :value="u.id">{{ u.name }}</option>
+            </select>
+          </div>
+        </div>
+
+        <div class="grid-fields">
+          <div class="field-group">
+            <label>Fecha de apertura</label>
+            <input type="datetime-local" v-model="form.start_date" required />
+          </div>
+          <div class="field-group">
+            <label>Fecha de cierre</label>
+            <input type="datetime-local" v-model="form.end_date" required />
+          </div>
+        </div>
+
+        <div class="status-selection">
+          <label class="section-label">Estado de la entrega</label>
+          <div class="status-grid">
+            <label v-for="opt in [
+              { value: 'Activa', color: '#16a34a' },
+              { value: 'Cerrada', color: '#d97706' },
+              { value: 'Cancelada', color: '#dc2626' }
+            ]" :key="opt.value" class="status-card" :class="{ active: form.status === opt.value }">
+              <input type="radio" v-model="form.status" :value="opt.value" />
+              <span class="status-dot" :style="{ background: opt.color }"></span>
+              {{ opt.value }}
+            </label>
+          </div>
         </div>
       </div>
 
-      <div class="grid-fields">
-        <div class="field-group">
-          <label>Fecha de apertura</label>
-          <input type="datetime-local" v-model="form.start_date" required />
-        </div>
-        <div class="field-group">
-          <label>Fecha de cierre</label>
-          <input type="datetime-local" v-model="form.end_date" required />
+      <div class="form-footer split">
+        <button type="button" class="btn-danger-outline" @click="deleteTask">Eliminar Tarea</button>
+        <div class="footer-right">
+          <button type="button" class="btn-cancel" @click="showEditModal = false">Cerrar</button>
+          <button type="submit" class="btn-primary">Guardar Cambios</button>
         </div>
       </div>
-
-      <div class="status-selection">
-        <label class="section-label">Estado de la entrega</label>
-        <div class="status-grid">
-          <label v-for="opt in [
-            { value: 'Activa', color: '#16a34a' },
-            { value: 'Cerrada', color: '#d97706' },
-            { value: 'Cancelada', color: '#dc2626' }
-          ]" :key="opt.value" class="status-card" :class="{ active: form.status === opt.value }">
-            <input type="radio" v-model="form.status" :value="opt.value" />
-            <span class="status-dot" :style="{ background: opt.color }"></span>
-            {{ opt.value }}
-          </label>
-        </div>
-      </div>
-    </div>
-
-    <div class="form-footer split">
-      <button type="button" class="btn-danger-outline" @click="deleteTask">Eliminar Tarea</button>
-      <div class="footer-right">
-        <button type="button" class="btn-cancel" @click="showEditModal = false">Cerrar</button>
-        <button type="submit" class="btn-primary">Guardar Cambios</button>
-      </div>
-    </div>
-  </form>
-</Modal>
-
-
-
+    </form>
+  </Modal>
 </template>
 
 <style scoped>
