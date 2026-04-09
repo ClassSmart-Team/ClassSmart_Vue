@@ -59,6 +59,17 @@ type UnitItem = {
   updated_at?: string | null
 }
 
+type FileItem = {
+  id: number
+  file_name: string
+  file_path?: string | null
+  url?: string | null
+  type?: string | null
+  size?: number | null
+  created_at?: string | null
+  updated_at?: string | null
+}
+
 type AssignmentItem = {
   id: number
   title: string
@@ -68,6 +79,7 @@ type AssignmentItem = {
   status: 'Activa' | 'Cerrada' | 'Cancelada'
   group?: GroupItem | null
   unit?: UnitItem | null
+  files?: FileItem[]
   submissions_count?: number
   created_at?: string | null
   updated_at?: string | null
@@ -95,6 +107,10 @@ const submitting = ref(false)
 const actionLoadingId = ref<number | null>(null)
 const formError = ref('')
 const unitsLoading = ref(false)
+
+const selectedFiles = ref<File[]>([])
+const fileInputRef = ref<HTMLInputElement | null>(null)
+const existingFiles = ref<FileItem[]>([])
 
 const form = reactive<AssignmentForm>({
   title: '',
@@ -158,13 +174,17 @@ const filteredAssignments = computed(() => {
     const groupName = (assignment.group?.name ?? '').toLowerCase()
     const unitName = (assignment.unit?.name ?? '').toLowerCase()
     const status = (assignment.status ?? '').toLowerCase()
+    const fileNames = (assignment.files ?? [])
+      .map((file) => (file.file_name ?? '').toLowerCase())
+      .join(' ')
 
     return (
       title.includes(term) ||
       description.includes(term) ||
       groupName.includes(term) ||
       unitName.includes(term) ||
-      status.includes(term)
+      status.includes(term) ||
+      fileNames.includes(term)
     )
   })
 })
@@ -179,6 +199,12 @@ function extractErrorMessage(data: unknown, fallback: string) {
   return payload.message || fallback
 }
 
+function resetFileInput() {
+  if (fileInputRef.value) {
+    fileInputRef.value.value = ''
+  }
+}
+
 function resetForm() {
   form.title = ''
   form.description = ''
@@ -191,6 +217,9 @@ function resetForm() {
   isEditMode.value = false
   formError.value = ''
   units.value = []
+  selectedFiles.value = []
+  existingFiles.value = []
+  resetFileInput()
 }
 
 function clearFilters() {
@@ -222,6 +251,40 @@ function formatGroup(group?: GroupItem | null) {
 
 function formatUnit(unit?: UnitItem | null) {
   return unit?.name || 'Sin unidad'
+}
+
+function resolveFileUrl(file?: FileItem | null) {
+  if (!file) return ''
+
+  if (file.url) return file.url
+
+  if (file.file_path) {
+    if (file.file_path.startsWith('http://') || file.file_path.startsWith('https://')) {
+      return file.file_path
+    }
+
+    const cleanPath = file.file_path.startsWith('/')
+      ? file.file_path
+      : `/${file.file_path}`
+
+    const apiBase = import.meta.env.VITE_API_URL ?? 'https://api.sutando-user.me/api'
+    const baseOrigin = apiBase.replace(/\/api\/?$/, '')
+
+    return `${baseOrigin}${cleanPath}`
+  }
+
+  return ''
+}
+
+function openFile(file?: FileItem | null) {
+  const url = resolveFileUrl(file)
+
+  if (!url) {
+    alert('No se encontró una URL válida para este archivo.')
+    return
+  }
+
+  window.open(url, '_blank', 'noopener,noreferrer')
 }
 
 function statusClass(status: string) {
@@ -290,28 +353,48 @@ async function openEditModal(assignment: AssignmentItem) {
   resetForm()
   isEditMode.value = true
   selectedAssignmentId.value = assignment.id
-
-  form.title = assignment.title ?? ''
-  form.description = assignment.description ?? ''
-  form.start_date = toInputDateTimeValue(assignment.start_date)
-  form.end_date = toInputDateTimeValue(assignment.end_date)
-  form.status = assignment.status ?? 'Activa'
-  form.group_id = assignment.group?.id ?? ''
-  form.unit_id = ''
-
   showModal.value = true
 
-  if (assignment.group?.id) {
-    try {
-      await loadUnitsByGroup(assignment.group.id)
-      form.unit_id = assignment.unit?.id ?? ''
-    } catch (ctx: any) {
-      formError.value = extractErrorMessage(
-        ctx?.data,
-        'No se pudieron cargar las unidades de esta tarea.',
-      )
+  const { data, onFetchResponse, onFetchError } = useapi(`/assignments/${assignment.id}`, {
+    method: 'GET',
+  }).json()
+
+  onFetchResponse(async () => {
+    const detail = data.value?.data as AssignmentItem | undefined
+
+    if (!detail) {
+      formError.value = 'No se pudo cargar el detalle de la tarea.'
+      return
     }
-  }
+
+    form.title = detail.title ?? ''
+    form.description = detail.description ?? ''
+    form.start_date = toInputDateTimeValue(detail.start_date)
+    form.end_date = toInputDateTimeValue(detail.end_date)
+    form.status = detail.status ?? 'Activa'
+    form.group_id = detail.group?.id ?? ''
+    existingFiles.value = detail.files ?? []
+
+    if (detail.group?.id) {
+      try {
+        await loadUnitsByGroup(detail.group.id)
+        form.unit_id = detail.unit?.id ?? ''
+      } catch (ctx: any) {
+        formError.value = extractErrorMessage(
+          ctx?.data,
+          'No se pudieron cargar las unidades de esta tarea.',
+        )
+      }
+    }
+  })
+
+  onFetchError((ctx) => {
+    formError.value = extractErrorMessage(
+      ctx.data,
+      'No se pudo cargar la tarea.',
+    )
+    return ctx
+  })
 }
 
 function validateForm() {
@@ -360,73 +443,99 @@ function validateForm() {
   return true
 }
 
-function buildPayload() {
-  return {
-    title: form.title.trim(),
-    description: form.description.trim(),
-    start_date: form.start_date,
-    end_date: form.end_date,
-    status: form.status,
-    group_id: Number(form.group_id),
-    unit_id: Number(form.unit_id),
-  }
+function buildFormData() {
+  const payload = new FormData()
+
+  payload.append('title', form.title.trim())
+  payload.append('description', form.description.trim())
+  payload.append('start_date', form.start_date.replace('T', ' ') + ':00')
+  payload.append('end_date', form.end_date.replace('T', ' ') + ':00')
+  payload.append('status', form.status)
+  payload.append('group_id', String(form.group_id))
+  payload.append('unit_id', String(form.unit_id))
+
+  selectedFiles.value.forEach((file) => {
+    payload.append('files[]', file)
+  })
+
+  return payload
 }
 
-function submitForm() {
+function onFilesChange(event: Event) {
+  const target = event.target as HTMLInputElement
+  const newFiles = target.files ? Array.from(target.files) : []
+
+  if (!newFiles.length) return
+
+  selectedFiles.value = [...selectedFiles.value, ...newFiles]
+  resetFileInput()
+}
+
+function removeSelectedFile(index: number) {
+  selectedFiles.value = selectedFiles.value.filter((_, i) => i !== index)
+}
+
+async function submitForm() {
   if (!validateForm()) return
 
   submitting.value = true
   formError.value = ''
 
-  const payload = buildPayload()
+  const baseUrl = import.meta.env.VITE_API_URL ?? 'https://api.sutando-user.me/api'
+  const payload = buildFormData()
 
-  if (isEditMode.value && selectedAssignmentId.value) {
-    const { data, onFetchResponse, onFetchError } = useapi(`/assignments/${selectedAssignmentId.value}`, {
-      method: 'PUT',
-    })
-      .put(payload)
-      .json()
+  try {
+    let res: Response
 
-    onFetchResponse(async () => {
-      await reloadAssignments()
-      alert(data.value?.message || 'Tarea actualizada exitosamente')
-      closeModal()
+    if (isEditMode.value && selectedAssignmentId.value) {
+      payload.append('_method', 'PUT')
+
+      res = await fetch(`${baseUrl}/assignments/${selectedAssignmentId.value}`, {
+        method: 'POST',
+        headers: {
+          Authorization: `Bearer ${ua.credentials?.token}`,
+          Accept: 'application/json',
+        },
+        body: payload,
+      })
+    } else {
+      res = await fetch(`${baseUrl}/assignments`, {
+        method: 'POST',
+        headers: {
+          Authorization: `Bearer ${ua.credentials?.token}`,
+          Accept: 'application/json',
+        },
+        body: payload,
+      })
+    }
+
+    const text = await res.text()
+    const json = text ? JSON.parse(text) : {}
+
+    if (!res.ok) {
+      formError.value =
+        json?.errors
+          ? Object.values(json.errors).flat().join(' ')
+          : json?.message || 'Ocurrió un error al guardar la tarea.'
       submitting.value = false
-    })
+      return
+    }
 
-    onFetchError((ctx) => {
-      formError.value = extractErrorMessage(
-        ctx.data,
-        'Ocurrió un error al guardar la tarea.',
-      )
-      submitting.value = false
-      return ctx
-    })
-
-    return
-  }
-
-  const { data, onFetchResponse, onFetchError } = useapi('/assignments', {
-    method: 'POST',
-  })
-    .post(payload)
-    .json()
-
-  onFetchResponse(async () => {
     await reloadAssignments()
-    alert(data.value?.message || 'Tarea creada exitosamente')
+    alert(
+      json?.message ||
+        (isEditMode.value
+          ? 'Tarea actualizada exitosamente'
+          : 'Tarea creada exitosamente'),
+    )
+
     closeModal()
     submitting.value = false
-  })
-
-  onFetchError((ctx) => {
-    formError.value = extractErrorMessage(
-      ctx.data,
-      'Ocurrió un error al guardar la tarea.',
-    )
+  } catch (e) {
+    console.error('[submitAssignment] error →', e)
+    formError.value = 'Ocurrió un error inesperado al guardar la tarea.'
     submitting.value = false
-    return ctx
-  })
+  }
 }
 
 function setAssignmentStatus(assignment: AssignmentItem, nextStatus: 'Activa' | 'Cerrada' | 'Cancelada') {
@@ -484,7 +593,9 @@ function cancelAssignmentFromDelete(assignment: AssignmentItem) {
 
   const { data, onFetchResponse, onFetchError } = useapi(`/assignments/${assignment.id}`, {
     method: 'DELETE',
-  }).json()
+  })
+    .delete()
+    .json()
 
   onFetchResponse(async () => {
     await reloadAssignments()
@@ -531,7 +642,7 @@ function cancelAssignmentFromDelete(assignment: AssignmentItem) {
             v-model="filters.search"
             type="text"
             class="input"
-            placeholder="Buscar por título, descripción, grupo, unidad o estado..."
+            placeholder="Buscar por título, descripción, grupo, unidad, estado o archivo..."
           />
 
           <button class="btn secondary" @click="clearFilters">
@@ -556,6 +667,7 @@ function cancelAssignmentFromDelete(assignment: AssignmentItem) {
                   <th>Tarea</th>
                   <th>Grupo</th>
                   <th>Unidad</th>
+                  <th>Archivos</th>
                   <th>Estado</th>
                   <th>Inicio</th>
                   <th>Entrega</th>
@@ -566,7 +678,7 @@ function cancelAssignmentFromDelete(assignment: AssignmentItem) {
 
               <tbody>
                 <tr v-if="filteredAssignments.length === 0">
-                  <td colspan="9" class="empty-cell">
+                  <td colspan="10" class="empty-cell">
                     No hay tareas para mostrar.
                   </td>
                 </tr>
@@ -581,6 +693,21 @@ function cancelAssignmentFromDelete(assignment: AssignmentItem) {
 
                   <td>{{ formatGroup(assignment.group) }}</td>
                   <td>{{ formatUnit(assignment.unit) }}</td>
+
+                  <td>
+                    <div v-if="assignment.files?.length" class="files-chip-list">
+                      <button
+                        v-for="file in assignment.files"
+                        :key="file.id"
+                        type="button"
+                        class="file-chip file-chip-link file-chip-button"
+                        @click="openFile(file)"
+                      >
+                        {{ file.file_name }}
+                      </button>
+                    </div>
+                    <span v-else class="no-files">Sin archivos</span>
+                  </td>
 
                   <td>
                     <span :class="statusClass(assignment.status)">
@@ -713,6 +840,54 @@ function cancelAssignmentFromDelete(assignment: AssignmentItem) {
                   placeholder="Describe la tarea..."
                 ></textarea>
               </div>
+
+              <div class="field full-width">
+                <label>Archivos adjuntos (opcional)</label>
+                <input
+                  ref="fileInputRef"
+                  type="file"
+                  class="input"
+                  multiple
+                  @change="onFilesChange"
+                />
+
+                <div v-if="selectedFiles.length" class="selected-files-box">
+                  <div class="files-title">Archivos nuevos seleccionados</div>
+
+                  <div class="selected-files-list">
+                    <div
+                      v-for="(file, index) in selectedFiles"
+                      :key="`${file.name}-${index}`"
+                      class="selected-file-item"
+                    >
+                      <span>{{ file.name }}</span>
+                      <button
+                        type="button"
+                        class="remove-file-btn"
+                        @click="removeSelectedFile(index)"
+                      >
+                        ✕
+                      </button>
+                    </div>
+                  </div>
+                </div>
+
+                <div v-if="isEditMode && existingFiles.length" class="existing-files-box">
+                  <div class="files-title">Archivos actuales</div>
+
+                  <div class="existing-files-list">
+                    <button
+                      v-for="file in existingFiles"
+                      :key="file.id"
+                      type="button"
+                      class="file-chip existing file-chip-link file-chip-button"
+                      @click="openFile(file)"
+                    >
+                      {{ file.file_name }}
+                    </button>
+                  </div>
+                </div>
+              </div>
             </div>
 
             <div class="form-actions">
@@ -819,7 +994,8 @@ function cancelAssignmentFromDelete(assignment: AssignmentItem) {
 
 .btn:disabled,
 .btn-action:disabled,
-.close-btn:disabled {
+.close-btn:disabled,
+.remove-file-btn:disabled {
   opacity: 0.6;
   cursor: not-allowed;
 }
@@ -869,7 +1045,7 @@ function cancelAssignmentFromDelete(assignment: AssignmentItem) {
 .tasks-table {
   width: 100%;
   border-collapse: collapse;
-  min-width: 1280px;
+  min-width: 1400px;
 }
 
 .tasks-table thead {
@@ -918,6 +1094,48 @@ function cancelAssignmentFromDelete(assignment: AssignmentItem) {
   color: #075985;
   font-weight: 700;
   font-size: 0.85rem;
+}
+
+.files-chip-list,
+.existing-files-list {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+
+.file-chip {
+  display: inline-flex;
+  align-items: center;
+  padding: 5px 10px;
+  border-radius: 999px;
+  background: #e0f2fe;
+  color: #075985;
+  font-weight: 700;
+  font-size: 0.8rem;
+}
+
+.file-chip.existing {
+  background: #ede9fe;
+  color: #5b21b6;
+}
+
+.file-chip-link {
+  text-decoration: none;
+}
+
+.file-chip-link:hover {
+  text-decoration: underline;
+}
+
+.file-chip-button {
+  border: none;
+  cursor: pointer;
+  font-family: inherit;
+}
+
+.no-files {
+  color: #6b7280;
+  font-size: 0.9rem;
 }
 
 .empty-cell {
@@ -1011,15 +1229,18 @@ function cancelAssignmentFromDelete(assignment: AssignmentItem) {
   justify-content: center;
   padding: 20px;
   z-index: 999;
+  overflow-y: auto;
 }
 
 .modal-card {
   width: 100%;
   max-width: 860px;
+  max-height: 90vh;
   background: white;
   border-radius: 18px;
   box-shadow: 0 20px 45px rgba(0, 0, 0, 0.22);
-  overflow: hidden;
+  overflow-x: hidden;
+  overflow-y: auto;
 }
 
 .modal-header {
@@ -1068,6 +1289,51 @@ function cancelAssignmentFromDelete(assignment: AssignmentItem) {
   color: #111827;
 }
 
+.selected-files-box,
+.existing-files-box {
+  margin-top: 12px;
+  padding: 12px;
+  border-radius: 12px;
+  background: #f8fbff;
+  border: 1px solid #e2edf7;
+}
+
+.files-title {
+  font-weight: 700;
+  color: var(--color-AzulCuatro);
+  margin-bottom: 8px;
+  font-size: 0.9rem;
+}
+
+.selected-files-list {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.selected-file-item {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 12px;
+  padding: 10px 12px;
+  background: white;
+  border: 1px solid #e5edf5;
+  border-radius: 10px;
+  font-size: 0.9rem;
+}
+
+.remove-file-btn {
+  border: none;
+  background: #fee2e2;
+  color: #b91c1c;
+  width: 28px;
+  height: 28px;
+  border-radius: 999px;
+  cursor: pointer;
+  font-weight: 700;
+}
+
 .form-actions {
   margin-top: 18px;
   display: flex;
@@ -1089,7 +1355,7 @@ function cancelAssignmentFromDelete(assignment: AssignmentItem) {
   }
 
   .tasks-table {
-    min-width: 1120px;
+    min-width: 1200px;
   }
 
   .panel-header {
