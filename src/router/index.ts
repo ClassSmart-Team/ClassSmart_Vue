@@ -29,7 +29,8 @@ import TaskDetailStudentView from "@/views/TaskDetailStudentView.vue";
 import TaskStudentView from "@/views/TaskStudentView.vue";
 import AdminUsersView from '@/views/AdminUsersView.vue'
 import ProfileStudentView from '@/views/ProfileStudentView.vue'
-
+import AdminRolesView from '@/views/AdminRolesView.vue'
+import AdminGroupsView from '@/views/AdminGroupsView.vue'
 
 //ROLES//
 //1-admin
@@ -71,6 +72,18 @@ const router = createRouter({
       path: '/admin/users',
       name: 'AdminUsers',
       component: AdminUsersView,
+      meta: { requiresAuth: true, rol: 1 },
+    },
+    {
+      path: '/admin/roles',
+      name: 'AdminRoles',
+      component: AdminRolesView,
+      meta: { requiresAuth: true, rol: 1 },
+    },
+    {
+      path: '/admin/groups',
+      name: 'AdminGroups',
+      component: AdminGroupsView,
       meta: { requiresAuth: true, rol: 1 },
     },
     //TEACHER
