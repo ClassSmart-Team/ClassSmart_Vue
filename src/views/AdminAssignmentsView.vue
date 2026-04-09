@@ -258,19 +258,29 @@ function resolveFileUrl(file?: FileItem | null) {
 
   if (file.url) return file.url
 
-  if (file.file_path) {
-    if (file.file_path.startsWith('http://') || file.file_path.startsWith('https://')) {
-      return file.file_path
+  const apiBase = import.meta.env.VITE_API_URL ?? 'https://api.sutando-user.me/api'
+  const baseOrigin = apiBase.replace(/\/api\/?$/, '')
+
+  const buildStorageUrl = (rawPath: string) => {
+    if (!rawPath) return ''
+
+    if (rawPath.startsWith('http://') || rawPath.startsWith('https://')) {
+      return rawPath
     }
 
-    const cleanPath = file.file_path.startsWith('/')
-      ? file.file_path
-      : `/${file.file_path}`
+    let cleanPath = rawPath.startsWith('/')
+      ? rawPath
+      : `/${rawPath}`
 
-    const apiBase = import.meta.env.VITE_API_URL ?? 'https://api.sutando-user.me/api'
-    const baseOrigin = apiBase.replace(/\/api\/?$/, '')
+    if (!cleanPath.startsWith('/storage/')) {
+      cleanPath = `/storage${cleanPath}`
+    }
 
     return `${baseOrigin}${cleanPath}`
+  }
+
+  if (file.file_path) {
+    return buildStorageUrl(file.file_path)
   }
 
   return ''
