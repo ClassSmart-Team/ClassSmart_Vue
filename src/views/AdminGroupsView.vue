@@ -78,6 +78,9 @@ const selectedAvailableStudentId = ref<number | ''>('')
 const studentSubmitting = ref(false)
 const removingStudentId = ref<number | null>(null)
 
+const currentStudentsSearch = ref('')
+const availableStudentsSearch = ref('')
+
 const initialForm = (): GroupForm => ({
   name: '',
   description: '',
@@ -154,6 +157,32 @@ const filteredGroups = computed(() => {
       periodLabel.includes(term) ||
       status.includes(term)
     )
+  })
+})
+
+const filteredCurrentStudents = computed(() => {
+  const term = currentStudentsSearch.value.trim().toLowerCase()
+
+  if (!term) return currentStudents.value
+
+  return currentStudents.value.filter((student) => {
+    const fullName = `${student.name ?? ''} ${student.lastname ?? ''}`.toLowerCase()
+    const email = (student.email ?? '').toLowerCase()
+
+    return fullName.includes(term) || email.includes(term)
+  })
+})
+
+const filteredAvailableStudents = computed(() => {
+  const term = availableStudentsSearch.value.trim().toLowerCase()
+
+  if (!term) return availableStudents.value
+
+  return availableStudents.value.filter((student) => {
+    const fullName = `${student.name ?? ''} ${student.lastname ?? ''}`.toLowerCase()
+    const email = (student.email ?? '').toLowerCase()
+
+    return fullName.includes(term) || email.includes(term)
   })
 })
 
@@ -373,6 +402,8 @@ function closeStudentsModal() {
   currentStudents.value = []
   availableStudents.value = []
   selectedAvailableStudentId.value = ''
+  currentStudentsSearch.value = ''
+  availableStudentsSearch.value = ''
   studentsModalError.value = ''
   studentsModalLoading.value = false
   studentSubmitting.value = false
@@ -419,6 +450,8 @@ async function openStudentsModal(group: GroupItem) {
   showStudentsModal.value = true
   selectedGroupForStudents.value = group
   selectedAvailableStudentId.value = ''
+  currentStudentsSearch.value = ''
+  availableStudentsSearch.value = ''
   studentsModalError.value = ''
   studentsModalLoading.value = true
   currentStudents.value = []
@@ -765,11 +798,18 @@ function removeStudentFromGroup(student: UserItem) {
               <div class="student-add-box">
                 <h3>Agregar alumno</h3>
 
+                <input
+                  v-model="availableStudentsSearch"
+                  type="text"
+                  class="input"
+                  placeholder="Buscar alumno disponible por nombre o correo..."
+                />
+
                 <div class="student-add-form">
                   <select v-model="selectedAvailableStudentId" class="input">
                     <option value="">Selecciona un alumno disponible</option>
                     <option
-                      v-for="student in availableStudents"
+                      v-for="student in filteredAvailableStudents"
                       :key="student.id"
                       :value="student.id"
                     >
@@ -790,12 +830,23 @@ function removeStudentFromGroup(student: UserItem) {
               <div class="students-list-box">
                 <h3>Alumnos inscritos</h3>
 
+                <input
+                  v-model="currentStudentsSearch"
+                  type="text"
+                  class="input"
+                  placeholder="Buscar alumno inscrito por nombre o correo..."
+                />
+
                 <div v-if="currentStudents.length === 0" class="empty-students">
                   Este grupo no tiene alumnos inscritos todavía.
                 </div>
 
+                <div v-else-if="filteredCurrentStudents.length === 0" class="empty-students">
+                  No hay alumnos inscritos que coincidan con la búsqueda.
+                </div>
+
                 <div v-else class="student-list">
-                  <div v-for="student in currentStudents" :key="student.id" class="student-item">
+                  <div v-for="student in filteredCurrentStudents" :key="student.id" class="student-item">
                     <div>
                       <div class="student-name">
                         {{ student.name }} {{ student.lastname }}
@@ -1195,6 +1246,11 @@ function removeStudentFromGroup(student: UserItem) {
 .students-list-box h3 {
   margin: 0 0 12px;
   color: var(--color-AzulCuatro);
+}
+
+.student-add-box .input,
+.students-list-box .input {
+  margin-bottom: 12px;
 }
 
 .student-add-form {
