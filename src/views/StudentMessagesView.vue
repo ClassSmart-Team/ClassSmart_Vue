@@ -234,9 +234,15 @@ async function sendMessage() {
     const newMessage = json?.data as ChatMessage
 
     if (selectedChat.value) {
-      selectedChat.value = {
-        ...selectedChat.value,
-        messages: [...(selectedChat.value.messages ?? []), newMessage],
+      const exists = (selectedChat.value.messages ?? []).some(
+        (message) => message.id === newMessage.id
+      )
+
+      if (!exists) {
+        selectedChat.value = {
+          ...selectedChat.value,
+          messages: [...(selectedChat.value.messages ?? []), newMessage],
+        }
       }
     }
 
@@ -323,6 +329,14 @@ watch(
   { immediate: true }
 )
 
+watch(
+  messages,
+  async () => {
+    await scrollToBottom()
+  },
+  { deep: true }
+)
+
 onMounted(async () => {
   if (chats.value.length > 0 && !selectedChatId.value) {
     await loadChat(chats.value[0].id)
@@ -335,219 +349,224 @@ onBeforeUnmount(() => {
 </script>
 
 <template>
-  <div class="bg-page">
+  <div class="messages-page">
     <SidebarLayout>
-      <div class="ContSmall">
-        <div class="left">
-          <div class="avatar">
-            {{ currentUserInitials }}
-          </div>
-          <div>
-            <h1>Mensajes</h1>
-            <p v-if="chats.length">{{ chats.length }} conversaciones disponibles</p>
-            <p v-else>No tienes conversaciones todavía</p>
-          </div>
-        </div>
+      <div class="messages-view">
+        <div class="ContSmall">
+          <div class="left">
+            <div class="avatar">
+                {{ currentUserInitials }}
+            </div>
 
-        <div class="right">
-          <button class="btn-create-chat" @click="openCreateModal">
-            Nuevo chat
-          </button>
-        </div>
-      </div>
-
-      <div class="messages-layout">
-        <div class="chat-list-box">
-          <div class="panel-header">
-            <h2>Conversaciones</h2>
-            <span class="badge">{{ chats.length }}</span>
-          </div>
-
-          <div v-if="chatsLoading" class="loading-state">
-            <div class="spinner"></div>
-            <p>Cargando conversaciones...</p>
-          </div>
-
-          <div v-else-if="chatsError" class="error-banner">
-            <p>No se pudieron cargar los chats.</p>
-          </div>
-
-          <div v-else-if="!chats.length" class="empty-state">
-            <p>No tienes chats disponibles.</p>
-            <button class="btn-empty-action" @click="openCreateModal">
-              Crear primer chat
-            </button>
-          </div>
-
-          <div v-else class="chat-list">
-            <button
-              v-for="chat in chats"
-              :key="chat.id"
-              class="chat-item"
-              :class="{ active: selectedChatId === chat.id }"
-              @click="loadChat(chat.id)"
-            >
-              <div class="chat-avatar">
-                {{ chatInitials(chat) }}
-              </div>
-
-              <div class="chat-meta">
-                <div class="chat-title">
-                  {{ chatDisplayName(chat) }}
-                </div>
-                <div class="chat-subtitle">
-                  {{ chat.messages_count ?? 0 }} mensajes
-                </div>
-              </div>
-            </button>
-          </div>
-        </div>
-
-        <div class="chat-box">
-          <div class="chat-box-header">
             <div>
-              <h2>{{ selectedChatName }}</h2>
-              <p v-if="selectedChat">
-                {{ selectedChat.users_count ?? selectedChat.users?.length ?? 0 }} participantes
-              </p>
+              <h1>Mensajes</h1>
+              <p v-if="chats.length">{{ chats.length }} conversaciones disponibles</p>
+              <p v-else>No tienes conversaciones todavía</p>
             </div>
           </div>
 
-          <div v-if="selectedChatLoading" class="loading-state">
-            <div class="spinner"></div>
-            <p>Cargando conversación...</p>
+          <div class="right">
+            <button class="btn-create-chat" @click="openCreateModal">
+                <span>＋</span> Nuevo chat
+            </button>
           </div>
+        </div>
 
-          <div v-else-if="localError" class="error-banner">
-            <p>{{ localError }}</p>
-          </div>
+        <div class="messages-layout">
+          <div class="chat-list-box">
+            <div class="panel-header">
+              <h2>Conversaciones</h2>
+              <span class="badge">{{ chats.length }}</span>
+            </div>
 
-          <template v-else-if="selectedChat">
-            <div ref="messagesContainer" class="messages-container">
-              <div v-if="!messages.length" class="empty-state inner">
-                <p>Este chat todavía no tiene mensajes.</p>
+            <div v-if="chatsLoading" class="loading-state">
+              <div class="spinner"></div>
+              <p>Cargando conversaciones...</p>
+            </div>
+
+            <div v-else-if="chatsError" class="error-banner">
+              <p>No se pudieron cargar los chats.</p>
+            </div>
+
+            <div v-else-if="!chats.length" class="empty-state">
+              <p>No tienes chats disponibles.</p>
+              <button class="btn-empty-action" @click="openCreateModal">
+                Crear primer chat
+              </button>
+            </div>
+
+            <div v-else class="chat-list-scroll">
+              <div class="chat-list">
+                <button
+                  v-for="chat in chats"
+                  :key="chat.id"
+                  class="chat-item"
+                  :class="{ active: selectedChatId === chat.id }"
+                  @click="loadChat(chat.id)"
+                >
+                  <div class="chat-avatar">
+                    {{ chatInitials(chat) }}
+                  </div>
+
+                  <div class="chat-meta">
+                    <div class="chat-title">
+                      {{ chatDisplayName(chat) }}
+                    </div>
+                    <div class="chat-subtitle">
+                      {{ chat.messages_count ?? 0 }} mensajes
+                    </div>
+                  </div>
+                </button>
               </div>
+            </div>
+          </div>
 
-              <div
-                v-for="message in messages"
-                :key="message.id"
-                class="message-row"
-                :class="{ own: isOwnMessage(message) }"
-              >
-                <div class="message-bubble">
-                  <div v-if="!isOwnMessage(message)" class="message-author">
-                    {{ message.user?.name }} {{ message.user?.lastname }}
-                  </div>
+          <div class="chat-box">
+            <div class="chat-box-header">
+              <div>
+                <h2>{{ selectedChatName }}</h2>
+                <p v-if="selectedChat">
+                  {{ selectedChat.users_count ?? selectedChat.users?.length ?? 0 }} participantes
+                </p>
+              </div>
+            </div>
 
-                  <div class="message-content">
-                    {{ message.content }}
-                  </div>
+            <div v-if="selectedChatLoading" class="loading-state">
+              <div class="spinner"></div>
+              <p>Cargando conversación...</p>
+            </div>
 
-                  <div class="message-date">
-                    {{ formatDate(message.created_at) }}
+            <div v-else-if="localError" class="error-banner">
+              <p>{{ localError }}</p>
+            </div>
+
+            <template v-else-if="selectedChat">
+              <div ref="messagesContainer" class="messages-container">
+                <div v-if="!messages.length" class="empty-state inner">
+                  <p>Este chat todavía no tiene mensajes.</p>
+                </div>
+
+                <div
+                  v-for="message in messages"
+                  :key="message.id"
+                  class="message-row"
+                  :class="{ own: isOwnMessage(message) }"
+                >
+                  <div class="message-bubble">
+                    <div v-if="!isOwnMessage(message)" class="message-author">
+                      {{ message.user?.name }} {{ message.user?.lastname }}
+                    </div>
+
+                    <div class="message-content">
+                      {{ message.content }}
+                    </div>
+
+                    <div class="message-date">
+                      {{ formatDate(message.created_at) }}
+                    </div>
                   </div>
                 </div>
               </div>
-            </div>
 
-            <form class="chat-form" @submit.prevent="sendMessage">
-              <input
-                v-model="messageText"
-                type="text"
-                class="chat-input"
-                placeholder="Escribe un mensaje..."
-                :disabled="sending"
-              />
+              <form class="chat-form" @submit.prevent="sendMessage">
+                <input
+                  v-model="messageText"
+                  type="text"
+                  class="chat-input"
+                  placeholder="Escribe un mensaje..."
+                  :disabled="sending"
+                />
 
-              <button
-                type="submit"
-                class="btn-send"
-                :disabled="sending || !messageText.trim()"
-              >
-                {{ sending ? 'Enviando...' : 'Enviar' }}
-              </button>
-            </form>
-          </template>
+                <button
+                  type="submit"
+                  class="btn-send"
+                  :disabled="sending || !messageText.trim()"
+                >
+                  {{ sending ? 'Enviando...' : 'Enviar' }}
+                </button>
+              </form>
+            </template>
 
-          <div v-else class="empty-state chat-empty">
-            <div class="chat-empty-content">
-              <h3>Selecciona una conversación</h3>
-              <p>Elige un chat del panel izquierdo o crea uno nuevo.</p>
-              <button class="btn-empty-action" @click="openCreateModal">
-                Nuevo chat
-              </button>
+            <div v-else class="empty-state chat-empty">
+              <div class="chat-empty-content">
+                <h3>Selecciona una conversación</h3>
+                <p>Elige un chat del panel izquierdo o crea uno nuevo.</p>
+                <button class="btn-empty-action" @click="openCreateModal">
+                  Nuevo chat
+                </button>
+              </div>
             </div>
           </div>
         </div>
-      </div>
 
-      <div v-if="showCreateModal" class="modal-overlay" @click.self="closeCreateModal">
-        <div class="modal-card">
-          <div class="modal-header">
-            <h2>Crear chat</h2>
-            <button class="close-btn" type="button" @click="closeCreateModal">
-              Cerrar
-            </button>
+        <div v-if="showCreateModal" class="modal-overlay" @click.self="closeCreateModal">
+          <div class="modal-card">
+            <div class="modal-header">
+              <h2>Crear chat</h2>
+              <button class="close-btn" type="button" @click="closeCreateModal">
+                Cerrar
+              </button>
+            </div>
+
+            <form class="create-chat-form" @submit.prevent="createChat">
+              <div v-if="createChatError" class="error-banner form-error">
+                <p>{{ createChatError }}</p>
+              </div>
+
+              <div v-if="candidatesLoading" class="loading-state modal-loading">
+                <div class="spinner"></div>
+                <p>Cargando usuarios disponibles...</p>
+              </div>
+
+              <div v-else-if="candidatesError" class="error-banner form-error">
+                <p>{{ candidatesError }}</p>
+              </div>
+
+              <template v-else>
+                <div class="field">
+                  <label>Nombre del chat (opcional)</label>
+                  <input
+                    v-model="createChatForm.name"
+                    type="text"
+                    class="input"
+                    placeholder="Si lo dejas vacío y eliges un solo usuario, será privado"
+                  />
+                </div>
+
+                <div class="field">
+                  <label>Selecciona usuarios</label>
+
+                  <div v-if="candidateUsers.length" class="users-selector">
+                    <label
+                      v-for="user in candidateUsers"
+                      :key="user.id"
+                      class="user-option"
+                    >
+                      <input
+                        v-model="createChatForm.user_ids"
+                        type="checkbox"
+                        :value="user.id"
+                      />
+                      <span>{{ user.name }} {{ user.lastname }}</span>
+                    </label>
+                  </div>
+
+                  <div v-else class="empty-state modal-empty">
+                    <p>No hay usuarios disponibles para crear chats.</p>
+                  </div>
+                </div>
+
+                <div class="form-actions">
+                  <button type="button" class="btn-secondary" @click="closeCreateModal">
+                    Cancelar
+                  </button>
+                  <button type="submit" class="btn-primary" :disabled="creatingChat">
+                    {{ creatingChat ? 'Creando...' : 'Crear chat' }}
+                  </button>
+                </div>
+              </template>
+            </form>
           </div>
-
-          <form class="create-chat-form" @submit.prevent="createChat">
-            <div v-if="createChatError" class="error-banner form-error">
-              <p>{{ createChatError }}</p>
-            </div>
-
-            <div v-if="candidatesLoading" class="loading-state modal-loading">
-              <div class="spinner"></div>
-              <p>Cargando usuarios disponibles...</p>
-            </div>
-
-            <div v-else-if="candidatesError" class="error-banner form-error">
-              <p>{{ candidatesError }}</p>
-            </div>
-
-            <template v-else>
-              <div class="field">
-                <label>Nombre del chat (opcional)</label>
-                <input
-                  v-model="createChatForm.name"
-                  type="text"
-                  class="input"
-                  placeholder="Si lo dejas vacío y eliges un solo usuario, será privado"
-                />
-              </div>
-
-              <div class="field">
-                <label>Selecciona usuarios</label>
-
-                <div v-if="candidateUsers.length" class="users-selector">
-                  <label
-                    v-for="user in candidateUsers"
-                    :key="user.id"
-                    class="user-option"
-                  >
-                    <input
-                      v-model="createChatForm.user_ids"
-                      type="checkbox"
-                      :value="user.id"
-                    />
-                    <span>{{ user.name }} {{ user.lastname }}</span>
-                  </label>
-                </div>
-
-                <div v-else class="empty-state modal-empty">
-                  <p>No hay usuarios disponibles para crear chats.</p>
-                </div>
-              </div>
-
-              <div class="form-actions">
-                <button type="button" class="btn-secondary" @click="closeCreateModal">
-                  Cancelar
-                </button>
-                <button type="submit" class="btn-primary" :disabled="creatingChat">
-                  {{ creatingChat ? 'Creando...' : 'Crear chat' }}
-                </button>
-              </div>
-            </template>
-          </form>
         </div>
       </div>
     </SidebarLayout>
@@ -555,116 +574,100 @@ onBeforeUnmount(() => {
 </template>
 
 <style scoped>
-.bg-page {
-  min-height: 100vh;
-  inset: 0;
-  overflow-x: hidden;
-  overflow-y: auto;
+.messages-page {
+  height: 100%;
+  min-height: 100%;
+  overflow: hidden;
   background: linear-gradient(180deg, var(--color-AzulDos), var(--color-ComplementoDos));
+}
+
+.messages-view {
+  height: calc(100vh - 48px);
+  max-height: calc(100vh - 48px);
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+  min-width: 0;
+  overflow: hidden;
 }
 
 .ContSmall {
   background: var(--color-Azul);
-  width: 95%;
-  max-width: 1200px;
-  min-height: 40px;
+  width: 100%;
   border-radius: 20px;
-  margin: 30px auto 0 auto;
   padding: 20px 25px;
   color: white;
   display: flex;
   justify-content: space-between;
   align-items: center;
+  box-sizing: border-box;
+  flex-shrink: 0;
 }
 
 .ContSmall h1 {
   margin: 0;
-  font-size: 1.5rem;
+  font-size: 1.7rem;
   letter-spacing: -0.5px;
 }
 
 .ContSmall p {
-  margin: 0;
-  font-size: 0.9rem;
-  opacity: 0.8;
+  margin: 4px 0 0;
+  font-size: 0.95rem;
+  opacity: 0.88;
 }
 
 .left {
   display: flex;
   align-items: center;
   gap: 15px;
+  min-width: 0;
 }
 
 .right {
   display: flex;
   align-items: center;
-}
-
-.avatar {
-  width: 46px;
-  height: 46px;
-  border-radius: 50%;
-  background: rgba(255, 255, 255, 0.18);
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  font-weight: 800;
-  font-size: 0.95rem;
-  color: white;
   flex-shrink: 0;
 }
 
-.btn-create-chat {
-  border: none;
-  border-radius: 12px;
-  background: white;
-  color: var(--color-AzulCuatro);
-  padding: 10px 16px;
-  font-weight: 700;
-  cursor: pointer;
-  transition: 0.2s ease;
-}
-
-.btn-create-chat:hover {
-  background: #eff6ff;
-}
 
 .messages-layout {
-  width: 95%;
-  max-width: 1200px;
-  margin: 30px auto;
+  flex: 1;
+  min-height: 0;
   display: grid;
-  grid-template-columns: 320px 1fr;
+  grid-template-columns: 320px minmax(0, 1fr);
   gap: 20px;
-  min-height: 72vh;
+  align-items: stretch;
+  min-width: 0;
+  overflow: hidden;
 }
 
 .chat-list-box,
 .chat-box {
   background: var(--color-Blanco);
-  border-radius: 20px;
+  border-radius: 22px;
   padding: 24px;
   box-shadow: 0 10px 30px #00000020;
-  min-height: 72vh;
+  box-sizing: border-box;
+  min-width: 0;
+  min-height: 0;
+  overflow: hidden;
 }
 
 .chat-list-box {
   display: flex;
   flex-direction: column;
-  overflow: hidden;
 }
 
 .chat-box {
   display: flex;
   flex-direction: column;
-  overflow: hidden;
 }
 
 .panel-header,
 .chat-box-header {
   display: flex;
   justify-content: space-between;
-  align-items: center;
+  align-items: flex-start;
   gap: 12px;
   margin-bottom: 20px;
   flex-shrink: 0;
@@ -676,10 +679,11 @@ onBeforeUnmount(() => {
   font-size: 1.1rem;
   font-weight: 800;
   color: var(--color-OscuroAzulado);
+  word-break: break-word;
 }
 
 .chat-box-header p {
-  margin: 4px 0 0;
+  margin: 6px 0 0;
   font-size: 0.82rem;
   color: #64748b;
 }
@@ -687,26 +691,34 @@ onBeforeUnmount(() => {
 .badge {
   background: var(--color-Azul);
   color: white;
-  border-radius: 8px;
+  border-radius: 10px;
   padding: 4px 12px;
   font-size: 0.75rem;
   font-weight: 800;
+  flex-shrink: 0;
+}
+
+.chat-list-scroll {
+  flex: 1;
+  min-height: 0;
+  overflow: hidden;
 }
 
 .chat-list {
+  height: 100%;
   display: flex;
   flex-direction: column;
   gap: 10px;
   overflow-y: auto;
-  padding-right: 4px;
+  padding-right: 6px;
   min-height: 0;
 }
 
 .chat-item {
   width: 100%;
-  border: 1px solid #e2e8f0;
-  background: #f8fafc;
-  border-radius: 16px;
+  border: 1px solid #bfdbfe;
+  background: #dbeafe;
+  border-radius: 18px;
   padding: 14px;
   display: flex;
   align-items: center;
@@ -714,23 +726,25 @@ onBeforeUnmount(() => {
   text-align: left;
   cursor: pointer;
   transition: all 0.2s ease;
+  box-sizing: border-box;
 }
 
 .chat-item:hover {
-  transform: translateY(-2px);
   background: #eff6ff;
-  border-color: #bfdbfe;
+  border-color: #93c5fd;
+  transform: translateY(-1px);
 }
 
 .chat-item.active {
   background: #dbeafe;
   border-color: var(--color-Azul);
+  box-shadow: 0 0 0 2px rgba(75, 164, 223, 0.12);
 }
 
 .chat-avatar {
-  width: 44px;
-  height: 44px;
-  border-radius: 14px;
+  width: 48px;
+  height: 48px;
+  border-radius: 16px;
   background: linear-gradient(135deg, var(--color-AzulDos), var(--color-AzulTres));
   color: white;
   display: flex;
@@ -742,32 +756,35 @@ onBeforeUnmount(() => {
 
 .chat-meta {
   min-width: 0;
+  flex: 1;
 }
 
 .chat-title {
-  font-size: 0.92rem;
-  font-weight: 700;
+  font-size: 0.98rem;
+  font-weight: 800;
   color: #1e293b;
-  line-height: 1.3;
+  line-height: 1.25;
+  word-break: break-word;
 }
 
 .chat-subtitle {
-  font-size: 0.78rem;
+  font-size: 0.82rem;
   color: #64748b;
-  margin-top: 3px;
+  margin-top: 4px;
 }
 
 .messages-container {
   flex: 1;
+  min-height: 0;
   overflow-y: auto;
-  border: 1px solid #e2e8f0;
-  border-radius: 18px;
+  border: 1px solid #d9e4ee;
+  border-radius: 22px;
   background: #f8fafc;
   padding: 18px;
   display: flex;
   flex-direction: column;
   gap: 12px;
-  min-height: 0;
+  scroll-behavior: smooth;
 }
 
 .message-row {
@@ -780,12 +797,13 @@ onBeforeUnmount(() => {
 }
 
 .message-bubble {
-  max-width: 70%;
+  max-width: min(70%, 520px);
   background: white;
   border: 1px solid #e5e7eb;
   border-radius: 18px;
   padding: 12px 14px;
   box-shadow: 0 4px 12px rgba(0, 0, 0, 0.04);
+  box-sizing: border-box;
 }
 
 .message-row.own .message-bubble {
@@ -799,10 +817,11 @@ onBeforeUnmount(() => {
   color: var(--color-AzulTres);
   margin-bottom: 6px;
   text-transform: uppercase;
+  word-break: break-word;
 }
 
 .message-content {
-  font-size: 0.95rem;
+  font-size: 0.96rem;
   color: #1f2937;
   line-height: 1.5;
   white-space: pre-wrap;
@@ -852,6 +871,7 @@ onBeforeUnmount(() => {
   font-weight: 700;
   cursor: pointer;
   transition: 0.2s ease;
+  flex-shrink: 0;
 }
 
 .btn-send:hover:not(:disabled),
@@ -1029,24 +1049,96 @@ onBeforeUnmount(() => {
   padding: 30px 10px;
 }
 
+.chat-list::-webkit-scrollbar,
+.messages-container::-webkit-scrollbar,
+.users-selector::-webkit-scrollbar {
+  width: 8px;
+}
+
+.chat-list::-webkit-scrollbar-track,
+.messages-container::-webkit-scrollbar-track,
+.users-selector::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+.chat-list::-webkit-scrollbar-thumb,
+.messages-container::-webkit-scrollbar-thumb,
+.users-selector::-webkit-scrollbar-thumb {
+  background: #cbd5e1;
+  border-radius: 999px;
+}
+
+.chat-list::-webkit-scrollbar-thumb:hover,
+.messages-container::-webkit-scrollbar-thumb:hover,
+.users-selector::-webkit-scrollbar-thumb:hover {
+  background: #94a3b8;
+}
+
+.btn-create-chat {
+  border: none;
+  border-radius: 14px;
+  background: white;
+  color: var(--color-AzulCuatro);
+  padding: 10px 18px;
+  font-weight: 800;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  box-shadow: 0 6px 18px rgba(0, 0, 0, 0.12);
+}
+
+.btn-create-chat:hover {
+  background: #eff6ff;
+  transform: translateY(-2px);
+  box-shadow: 0 10px 22px rgba(0, 0, 0, 0.18);
+}
+
+.btn-create-chat:active {
+  transform: scale(0.97);
+}
+
 @media (max-width: 980px) {
-  .messages-layout {
-    grid-template-columns: 1fr;
+  .messages-view {
+    height: auto;
+    max-height: none;
+    overflow: visible;
   }
 
-  .chat-list-box,
+  .messages-layout {
+    grid-template-columns: 1fr;
+    overflow: visible;
+  }
+
+  .chat-list-box {
+    height: 320px;
+  }
+
   .chat-box {
-    min-height: 60vh;
+    height: 65vh;
   }
 }
 
 @media (max-width: 768px) {
+  .messages-page {
+    overflow-y: auto;
+  }
+
+  .messages-view {
+    height: auto;
+    max-height: none;
+    overflow: visible;
+    gap: 18px;
+  }
+
   .ContSmall {
-    width: 95%;
     padding: 18px 20px;
     flex-direction: column;
     align-items: flex-start;
     gap: 12px;
+  }
+
+  .left,
+  .right {
+    width: 100%;
   }
 
   .message-bubble {
@@ -1064,6 +1156,17 @@ onBeforeUnmount(() => {
   .btn-empty-action,
   .btn-create-chat {
     width: 100%;
+  }
+  
+  .chat-list-box,
+  .chat-box {
+    height: auto;
+    min-height: 420px;
+  }
+
+  .messages-container {
+    min-height: 320px;
+    max-height: 55vh;
   }
 }
 </style>
