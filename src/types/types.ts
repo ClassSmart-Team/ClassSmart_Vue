@@ -119,3 +119,31 @@ export interface FormTask{
   group_id: number | null
   unit_id: number | null
 }
+
+export interface ChatUser {
+  id: number
+  name: string
+  lastname: string
+  email: string
+}
+
+export interface ChatMessage {
+  id: number
+  chat_id: number
+  content: string
+  user?: ChatUser
+  created_at: string
+  updated_at: string
+}
+
+export interface Chat {
+  id: number
+  name: string | null
+  is_private?: boolean
+  users?: ChatUser[]
+  messages?: ChatMessage[]
+  users_count?: number
+  messages_count?: number
+  created_at: string
+  updated_at: string
+}
