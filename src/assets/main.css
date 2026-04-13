@@ -217,7 +217,8 @@ button.link {
 /*Nuevos Estilos Globales para Reutilizar*/
 .bg-page {
   min-height: 100vh;
-  background: linear-gradient(180deg,var(--color-AzulDos),var(--color-ComplementoDos));
+  background: linear-gradient(180deg,var(--bg-gradient-top),var(--bg-gradient-bottom));
+  transition: background 0.3s ease;
 }
 
 .header-box {
