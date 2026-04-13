@@ -1,130 +1,235 @@
 <script setup lang="ts">
-import { ref, computed } from 'vue'
+import { ref, computed, watch } from 'vue'
 import SidebarLayout from '@/components/ParentSidebar.vue'
 import GradeUnitCard from '@/components/GradeRecordCard.vue'
+import type { GradeRecord } from '@/types/types.ts'
+import { useapi } from '@/assets/composables/useApi.ts'
+import { useAuthStore } from '@/stores/authStore.ts'
 
-const children = ref([
-  {
-    id: 1,
-    name: 'Mateo',
-    lastname: 'Pérez',
-    academicHistory: [
-      {
-        group_id: 101,
-        group_name: 'Matemáticas IV',
-        teacher: 'Ing. Isaac Newton',
-        final_average: 9.1,
-        grades: [
-          { unit_id: 1, unit_name: 'Álgebra de Funciones', grade: 9.5, order: 1 },
-          { unit_id: 2, unit_name: 'Límites y Continuidad', grade: 8.7, order: 2 },
-        ],
-      },
-      {
-        group_id: 102,
-        group_name: 'Física II',
-        teacher: 'Dr. Albert Einstein',
-        final_average: 8.5,
-        grades: [{ unit_id: 5, unit_name: 'Termodinámica', grade: 8.5, order: 1 }],
-      },
-    ],
-  },
-  {
-    id: 2,
-    name: 'Sofía',
-    lastname: 'Pérez',
-    academicHistory: [
-      {
-        group_id: 103,
-        group_name: 'Historia',
-        teacher: 'Lic. Heródoto',
-        final_average: 10,
-        grades: [{ unit_id: 8, unit_name: 'Revolución Mexicana', grade: 10, order: 1 }],
-      },
-    ],
-  },
-])
+const ua = useAuthStore()
+const { data, isFetching, error } = useapi('/grade-records').get().json()
 
-const selectedChildId = ref(children.value[0].id)
+const selectedChildId = ref<number | null>(null)
+const formattedChildren = ref<any[]>([])
 
-const currentChild = computed(() => children.value.find((c) => c.id === selectedChildId.value))
+watch(data, (newData) => {
+  if (newData && newData.data) {
+    const rawRecords: GradeRecord[] = newData.data
+    const tempChildren: any[] = []
+
+    rawRecords.forEach((record) => {
+      let child = tempChildren.find((c) => c.id === record.student.id)
+
+      if (!child) {
+        child = {
+          id: record.student.id,
+          name: record.student.name,
+          lastname: record.student.lastname,
+          academicHistory: [],
+        }
+        tempChildren.push(child)
+      }
+
+      let subject = child.academicHistory.find((h: any) => h.group_id === record.group.id)
+
+      if (!subject) {
+        subject = {
+          group_id: record.group.id,
+          group_name: record.group.name,
+          teacher: record.group.teacher || 'Docente no asignado',
+          grades: [],
+        }
+        child.academicHistory.push(subject)
+      }
+
+      subject.grades.push({
+        unit_id: record.unit.id,
+        unit_name: record.unit.name,
+        grade: record.grade,
+        order: record.unit.order,
+      })
+    })
+
+    // --- CÁLCULO DE PROMEDIOS ---
+    tempChildren.forEach((child) => {
+      child.academicHistory.forEach((subject: any) => {
+        // Calcular promedio final
+        const sum = subject.grades.reduce((acc: number, curr: any) => acc + curr.grade, 0)
+        subject.final_average =
+          subject.grades.length > 0 ? (sum / subject.grades.length).toFixed(1) : '0.0'
+      })
+    })
+
+    formattedChildren.value = tempChildren
+
+    if (tempChildren.length > 0 && !selectedChildId.value) {
+      selectedChildId.value = tempChildren[0].id
+    }
+  }
+})
+
+const currentChild = computed(() =>
+  formattedChildren.value.find((c) => c.id === selectedChildId.value),
+)
 </script>
 
 <template>
-  <SidebarLayout>
-    <div class="ContSmall center">
-      <h1>Historial de Calificaciones</h1>
-    </div>
-
-    <div class="ContBig" style="margin-top: 40px">
-      <div class="header-actions">
-        <div class="child-selector">
-          <label>Alumno:</label>
-          <select v-model="selectedChildId" class="custom-select">
-            <option v-for="child in children" :key="child.id" :value="child.id">
-              {{ child.name }} {{ child.lastname }}
-            </option>
-          </select>
+  <div class="bg-page">
+    <SidebarLayout>
+      <div class="ContSmall">
+        <div class="left">
+          <div class="avatar">
+            {{ ua.credentials?.user.name.charAt(0) }}{{ ua.credentials?.user.lastname.charAt(0) }}
+          </div>
+          <div>
+            <h1>Historial de calificaciones</h1>
+          </div>
+        </div>
+        <div class="right">
+          <span class="welcome-text">{{ ua.credentials?.user.name }}</span>
         </div>
       </div>
 
-      <div v-if="currentChild" class="history-content">
-        <div
-          v-for="subject in currentChild.academicHistory"
-          :key="subject.group_id"
-          class="subject-block"
-        >
-          <div class="subject-header">
-            <div class="title-area">
-              <h3>{{ subject.group_name }}</h3>
-              <span class="teacher-name">Docente: {{ subject.teacher }}</span>
-            </div>
-            <div class="average-box">
-              <label>Promedio</label>
-              <span class="score">{{ subject.final_average }}</span>
-            </div>
-          </div>
-
-          <div class="units-grid">
-            <GradeUnitCard v-for="grade in subject.grades" :key="grade.unit_id" :grade="grade" />
-          </div>
+      <div class="main-box" style="margin-top: 30px">
+        <div v-if="isFetching" class="loading-state">
+          <div class="spinner"></div>
+          <p>Cargando información...</p>
         </div>
+
+        <div v-if="error" class="error-banner">
+          <span><img src="@/components/advertencia-triangulo.png" alt="error" /></span>
+          <p>Hubo un problema al cargar la información.</p>
+        </div>
+
+        <template v-else>
+          <template v-if="formattedChildren.length > 0">
+            <div class="header-actions">
+              <div class="child-selector" v-if="formattedChildren.length > 0">
+                <label for="child-select">Alumno:</label>
+                <select id="child-select" v-model="selectedChildId">
+                  <option v-for="child in formattedChildren" :key="child.id" :value="child.id">
+                    {{ child.name }}
+                  </option>
+                </select>
+              </div>
+            </div>
+
+            <div v-if="currentChild" class="history-content">
+              <div
+                v-for="subject in currentChild.academicHistory"
+                :key="subject.group_id"
+                class="subject-block"
+              >
+                <div class="subject-header">
+                  <div class="title-area">
+                    <h3>{{ subject.group_name }}</h3>
+                    <span class="teacher-name">Docente: {{ subject.teacher }}</span>
+                  </div>
+                  <div class="average-box">
+                    <label>Promedio</label>
+                    <span class="score">{{ subject.final_average }}</span>
+                  </div>
+                </div>
+
+                <div class="units-grid">
+                  <GradeUnitCard
+                    v-for="grade in subject.grades"
+                    :key="grade.unit_id"
+                    :grade="grade"
+                  />
+                </div>
+              </div>
+            </div>
+          </template>
+        </template>
       </div>
-    </div>
-  </SidebarLayout>
+    </SidebarLayout>
+  </div>
 </template>
 
 <style scoped>
-.ContSmall {
-  background: var(--color-Azul);
-  width: 95%;
-  max-width: 1000px;
-  height: 60px;
-  border-radius: 20px;
-  margin: 0 auto;
-  color: white;
-}
-.ContBig {
-  background: var(--color-Blanco);
-  width: 95%;
-  max-width: 1000px;
-  border-radius: 20px;
-  margin: 40px auto;
-  padding: 30px;
-  box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
-  max-height: 60vh;
-  overflow-y: auto;
+.bg-page {
+  min-height: 100vh;
+  inset: 0;
   overflow-x: hidden;
-  scrollbar-width: none;
-  -ms-overflow-style: none;
+  overflow-y: auto;
+  z-index: -1;
 }
 
-.ContBig::-webkit-scrollbar {
-  width: 8px;
-  display: none;
+.ContSmall {
+  background: var(--color-Azul);
+  width: 1000px;
+  min-height: 40px;
+  border-radius: 20px;
+  margin: 0 auto;
+  padding: 20px 25px;
+  color: white;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
 }
-.ContBig::-webkit-scrollbar-thumb {
-  background: #ccc;
+.ContSmall h1 {
+  margin: 0;
+  font-size: 1.5rem;
+  letter-spacing: -0.5px;
+}
+
+.ContSmall p {
+  margin: 0;
+  font-size: 0.9rem;
+  opacity: 0.8;
+}
+
+.welcome-text {
+  font-weight: 600;
+  font-size: 0.9rem;
+  background: rgba(255, 255, 255, 0.1);
+  padding: 8px 15px;
   border-radius: 10px;
+}
+
+.loading-state,
+.empty-state {
+  text-align: center;
+  padding: 80px 20px;
+  color: #94a3b8;
+}
+.spinner {
+  width: 45px;
+  height: 45px;
+  border: 4px solid #f1f5f9;
+  border-top: 4px solid var(--color-Azul);
+  border-radius: 50%;
+  animation: spin 1s linear infinite;
+  margin: 0 auto 20px;
+}
+.empty-icon {
+  font-size: 3rem;
+  margin-bottom: 15px;
+  opacity: 0.5;
+}
+@keyframes spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+.error-banner {
+  background: #fee2e2;
+  color: #dc2626;
+  padding: 18px;
+  border-radius: 15px;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  font-weight: 700;
+}
+
+@media (max-width: 1050px) {
+  .ContSmall,
+  .ContBig {
+    width: 95%;
+  }
 }
 
 .header-actions {
@@ -134,15 +239,43 @@ const currentChild = computed(() => children.value.find((c) => c.id === selected
   align-items: center;
 }
 
-.custom-select {
-  padding: 8px 15px;
-  border-radius: 10px;
-  border: 1px solid var(--color-ContenedorClaro);
-  font-weight: bold;
-  color: var(--color-Azul);
-  margin-left: 10px;
+.child-selector {
+  margin-bottom: 25px;
+  display: flex;
+  justify-content: flex-end;
+  align-items: center;
+  gap: 12px;
 }
 
+.child-selector label {
+  font-size: 0.85rem;
+  font-weight: 700;
+  color: #64748b;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.child-selector select {
+  background: var(--color-Blanco);
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 24 24' stroke='%23005499'%3E%3Cpath stroke-linecap='round' stroke-linejoin='round' stroke-width='2' d='C19 9l-7 7-7-7'/%3E%3C/svg%3E");
+  background-repeat: no-repeat;
+  background-position: right 10px center;
+  background-size: 15px;
+  padding: 8px 35px 8px 15px;
+  border-radius: 10px;
+  border: 1px solid #e2e8f0;
+  color: var(--color-Azul);
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  outline: none;
+  min-width: 180px;
+}
+
+.child-selector select:hover {
+  border-color: var(--color-Azul);
+  background-color: var(--color-Blanco);
+}
 .subject-block {
   border: 1px solid #eee;
   border-radius: 15px;
@@ -171,7 +304,8 @@ const currentChild = computed(() => children.value.find((c) => c.id === selected
 
 .average-box {
   text-align: center;
-  background: #f0f4ff;
+  background: var(--color-Blanco);
+  border: 1px solid var(--color-Bordes);
   padding: 5px 4px;
   border-radius: 12px;
 }
@@ -180,13 +314,13 @@ const currentChild = computed(() => children.value.find((c) => c.id === selected
   display: block;
   font-size: 0.6rem;
   font-weight: bold;
-  color: var(--color-AzulTres);
+  color: var(--color-Azul);
   text-transform: uppercase;
 }
 .average-box .score {
   font-size: 1.2rem;
   font-weight: 800;
-  color: var(--color-Azul);
+  color: var(--color-Texto);
 }
 
 .units-grid {
@@ -206,5 +340,57 @@ const currentChild = computed(() => children.value.find((c) => c.id === selected
   .units-grid {
     grid-template-columns: 1fr;
   }
+}
+
+.loader-dots {
+  width: 50px;
+  aspect-ratio: 2;
+  --_g: no-repeat radial-gradient(circle closest-side, var(--color-Texto) 90%, #0000);
+  background:
+    var(--_g) 0% 50%,
+    var(--_g) 50% 50%,
+    var(--_g) 100% 50%;
+  background-size: calc(100% / 3) 50%;
+  animation: l3 1s infinite linear;
+  opacity: 0.3;
+}
+@keyframes l3 {
+  20% {
+    background-position:
+      0% 0%,
+      50% 50%,
+      100% 50%;
+  }
+  40% {
+    background-position:
+      0% 100%,
+      50% 0%,
+      100% 50%;
+  }
+  60% {
+    background-position:
+      0% 50%,
+      50% 100%,
+      100% 0%;
+  }
+  80% {
+    background-position:
+      0% 50%,
+      50% 50%,
+      100% 100%;
+  }
+}
+
+/* Error */
+.icon-circle {
+  width: 70px;
+  height: 70px;
+  background: var(--color-Error);
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 2rem;
+  margin-bottom: 10px;
 }
 </style>
