@@ -37,6 +37,7 @@ import studentGroupsView from '@/views/studentGroupsView.vue'
 import StudentMessagesView from '@/views/StudentMessagesView.vue'
 import NotificationStudentView from '@/views/NotificationStudentView.vue'
 import NotificationTeacherView from '@/views/NotificationTeacherView.vue'
+import AdminPeriodsView from '@/views/AdminPeriodsView.vue'
 //ROLES//
 //1-admin
 //2-teacher
@@ -101,6 +102,12 @@ const router = createRouter({
       path: '/admin/announcements',
       name: 'AdminAnnouncements',
       component: AdminAnnouncementsView,
+      meta: { requiresAuth: true, rol: 1 },
+    },
+    {
+      path: '/admin/periods',
+      name: 'AdminPeriods',
+      component: AdminPeriodsView,
       meta: { requiresAuth: true, rol: 1 },
     },
 
