@@ -38,6 +38,8 @@ import ShowGroupParent from '@/views/ShowGroupParent.vue'
 import TaskDetailParentView from '@/views/TaskDetailParentView.vue'
 import AnnouncementParentView from '@/views/AnnouncementParentView.vue'
 import AnnouncementDetailView from '@/views/AnnouncementDetailView.vue'
+import StudentAnnouncementsView from '@/views/StudentAnnouncementsView.vue'
+
 //ROLES//
 //1-admin
 //2-teacher
@@ -124,6 +126,12 @@ const router = createRouter({
       name: 'profile',
       component: ProfileTeacherView,
       meta: { requiresAuth: true, rol: 2 },
+    },
+    {
+      path: '/student/announcements',
+      name: 'profile',
+      component: StudentAnnouncementsView,
+      meta: { requiresAuth: true, rol: 3 },
     },
 
     {
