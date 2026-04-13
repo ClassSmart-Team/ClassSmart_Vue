@@ -23,7 +23,68 @@ html, body, #app {
 
   --color-TitulosMenu: #0c4a7a;
   --color-Texto: #23212a;
+  --color-Fondo: #f8fafc;
+  --color-Bordes: #F2F2F2;
+
+  --color-Avatar: #e1f5ee;
+  --color-Aviso: #fffde7;
+  --color-Rol: #f0f4ff;
+  --color-Error: #f0f2f5;
+  --color-Unidad: #334155;
+  --color-Anuncio: #1e293b;
+  --color-Hover: #f8fafc;
+  --color-Tabs: #f1f5f9;
+
+  /* detalle de tarea */
+  --color-Pendente: #f1f3f4;
+  --color-StatusPendente: #5f6368;
+  --color-Tardio: #fce8e6;
+  --color-StatusTardio: #d93025;
+  --color-Entregado: #efeff4;
+  --color-StatusEntregado: #1e8e3e;
+  --color-SinEntrega: #efeff4;
+  --color-StatusSinEntrega: #e6f4ea;
+  --color-Retroalimentacion: #2c2f36;
+
+  --bg-gradient-top: var(--color-AzulDos);       /* #4ba4df */
+  --bg-gradient-bottom: var(--color-ComplementoDos);
 }
+
+.dark-mode {
+  --color-Contenedor: #1a232e;
+  --color-ContenedorClaro: #6D68F7;
+  --color-Fondo: #242f4e;
+  --color-Blanco: #1e2530;
+  --color-Azul: #615fed;
+  --color-AzulTres: #010a85;
+  --color-Texto: #aeb9c7;
+  --color-Bordes: #3d424a;
+
+  --color-Avatar: #9CBBF0;
+  --color-Aviso: #383838;
+  --color-Rol: #343447;
+  --color-Error: #43435C;
+  --color-Unidad: #345A91;
+  --color-Anuncio: #595A69;
+  --color-Hover: #242424;
+  --color-Tabs: #242f4e;
+
+  /* detalle de tarea */
+  --color-Pendente: #2d2e31;
+  --color-StatusPendente: #bdc1c6;
+  --color-Tardio: #3c1e1e;
+  --color-StatusTardio: #fce8e6;
+  --color-Entregado: #1b2d20;
+  --color-StatusEntregado: #81c995;
+  --color-SinEntrega: #202124;
+  --color-StatusSinEntrega: #9aa0a6;
+  --color-Retroalimentacion: #ffffff;
+
+  --bg-gradient-top: #11131b;
+  --bg-gradient-bottom: #242f4e;
+}
+
+
 
 body {
   font-family:
@@ -50,6 +111,17 @@ body {
   justify-content: center;
   align-items: center;
   padding: 10px;
+}
+
+.left {
+  display: flex;
+  align-items: center;
+  gap: 15px;
+}
+
+.right {
+  display: flex;
+  align-items: center;
 }
 
 .layout {
@@ -83,6 +155,16 @@ body {
   flex-direction: column;
   z-index: 50;
   overflow: hidden; /* ← sin scroll de ningún tipo */
+}
+
+.contenido {
+  margin-left: 220px; /* ← mismo ancho que la sidebar */
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  padding: 24px;
+  box-sizing: border-box;
+  min-width: 0;
 }
 
 .sidebar-divider {
@@ -185,5 +267,18 @@ button.link {
   .contenido {
     margin-left: 0;
     padding: 16px;
+  }
+
+  .header-box {
+    width: 95%;
+    padding-left: 20px;
+    justify-content: flex-start;
+  }
+
+  .header-box h1 {
+    font-size: 1.5rem;
+    margin: 0;
+    text-align: left;
+    letter-spacing: -0.5px;
   }
 }
