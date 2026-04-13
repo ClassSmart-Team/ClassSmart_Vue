@@ -157,16 +157,6 @@ body {
   overflow: hidden; /* ← sin scroll de ningún tipo */
 }
 
-.contenido {
-  margin-left: 220px; /* ← mismo ancho que la sidebar */
-  flex: 1;
-  display: flex;
-  flex-direction: column;
-  padding: 24px;
-  box-sizing: border-box;
-  min-width: 0;
-}
-
 .sidebar-divider {
   height: 1px;
   background: rgba(255, 255, 255, 0.25);
