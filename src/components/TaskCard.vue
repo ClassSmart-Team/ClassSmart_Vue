@@ -1,40 +1,49 @@
 <script setup lang="ts">
 import { computed } from 'vue'
+import type { ParentActivity } from '@/types/types.ts'
 
 const props = defineProps<{
-  task: any
+  activity: ParentActivity
 }>()
 
 const computedStatus = computed(() => {
-  if (props.task.submissions_count > 0) return 'entregada'
-  if (new Date(props.task.end_date) < new Date()) return 'tardia'
+  if (!props.activity?.status) return 'pendiente'
+
+  const s = props.activity.status.toLowerCase()
+
+  if (s === 'calificada' || s === 'calificado') return 'calificada'
+  if (s === 'tardia' || s === 'tardía' || s === 'atrasada' || s === 'atrasado') return 'tardia'
+  if (s === 'entregada' || s === 'entregado') return 'entregada'
+
   return 'pendiente'
 })
 
-const formatDate = (dateStr: string) => {
-  return new Date(dateStr).toLocaleDateString('es-MX', { day: '2-digit', month: 'short' })
+const formatDate = (dateStr: string | null) => {
+  if (!dateStr) return 'Sin fecha'
+  return new Date(dateStr).toLocaleDateString('es-MX', {
+    day: '2-digit',
+    month: 'short',
+    timeZone: 'UTC',
+  })
 }
 </script>
 
 <template>
-  <div :class="['activity-card', computedStatus]">
+  <div v-if="activity.status !== 'Cancelada'" :class="['activity-card', computedStatus]">
     <div class="activity-info">
-      <div class="top-row">
-        <span class="subject-tag">{{ task.group?.name }}</span>
-        <span v-if="computedStatus === 'entregada'" class="done-badge">Entregada</span>
-        <span v-if="computedStatus === 'tardia'" class="late-badge">Fuera de tiempo</span>
-      </div>
-      <h4>{{ task.title }}</h4>
-      <p class="due-date">Límite: {{ formatDate(task.end_date) }}</p>
+      <h4 class="activity-tag">{{ activity?.title || 'Sin titulo' }}</h4>
+      <p class="due-date">Límite: {{ formatDate(activity?.end_date) }}</p>
     </div>
 
-    <div class="activity-actions">
-      <router-link
-        :to="{ name: 'studentTasksDetail', params: { id: task.id } }"
-        class="btn-open-task"
-      >
-        {{ computedStatus === 'entregada' ? 'Ver Entrega' : 'Ver Detalles' }}
-      </router-link>
+    <div class="activity-status-box">
+      <span class="simple-badge">{{ activity.status }}</span>
+
+      <div v-if="computedStatus === 'calificada'" class="grade-pill">
+        <span class="grade-label">Calificación</span>
+        <span class="grade-value">{{
+          activity?.submission?.grade != null ? Math.round(activity.submission.grade) : '--'
+        }}</span>
+      </div>
     </div>
   </div>
 </template>
@@ -45,69 +54,116 @@ const formatDate = (dateStr: string) => {
   grid-template-columns: 1fr auto;
   align-items: center;
   gap: 20px;
-  background: white;
-  padding: 18px 25px;
-  border-radius: 16px;
-  border: 1px solid #f1f5f9;
-  border-left: 6px solid #cbd5e1;
+  background: var(--color-Bordes);
+  padding: 18px 24px;
+  border-radius: 12px;
+  border: 1px solid var(--color-Bordes);
+  border-left: 4px solid #cbd5e1;
   margin-bottom: 12px;
-  transition: transform 0.2s;
+  transition: all 0.2s ease;
 }
+
 .activity-card:hover {
-  transform: scale(1.01);
-  box-shadow: 0 4px 12px rgba(0,0,0,0.06);
+  border-top-color: #cbd5e1;
+  border-right-color: #cbd5e1;
+  border-bottom-color: #cbd5e1;
+
+  transform: translateY(-2px);
+  box-shadow: 0 6px 15px rgba(0, 0, 0, 0.08);
+}
+.activity-card.pendiente {
+  border-left-color: #fde68a !important;
+}
+.activity-card.entregada {
+  border-left-color: #bfdbfe !important;
+}
+.activity-card.calificada {
+  border-left-color: #bbf7d0 !important;
+}
+.activity-card.tardia {
+  border-left-color: #fecaca !important;
+}
+/* Pendiente: Tonos ámbar/arena suaves */
+.pendiente .simple-badge {
+  color: #d97706;
 }
 
-.pendiente { border-left-color: #f59e0b; }
-.entregada { border-left-color: #3b82f6; }
-.tardia    { border-left-color: #ef4444; background: #fffafb; }
-
-.top-row { display: flex; align-items: center; gap: 8px; margin-bottom: 4px; }
-
-.subject-tag {
-  font-size: 0.65rem;
-  font-weight: 800;
-  color: var(--color-Azul);
-  text-transform: uppercase;
-  background: #eff6ff;
-  padding: 2px 8px;
-  border-radius: 4px;
-}
-.done-badge {
-  font-size: 0.6rem;
-  color: #3b82f6;
-  font-weight: bold;
-  text-transform: uppercase;
-}
-.late-badge {
-  font-size: 0.6rem;
-  color: #ef4444;
-  font-weight: bold;
-  text-transform: uppercase;
+/* Entregada: Tonos azulados suaves */
+.entregada .simple-badge {
+  color: #2563eb;
 }
 
-.activity-info h4 { margin: 0; font-size: 1.05rem; color: #1e293b; font-weight: 700; }
-.due-date { font-size: 0.8rem; color: #64748b; margin-top: 4px; }
+/* Tardía */
+.tardia .simple-badge {
+  color: #e11d48;
+}
 
-.btn-open-task {
-  display: inline-block;
-  text-decoration: none;
-  padding: 10px 18px;
-  border-radius: 10px;
-  background: #f8fafc;
-  color: var(--color-Azul);
-  font-weight: bold;
+/* Calificada */
+.calificada .simple-badge {
+  color: #61d48d;
+}
+
+.activity-status-box {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: 10px;
+  min-width: 120px;
+}
+
+.activity-info h4 {
+  margin: 0;
+  font-size: 1.1rem;
+  color: #1e293b;
+  font-weight: 700;
+}
+
+.due-date {
   font-size: 0.8rem;
-  text-align: center;
-  transition: 0.2s;
+  color: #64748b;
+  margin-top: 5px;
+}
+
+.simple-badge {
+  font-size: 0.7rem;
+  font-weight: 800;
+  text-transform: uppercase;
+  padding: 4px 12px;
   white-space: nowrap;
 }
-.btn-open-task:hover {
-  background: var(--color-Azul);
-  color: white;
+
+.grade-pill {
+  text-align: center;
+  background: var(--color-Bordes);
+  padding: 4px 12px;
+  border-radius: 8px;
+  border: 1px solid var(--color-Texto);
+}
+.grade-label {
+  font-family: 'Roboto', sans-serif;
+  display: block;
+  font-size: 0.5rem;
+  color: #64748b;
+  text-transform: uppercase;
+  font-weight: bold;
+}
+.grade-value {
+  font-size: 1.1rem;
+  font-weight: 800;
+  color: #61d48d;
 }
 
-@media (max-width: 768px) {
-  .activity-card { grid-template-columns: 1fr; gap: 15px; }
+@media (max-width: 600px) {
+  .activity-card {
+    grid-template-columns: 1fr;
+    gap: 16px;
+  }
+
+  .activity-status-box {
+    align-items: flex-start;
+    flex-direction: row;
+    justify-content: space-between;
+    width: 100%;
+  }
 }
 </style>

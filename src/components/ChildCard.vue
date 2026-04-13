@@ -1,11 +1,7 @@
 <script setup lang="ts">
 // Definimos las propiedades que recibirá el componente
-interface Child {
-  id: number
-  name: string
-  email: string
-  status: string
-}
+
+import type { Child } from '@/types/types.ts'
 
 defineProps<{
   child: Child
@@ -33,9 +29,19 @@ const emit = defineEmits(['view-schedule', 'view-grades'])
         <span class="value">{{ child.email }}</span>
       </div>
       <div class="info-row">
+        <span class="label">Periodo:</span>
+        <span class="value">
+          {{
+            child.groups && child.groups.length > 0
+              ? `${child.groups[0].period.name} - ${child.groups[0].period.year}`
+              : 'Sin asignar'
+          }}
+        </span>
+      </div>
+      <div class="info-row">
         <span class="label">Estado:</span>
-        <span :class="['status-pill', (child.status || 'inactivo').toLowerCase()]">
-          {{ child.status || 'Desconocido' }}
+        <span :class="['status-pill', child.active ? 'activo' : 'inactivo']">
+          {{ child.active ? 'Activo' : 'Inactivo' }}
         </span>
       </div>
     </div>
@@ -96,7 +102,7 @@ const emit = defineEmits(['view-schedule', 'view-grades'])
 
 .divider {
   border: 0;
-  border-top: 1px solid #f0f0f0;
+  border-top: 1px solid var(--color-Bordes);
   margin: 15px 0;
 }
 
