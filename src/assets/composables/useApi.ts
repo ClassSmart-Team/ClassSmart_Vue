@@ -8,10 +8,19 @@ export const useapi = createFetch({
     // Interceptor: Se ejecuta justo antes de cada petición
     async beforeFetch({ options, cancel }) {
       const authStore = useAuthStore()
-      if (!authStore.credentials) {
+
+      const headers: Record<string, string> = {
+        ...(options.headers as Record<string, string>),
+        Accept: 'application/json',
+      }
+
+      if (authStore.credentials) {
+        headers['Authorization'] = `Bearer ${authStore.credentials.token}`
+      } else {
         cancel()
       }
-      if (authStore.credentials) {
+
+      /*if (authStore.credentials) {
         // Garantizamos que headers sea un objeto y añadimos el Bearer
         options.headers = {
           ...options.headers,
@@ -19,8 +28,13 @@ export const useapi = createFetch({
           'Content-Type': 'application/json',
           Accept: 'application/json',
         }
+      }*/
+
+      if (!(options.body instanceof FormData)) {
+        headers['Content-Type'] = 'application/json'
       }
 
+      options.headers = headers
       return { options }
     },
     // Interceptor: Manejo de errores global (ej. Token expirado)
