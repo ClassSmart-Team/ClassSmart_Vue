@@ -35,7 +35,8 @@ import AdminAssignmentsView from '@/views/AdminAssignmentsView.vue'
 import AdminAnnouncementsView from '@/views/AdminAnnouncementsView.vue'
 import studentGroupsView from '@/views/studentGroupsView.vue'
 import StudentMessagesView from '@/views/StudentMessagesView.vue'
-
+import NotificationStudentView from '@/views/NotificationStudentView.vue'
+import NotificationTeacherView from '@/views/NotificationTeacherView.vue'
 //ROLES//
 //1-admin
 //2-teacher
@@ -163,8 +164,8 @@ const router = createRouter({
     },
     {
       path: '/teacher/notifications',
-      name: 'notifications',
-      component: HomeTeacherView, // temporal
+      name: 'teacherNotifications',
+      component: NotificationTeacherView,
       meta: { requiresAuth: true, rol: 2 },
     },
 
@@ -214,6 +215,12 @@ const router = createRouter({
       path: '/student/messages',
       name: 'studentMessages',
       component: StudentMessagesView,
+      meta: { requiresAuth: true, rol: 3 },
+    },
+    {
+      path: '/student/notifications',
+      name: 'studentNotifications',
+      component: NotificationStudentView,
       meta: { requiresAuth: true, rol: 3 },
     },
 
