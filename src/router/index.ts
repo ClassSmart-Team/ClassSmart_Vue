@@ -55,6 +55,7 @@ import AnnouncementDetailView from '@/views/AnnouncementDetailView.vue'
 
 // Store
 import { useAuthStore } from '@/stores/authStore'
+import StudentShowGroupView from '@/views/StudentShowGroupView.vue'
 //ROLES//
 //1-admin
 //2-teacher
@@ -148,9 +149,16 @@ const router = createRouter({
       name: 'groups',
       component: GroupsTeacherView,
       meta: { requiresAuth: true, rol: 2 },
-    },
+    }
+  ,{
+    path: '/student/show/group/:id',
+    name: 'studentshowgroup',
+    component: StudentShowGroupView,
+    meta: { requiresAuth: true, rol: 3 },
+  },
 
-    {
+
+  {
       path: '/teacher/show/group/:id',
       name: 'teachershowgroup',
       component: TeacherShowGroupView,
