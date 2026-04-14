@@ -13,13 +13,9 @@ import ProfileParentView from '@/views/ProfileParentView.vue'
 import StudentsParentView from '@/views/StudentsParentView.vue'
 import GroupsParentView from '@/views/GroupsParentView.vue'
 import TasksParentView from '@/views/TasksParentView.vue'
-import ForumParentView from '@/views/ForumParentView.vue'
 import GradesParentView from '@/views/GradesParentView.vue'
 import NotificationParentView from '@/views/NotificationParentView.vue'
 import SettingsParentView from '@/views/SettingsParentView.vue'
-import ShowGroup from '@/views/ShowGroup.vue'
-import TaskDetailView from '@/views/TaskDetailView.vue'
-import ForumDetailView from '@/views/ForumDetailView.vue'
 import TaskDetailTeacherView from '@/views/TaskDetailTeacherView.vue'
 import AdminHomeView from '@/views/AdminHomeView.vue'
 import { useAuthStore } from '@/stores/authStore'
@@ -37,6 +33,13 @@ import studentGroupsView from '@/views/studentGroupsView.vue'
 import StudentMessagesView from '@/views/StudentMessagesView.vue'
 import NotificationStudentView from '@/views/NotificationStudentView.vue'
 import NotificationTeacherView from '@/views/NotificationTeacherView.vue'
+import AdminPeriodsView from '@/views/AdminPeriodsView.vue'
+import ShowGroupParent from '@/views/ShowGroupParent.vue'
+import TaskDetailParentView from '@/views/TaskDetailParentView.vue'
+import AnnouncementParentView from '@/views/AnnouncementParentView.vue'
+import AnnouncementDetailView from '@/views/AnnouncementDetailView.vue'
+import StudentAnnouncementsView from '@/views/StudentAnnouncementsView.vue'
+
 //ROLES//
 //1-admin
 //2-teacher
@@ -46,7 +49,6 @@ import NotificationTeacherView from '@/views/NotificationTeacherView.vue'
 const router = createRouter({
   history: createWebHistory(import.meta.env.BASE_URL),
   routes: [
-
     //Auth / Rutas "publicas"
     {
       path: '/register',
@@ -103,6 +105,12 @@ const router = createRouter({
       component: AdminAnnouncementsView,
       meta: { requiresAuth: true, rol: 1 },
     },
+    {
+      path: '/admin/periods',
+      name: 'AdminPeriods',
+      component: AdminPeriodsView,
+      meta: { requiresAuth: true, rol: 1 },
+    },
 
     //TEACHER
 
@@ -117,7 +125,13 @@ const router = createRouter({
       path: '/teacher/profile',
       name: 'profile',
       component: ProfileTeacherView,
-      meta: { requiresAuth: true, rol:2 },
+      meta: { requiresAuth: true, rol: 2 },
+    },
+    {
+      path: '/student/announcements',
+      name: 'profile',
+      component: StudentAnnouncementsView,
+      meta: { requiresAuth: true, rol: 3 },
     },
 
     {
@@ -127,7 +141,7 @@ const router = createRouter({
       meta: { requiresAuth: true, rol: 2 },
     },
 
-        {
+    {
       path: '/teacher/show/group/:id',
       name: 'teachershowgroup',
       component: TeacherShowGroupView,
@@ -142,12 +156,11 @@ const router = createRouter({
     },
 
     {
-    path: '/teacher/tasks/:id',
-    name: 'teacherTasksDetail',
-    component: TaskDetailTeacherView,
-    meta: { requiresAuth: true, rol: [1, 2] },
+      path: '/teacher/tasks/:id',
+      name: 'teacherTasksDetail',
+      component: TaskDetailTeacherView,
+      meta: { requiresAuth: true, rol: [1, 2] },
     },
-
 
     {
       path: '/teacher/announcements',
@@ -177,34 +190,33 @@ const router = createRouter({
     },
 
     //STUDENT
-        {
+    {
       path: '/student/home',
       name: 'studentHome',
       component: HomeStudentView,
       meta: { requiresAuth: true, rol: 3 },
     },
 
-     {
+    {
       path: '/student/profile',
       name: 'studentProfile',
       component: ProfileStudentView,
       meta: { requiresAuth: true, rol: 3 },
     },
 
-            {
+    {
       path: '/student/tasks',
       name: 'studentTasks',
       component: TaskStudentView,
       meta: { requiresAuth: true, rol: 3 },
     },
 
-
-{
-  path: '/student/tasks/:id',
-  name: 'studentTasksDetail',
-  component: TaskDetailStudentView,
-  meta: { requiresAuth: true, rol: 3 },
-},
+    {
+      path: '/student/tasks/:id',
+      name: 'studentTasksDetail',
+      component: TaskDetailStudentView,
+      meta: { requiresAuth: true, rol: 3 },
+    },
     {
       path: '/student/groups',
       name: 'studentgroups',
@@ -224,103 +236,99 @@ const router = createRouter({
       meta: { requiresAuth: true, rol: 3 },
     },
 
-// Parent
+    // Parent
     {
       path: '/parent/home',
       name: 'parentHome',
       component: HomeParentView,
-      meta: { requiresAuth: true, rol: 4 },
+      meta: { requiresAuth: true, role: 4 },
     },
 
     {
       path: '/parent/profile',
       name: 'parentProfile',
       component: ProfileParentView,
-      meta: { requiresAuth: true, rol: 4 },
+      meta: { requiresAuth: true, role: 4 },
     },
 
     {
       path: '/parent/students',
       name: 'parentStudents',
       component: StudentsParentView,
-      meta: { requiresAuth: true, rol: 4 },
+      meta: { requiresAuth: true, role: 4 },
     },
 
     {
       path: '/parent/groups',
       name: 'parentGroups',
       component: GroupsParentView,
-      meta: { requiresAuth: true, rol: 4 },
+      meta: { requiresAuth: true, role: 4 },
     },
 
     {
-      path: '/parent/groups/:id',
+      path: '/parent/groups/:id/:childId',
       name: 'parentGroupDetail',
-      component: ShowGroup,
-      meta: { requiresAuth: true, rol: 4 },
+      component: ShowGroupParent,
+      meta: { requiresAuth: true, role: 4 },
     },
 
     {
-      path: '/parent/tasks',
-      name: 'parentTasks',
+      path: '/parent/groups/:id/assignments/:childId',
+      name: 'parentGroupAssignmentDetail',
+      component: TaskDetailParentView,
+      meta: { requiresAuth: true, role: 4 },
+    },
+
+    {
+      path: '/parent/assignments/',
+      name: 'parentAssignments',
       component: TasksParentView,
-      meta: { requiresAuth: true, rol: 4 },
+      meta: { requiresAuth: true, role: 4 },
     },
 
     {
-      path: '/parent/tasks/:id',
-      name: 'parentTasksDetail',
-      component: TaskDetailView,
-      meta: { requiresAuth: true, rol: 4 },
+      path: '/parent/assignments/:id/:childId',
+      name: 'parentAssignmentsDetail',
+      component: TaskDetailParentView,
+      meta: { requiresAuth: true, role: 4 },
     },
 
     {
-      path: '/parent/forum',
-      name: 'parentForum',
-      component: ForumParentView,
-      meta: { requiresAuth: true, rol: 4 },
+      path: '/parent/announcements',
+      name: 'parentAnnouncements',
+      component: AnnouncementParentView,
+      meta: { requiresAuth: true, role: 4 },
     },
 
     {
-      path: '/parent/forum/:id',
-      name: 'parentForumDetail',
-      component: ForumDetailView,
+      path: '/parent/announcements/:id',
+      name: 'parentAnnouncementDetail',
+      component: AnnouncementDetailView,
       props: true,
-      meta: { requiresAuth: true, rol: 4 },
+      meta: { requiresAuth: true, role: 4 },
     },
 
     {
       path: '/parent/grades',
       name: 'parentGrades',
       component: GradesParentView,
-      meta: { requiresAuth: true, rol: 4 },
+      meta: { requiresAuth: true, role: 4 },
     },
 
     {
       path: '/parent/notifications',
       name: 'parentNotifications',
       component: NotificationParentView,
-      meta: { requiresAuth: true, rol: 4 },
+      meta: { requiresAuth: true, role: 4 },
     },
 
     {
       path: '/parent/settings',
       name: 'parentSettings',
       component: SettingsParentView,
-      meta: { requiresAuth: true, rol: 4 },
+      meta: { requiresAuth: true, role: 4 },
     },
-
-    {
-      path: '/grupo/:id',
-      name: 'group-detail',
-      component: ShowGroup,
-      props: true, // Esto permite recibir el :id como una prop en la vista de detalle
-      meta: { requiresAuth: true, rol: 4 },
-    },
-
-
-
-      ],
+  ],
 })
 
 router.beforeEach((to, from, next) => {

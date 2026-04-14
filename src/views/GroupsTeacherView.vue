@@ -7,6 +7,7 @@ import { useAuthStore } from '@/stores/authStore.ts'
 import { type formgroup } from '@/types/types.ts'
 import { ref } from 'vue'
 import router from '@/router'
+const issubmitingGroup = ref(false)
 
 const form = ref<formgroup>({
   period_id: 1,
@@ -33,6 +34,8 @@ const {
 }).json()
 
 function creategroup() {
+  if (issubmitingGroup.value) return
+  issubmitingGroup.value=true
   const { data: postData, onFetchResponse } = useapi('/groups', {
     method: 'POST',
   })
@@ -44,6 +47,7 @@ function creategroup() {
     form.value = { ...initialgroup }
 
     await reloadGroups()
+    issubmitingGroup.value=false
   })
 }
 // Petición para traer los periodos del backend
@@ -51,15 +55,14 @@ const { data: periodsData } = useapi('/periods', {
   method: 'GET',
 }).json()
 
-function showgroup(id:number){
-  router.push({name:'teachershowgroup',params:{id}})
+function showgroup(id: number) {
+  router.push({ name: 'teachershowgroup', params: { id } })
 }
 </script>
 
 <template>
   <div class="bg-page">
     <SidebarLayout>
-
       <div class="header-box header-flex">
         <div class="left">
           <div class="avatar">
@@ -72,14 +75,11 @@ function showgroup(id:number){
         </div>
 
         <div class="right">
-          <button @click="showModal = true" class="btn-create-group">
-            CREAR GRUPO
-          </button>
+          <button @click="showModal = true" class="btn-create-group">CREAR GRUPO</button>
         </div>
       </div>
 
       <div class="main-box">
-
         <div v-if="isFetching" class="loading-state">
           <div class="spinner"></div>
           <p>Cargando grupos...</p>
@@ -98,7 +98,6 @@ function showgroup(id:number){
             @click="showgroup(group.id)"
           />
         </div>
-
       </div>
 
       <Modal v-model="showModal">
@@ -123,11 +122,10 @@ function showgroup(id:number){
 
           <div class="actions">
             <button type="button" class="btn-cancel" @click="showModal = false">Cancelar</button>
-            <button type="submit" class="btn-save">Guardar</button>
+            <button type="submit" :disabled="issubmitingGroup" class="btn-save">Guardar</button>
           </div>
         </form>
       </Modal>
-
     </SidebarLayout>
   </div>
 </template>
@@ -139,7 +137,7 @@ function showgroup(id:number){
   inset: 0;
   overflow-x: hidden;
   overflow-y: auto;
-  background: linear-gradient(180deg,var(--color-AzulDos),var(--color-ComplementoDos));
+  background: linear-gradient(180deg, var(--color-AzulDos), var(--color-ComplementoDos));
   z-index: -1;
 }
 
@@ -212,8 +210,12 @@ function showgroup(id:number){
 }
 
 @keyframes spin {
-  0% { transform: rotate(0deg); }
-  100% { transform: rotate(360deg); }
+  0% {
+    transform: rotate(0deg);
+  }
+  100% {
+    transform: rotate(360deg);
+  }
 }
 
 /* ERROR */

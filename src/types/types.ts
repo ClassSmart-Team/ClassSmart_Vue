@@ -147,3 +147,96 @@ export interface Chat {
   created_at: string
   updated_at: string
 }
+
+
+/*PARENT*/
+export interface Child {
+  id: number
+  name: string
+  lastname?: string
+  email: string
+  active?: string
+  groups?: Group[]
+}
+
+export interface ScheduleItem {
+  day: string
+  start_time: string
+  end_time: string
+  subject_name: string
+  teacher_name: string
+}
+
+export interface ParentActivity {
+  id: number | null
+  childId: number
+  child: string
+  title: string | null
+  description: string | null
+  subject: string
+  end_date: string | null
+  unit_id: number
+  unit_name: string
+  status: string // 'Pendiente', 'Atrasado', 'Entregado', 'Calificado', 'Tardia'
+  submission?: {
+    status: string
+    grade: number | null
+  } | null
+}
+
+export interface GroupedChild {
+  childName: string
+  childId: number
+  subjects: Record< //como un array pero mejor <llave, array>, mas facil y directo en busqueda
+    string,
+    {
+      name: string
+      units: Record<
+        string,
+        {
+          name: string
+          id: number | null
+          tasks: ParentActivity[]
+        }
+      >
+      totalTasks: number
+    }
+  >
+}
+
+export interface Announcement {
+  id: number
+  title: string
+  message: string
+  created_at: string
+  attachment_path?: string
+  attachment_name?: string
+  group?: Group
+}
+
+export interface GroupedForum {
+  group: Group
+  latestAnnouncement: Announcement | null | undefined
+  count: number
+}
+
+export interface GradeRecord {
+  id: number
+  grade: number
+  student: { id: number; name: string; lastname: string }
+  group: { id: number; name: string; teacher?: string } 
+  unit: { id: number; name: string; order: number }
+}
+
+export interface Notifications {
+  id: number
+  title: string
+  message?: string
+  read_at: string | null
+  created_at: string
+  type?: string
+  // Datos adicionales que el padre recibe
+  student_name?: string
+  group?: { id: number; name: string }
+  creator?: { id: number; name: string; lastname: string }
+}

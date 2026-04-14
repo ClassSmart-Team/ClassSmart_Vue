@@ -1,53 +1,83 @@
 <script setup lang="ts">
 import router from '@/router'
+import type { Group } from '@/types/types.ts'
 
-export interface Group {
-  id: number
-  name: string
-  description?: string
-  active: boolean
-  owner: {
-    name: string
-    lastname: string
-  }
-  period: {
-    name: string
-    year: number
-  }
-}
-
-defineProps<{
+const props = defineProps<{
   group: Group
+  childId: number
 }>()
 
-function goToGroup(id: number) {
-  router.push({ name: 'parentGroupDetail', params: { id } })
+function goToGroup() {
+  router.push({ name: 'parentGroupDetail', params: { id: props.group.id, childId: props.childId } })
 }
 </script>
 
 <template>
-  <div class="card" :class="{ inactive: !group.active }">
-    <div class="card-top">
-      <span class="period-pill"> {{ group.period.name }} · {{ group.period.year }} </span>
-      <div class="dot" :class="{ 'dot-active': group.active, 'dot-inactive': !group.active }"></div>
+  <div class="card" :class="{ inactive: !group.active }" @click="goToGroup">
+    <!-- Header con gradiente azul -->
+    <div class="card-header">
+      <div class="header-top">
+        <div class="period-badge">{{ group.period.name }} {{ group.period.year }}</div>
+      </div>
+      <h2 class="group-title">{{ group.name }}</h2>
     </div>
 
-    <div class="card-body">
-      <p class="card-title">{{ group.name }}</p>
-      <p class="card-desc">
-        {{ group.description || 'Sin descripción disponible.' }}
-      </p>
-
-      <div class="meta">
-        <div class="meta-box full">
-          <div class="meta-label">Docente</div>
-          <div class="meta-value teacher">{{ group.owner.name }} {{ group.owner.lastname }}</div>
+    <!-- Contenido principal -->
+    <div class="card-content">
+      <!-- Sección de fechas -->
+      <div class="dates-section">
+        <div class="date-block">
+          <p class="date-label">INICIO</p>
+          <p class="date-value">01 Feb 2026</p>
+        </div>
+        <div class="date-separator"></div>
+        <div class="date-block">
+          <p class="date-label">FIN</p>
+          <p class="date-value">30 Jun 2026</p>
         </div>
       </div>
-    </div>
 
-    <div class="card-action">
-      <button @click="goToGroup(group.id)" class="view-btn">Ver detalles</button>
+      <!-- Sección de estadísticas -->
+      <div class="stats-section">
+        <div class="stat-item">
+          <div class="stat-icon students-icon">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path>
+              <circle cx="12" cy="7" r="4"></circle>
+            </svg>
+          </div>
+          <div>
+            <p class="stat-number">{{ group.students_count }}</p>
+            <p class="stat-label">Alumnos</p>
+          </div>
+        </div>
+
+        <div class="stat-item">
+          <div class="stat-icon assignments-icon">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path>
+              <polyline points="14 2 14 8 20 8"></polyline>
+              <line x1="12" y1="13" x2="16" y2="13"></line>
+              <line x1="12" y1="17" x2="16" y2="17"></line>
+            </svg>
+          </div>
+          <div>
+            <p class="stat-number">{{ group.assignments_count }}</p>
+            <p class="stat-label">Tareas</p>
+          </div>
+        </div>
+      </div>
+
+      <!-- Sección de profesor -->
+      <div class="teacher-section">
+        <div class="teacher-avatar">
+          {{ group.owner.name.charAt(0) }}{{ group.owner.lastname.charAt(0) }}
+        </div>
+        <div class="teacher-info">
+          <p class="teacher-name">{{ group.owner.name }} {{ group.owner.lastname }}</p>
+          <p class="teacher-role">Docente titular</p>
+        </div>
+      </div>
     </div>
   </div>
 </template>
@@ -55,163 +85,230 @@ function goToGroup(id: number) {
 <style scoped>
 .card {
   width: 100%;
-  background: var(--color-Blanco);
-  border: 1px solid var(--color-ContenedorClaro);
-  border-radius: 18px;
+  max-width: 320px;
+  border-radius: 16px;
   overflow: hidden;
-  box-shadow: 0 4px 15px rgba(0, 0, 0, 0.05);
-  transition: all 0.3s ease;
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.3);
+  transition:
+    transform 0.3s ease,
+    box-shadow 0.3s ease;
   display: flex;
   flex-direction: column;
+  height: 100%;
 }
 
 .card:hover {
-  transform: translateY(-5px);
-  box-shadow: 0 8px 25px rgba(0, 0, 0, 0.1);
-  border-color: var(--color-Azul);
+  transform: translateY(-4px);
+  box-shadow: 0 12px 32px rgba(0, 0, 0, 0.4);
 }
 
 .card.inactive {
-  opacity: 0.8;
-  filter: grayscale(0.4);
+  opacity: 0.65;
 }
 
-/* HEADER */
-.card-top {
-  background: linear-gradient(135deg, var(--color-Azul), var(--color-AzulTres));
-  padding: 12px 15px;
+/* Header con gradiente azul */
+.card-header {
+  background: linear-gradient(135deg, #1d65d8 0%, #c5c1c1 100%);
+  padding: 16px;
+  color: white;
   display: flex;
-  justify-content: space-between;
-  align-items: center;
-}
-
-.inactive .card-top {
-  background: #95a5a6;
-}
-
-.period-pill {
-  background: rgba(255, 255, 255, 0.9);
-  color: var(--color-Azul);
-  font-size: 10px;
-  font-weight: bold;
-  padding: 3px 10px;
-  border-radius: 20px;
-  text-transform: uppercase;
-}
-
-.dot {
-  width: 8px;
-  height: 8px;
-  border-radius: 50%;
-  background: white;
-}
-
-.dot-active {
-  box-shadow: 0 0 8px #2ecc71;
-}
-
-/* BODY */
-.card-body {
-  padding: 20px 15px;
+  flex-direction: column;
+  gap: 12px;
   flex-grow: 1;
 }
 
-.card-title {
-  font-size: 1.1rem;
-  font-weight: 700;
-  color: var(--color-Texto);
-  margin-bottom: 8px;
-}
-
-.card-desc {
-  font-size: 0.85rem;
-  color: #777;
-  line-height: 1.4;
-  margin-bottom: 15px;
-  display: -webkit-box;
-  -webkit-line-clamp: 2;
-  -webkit-box-orient: vertical;
-  overflow: hidden;
-}
-
-/* META */
-.meta-box.full {
-  background: #f8f9fa;
-  border-radius: 12px;
-  padding: 10px;
-  border: 1px solid #eee;
-}
-
-.meta-label {
-  font-size: 10px;
-  color: #999;
-  text-transform: uppercase;
-  font-weight: bold;
-}
-
-.meta-value.teacher {
-  font-weight: 600;
-  color: var(--color-Azul);
-  font-size: 0.9rem;
-}
-
-/* FOOTER */
-.card-footer {
-  padding: 12px 15px;
+.header-top {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  border-top: 1px solid #f5f5f5;
 }
 
-.status {
-  font-size: 11px;
-  font-weight: bold;
-  padding: 2px 8px;
-  border-radius: 6px;
+.period-badge {
+  background: rgba(255, 255, 255, 0.25);
+  backdrop-filter: blur(10px);
+  padding: 6px 12px;
+  border-radius: 20px;
+  font-size: 0.75rem;
+  font-weight: 600;
+  color: white;
+  border: 1px solid rgba(255, 255, 255, 0.3);
 }
 
-.status-active {
-  background: #e3f9e5;
-  color: #1f7a28;
-}
-.status-inactive {
-  background: #feeef0;
-  color: #e74c3c;
+.status-badge {
+  background: rgba(255, 255, 255, 0.25);
+  padding: 6px 12px;
+  border-radius: 20px;
+  font-size: 0.75rem;
+  font-weight: 600;
+  color: white;
+  border: 1px solid rgba(255, 255, 255, 0.3);
 }
 
-.counts {
-  font-size: 12px;
+.status-badge.active {
+  background: rgba(120, 251, 166, 0.79);
+  border-color: rgba(6, 255, 102, 0.76);
+}
+
+.group-title {
+  font-size: 1.5rem;
+  font-weight: 700;
+  margin: 0;
+  color: white;
+}
+
+/* Contenido principal */
+.card-content {
+  background: #d0e4f7;
+  padding: 16px;
+  display: flex;
+  flex-direction: column;
+  gap: 18px;
+}
+
+/* Sección de fechas */
+.dates-section {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+}
+
+.date-block {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.date-label {
+  font-size: 0.7rem;
+  font-weight: 700;
+  color: #4b7ba7;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  margin: 0;
+}
+
+.date-value {
+  font-size: 0.95rem;
+  font-weight: 600;
+  color: #1e3a5f;
+  margin: 0;
+}
+
+.date-separator {
+  width: 1px;
+  height: 40px;
+  background: rgba(30, 58, 95, 0.15);
+}
+
+/* Sección de estadísticas */
+.stats-section {
   display: flex;
   gap: 12px;
-  font-weight: 600;
-  color: #555;
 }
 
-/* ACTION */
-.card-action {
-  padding: 0 15px 15px;
-}
-
-.view-btn {
-  width: 100%;
-  padding: 10px;
+.stat-item {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  background: rgba(255, 255, 255, 0.6);
+  padding: 12px;
   border-radius: 12px;
-  background: var(--color-Azul);
+}
+
+.stat-icon {
+  width: 44px;
+  height: 44px;
+  border-radius: 10px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
   color: white;
-  border: none;
-  font-weight: bold;
-  font-size: 0.85rem;
-  cursor: pointer;
-  transition: 0.2s;
+  font-weight: 700;
 }
 
-.view-btn:hover {
-  background: var(--color-AzulTres);
-  transform: scale(1.02);
+.stat-icon svg {
+  width: 24px;
+  height: 24px;
 }
 
-.view-btn:active {
-  transform: scale(0.98);
+.students-icon {
+  background: linear-gradient(135deg, #3b82f6 0%, #929db3 100%);
+}
+
+.assignments-icon {
+  background: linear-gradient(135deg, #4ade80 0%, #58cd83 100%);
+}
+
+.stat-number {
+  font-size: 1.1rem;
+  font-weight: 700;
+  color: #1e3a5f;
+  margin: 0;
+}
+
+.stat-label {
+  font-size: 0.75rem;
+  color: #4b7ba7;
+  margin: 0;
+}
+
+/* Sección de profesor */
+.teacher-section {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding-top: 8px;
+  border-top: 1px solid rgba(30, 58, 95, 0.1);
+}
+
+.teacher-avatar {
+  width: 44px;
+  height: 44px;
+  border-radius: 50%;
+  background: linear-gradient(135deg, #3b82f6 0%, #294173 100%);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: white;
+  font-weight: 700;
+  font-size: 0.95rem;
+  flex-shrink: 0;
+}
+
+.teacher-info {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.teacher-name {
+  font-size: 0.95rem;
+  font-weight: 600;
+  color: #1e3a5f;
+  margin: 0;
+}
+
+.teacher-role {
+  font-size: 0.75rem;
+  color: #4b7ba7;
+  margin: 0;
+}
+
+/* Responsive */
+@media (max-width: 640px) {
+  .card {
+    max-width: 100%;
+  }
+
+  .group-title {
+    font-size: 1.3rem;
+  }
+
+  .date-value {
+    font-size: 0.85rem;
+  }
 }
 </style>

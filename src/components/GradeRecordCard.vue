@@ -1,21 +1,24 @@
 <script setup lang="ts">
 interface Grade {
   unit_name: string
-  grade: number
-  order: number
+  grade: any
 }
 
 defineProps<{ grade: Grade }>()
+
+const formatGrade = (value: any) => {
+  const num = parseFloat(value)
+  return isNaN(num) ? '0.0' : num.toFixed(1)
+}
 </script>
 
 <template>
   <div class="unit-grade-item">
     <div class="unit-info">
-      <span class="unit-number">Unidad {{ grade.order }}</span>
       <p class="unit-name">{{ grade.unit_name }}</p>
     </div>
-    <div :class="['grade-badge', grade.grade >= 7 ? 'pass' : 'fail']">
-      {{ grade.grade.toFixed(1) }}
+    <div :class="['grade-badge', parseFloat(grade.grade) >= 7 ? 'pass' : 'fail']">
+      {{ formatGrade(grade.grade) }}
     </div>
   </div>
 </template>
@@ -26,16 +29,10 @@ defineProps<{ grade: Grade }>()
   justify-content: space-between;
   align-items: center;
   padding: 12px 15px;
-  background: #f8f9fa;
+  background: var(--color-Blanco);
+  border: 1px solid var(--color-Bordes);
   border-radius: 10px;
   margin-bottom: 8px;
-}
-
-.unit-number {
-  font-size: 0.7rem;
-  font-weight: bold;
-  color: var(--color-AzulTres);
-  text-transform: uppercase;
 }
 
 .unit-name {
@@ -55,11 +52,11 @@ defineProps<{ grade: Grade }>()
 }
 
 .pass {
-  background: #e3f9e5;
-  color: #1f7a28;
+  background: var(--color-Entregado);
+  color: var(--color-StatusEntregado);
 }
 .fail {
-  background: #fee2e2;
-  color: #b91c1c;
+  background: var(--color-Tardio);
+  color: var(--color-StatusTardio);
 }
 </style>

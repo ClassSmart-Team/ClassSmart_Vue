@@ -1,18 +1,53 @@
 <script setup lang="ts">
 import { useapi } from '@/assets/composables/useApi'
-import { useAuthStore } from '@/stores/authStore'
 import { computed } from 'vue'
+import type { ScheduleItem } from '@/types/types.ts'
 
-const uas = useAuthStore()
+const props = defineProps<{
+  childId: number | string
+}>()
 
-const { data, isFetching, error } = useapi('/schedule', {
-})
-  .get()
-  .json()
+
+const { data, isFetching, error } = useapi(`/children/${props.childId}/schedule`).json()
+
+const scheduleData = computed<ScheduleItem[]>(() => data.value?.data || [])
 
 const days = ['Lunes', 'Martes', 'Miércoles', 'Jueves', 'Viernes']
 
-const scheduleData = computed(() => data.value?.data || [])
+const timeSlots = [
+  { start: '07:00:00', end: '07:50:00' },
+  { start: '07:50:00', end: '08:40:00' },
+  { start: '08:40:00', end: '09:30:00' },
+  { start: '09:30:00', end: '09:50:00' }, // Descanso o cambio
+  { start: '09:50:00', end: '10:40:00' },
+  { start: '10:40:00', end: '11:30:00' },
+  { start: '11:30:00', end: '12:20:00' },
+  { start: '12:20:00', end: '13:10:00' },
+  { start: '13:10:00', end: '14:00:00' },
+]
+
+const getSubjectForSlot = (day: string, slotStart: string, slotEnd: string) => {
+  return scheduleData.value.find((item) => {
+    const normalize = (str: string) =>
+      str
+        .normalize('NFD')
+        .replace(/[\u0300-\u036f]/g, '')
+        .trim()
+        .toLowerCase()
+
+    const itemStart = item.start_time
+    const itemEnd = item.end_time
+    const itemDay = normalize(item.day)
+    const currentDay = normalize(day)
+
+    return itemDay === currentDay && slotStart >= itemStart && slotEnd <= itemEnd
+  })
+}
+
+const formatTime = (time: string) => {
+  if (!time) return '--:--'
+  return time.slice(0, 5)
+}
 </script>
 
 <template>
@@ -32,13 +67,23 @@ const scheduleData = computed(() => data.value?.data || [])
           </tr>
         </thead>
         <tbody>
-          <tr v-for="timeBlock in scheduleData" :key="timeBlock.id">
-            <td class="hour-col">{{ timeBlock.start_time }} - {{ timeBlock.end_time }}</td>
+          <tr
+            v-for="(slot, index) in timeSlots"
+            :key="index"
+            :class="{ 'break-row': slot.start === '09:30:00' }"
+          >
+            <td class="hour-col">{{ formatTime(slot.start) }} - {{ formatTime(slot.end) }}</td>
 
             <td v-for="day in days" :key="day">
-              <div v-if="timeBlock.day === day" class="subject-card">
-                <span class="subject-name">{{ timeBlock.subject }}</span>
-                <span class="subject-room">{{ timeBlock.room }}</span>
+              <div v-if="slot.start === '09:30:00'" class="break-text">RECESO</div>
+
+              <div v-else-if="getSubjectForSlot(day, slot.start, slot.end)" class="subject-card">
+                <span class="subject-name">
+                  {{ getSubjectForSlot(day, slot.start, slot.end)!.subject_name }}
+                </span>
+                <span class="subject-room">
+                  {{ getSubjectForSlot(day, slot.start, slot.end)!.teacher_name }}
+                </span>
               </div>
             </td>
           </tr>
@@ -63,26 +108,32 @@ const scheduleData = computed(() => data.value?.data || [])
 .table-container {
   overflow-x: auto;
   border-radius: 15px;
+  scrollbar-width: none; /* Firefox */
+  -ms-overflow-style: none;
+}
+
+.table-container::-webkit-scrollbar {
+  display: none;
 }
 
 table {
   width: 100%;
   border-collapse: collapse;
-  background: white;
+  background: var(--color-Blanco);
 }
 
 th {
   background-color: var(--color-Azul);
   color: white;
-  padding: 15px;
+  padding: 8px;
   text-transform: uppercase;
-  font-size: 0.9rem;
+  font-size: 0.75rem;
 }
 
 td {
-  padding: 10px;
+  padding: 4px;
   border: 1px solid var(--color-ContenedorClaro);
-  height: 80px; /* Altura fija para que parezca rejilla */
+  height: 35px; /* Altura fija para que parezca rejilla */
   vertical-align: middle;
 }
 
@@ -90,27 +141,60 @@ td {
   background-color: var(--color-ContenedorClaro);
   color: var(--color-AzulTres);
   font-weight: bold;
-  width: 120px;
+  font-family: 'Roboto', sans-serif;
+  font-size: 0.65rem;
+  width: 80px;
+  text-align: center;
+}
+
+.break-row td {
+  height: 25px !important;
+  background-color: var(--color-Fondo);
+  padding: 0;
+}
+
+.break-text {
+  font-size: 0.5rem;
+  font-weight: bold;
+  color: #94a3b8;
+  text-align: center;
+  text-transform: uppercase;
+  letter-spacing: 2px;
+}
+
+.break-row .hour-col {
+  font-size: 0.55rem;
+  color: #64748b;
 }
 
 .subject-card {
-  background: var(--color-AzulCuatro);
-  color: white;
-  padding: 8px;
-  border-radius: 8px;
+  font-family: 'Roboto', sans-serif; /* Aplicamos Roboto */
+  padding: 4px; /* Un poco menos de padding para ahorrar espacio */
   display: flex;
   flex-direction: column;
-  gap: 4px;
-  font-size: 0.85rem;
-  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+  gap: 1px; /* Gap mínimo */
+  font-size: 0.6rem;
+  border-radius: 6px;
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.1);
+  line-height: 1.1;
+  color: var(--color-Texto);
 }
 
 .subject-name {
-  font-weight: bold;
+  font-weight: 800;
+  text-transform: uppercase;
+  margin-bottom: 5px;
+  font-size: 0.55rem;
+  justify-items: center;
 }
+
 .subject-room {
-  opacity: 0.8;
-  font-size: 0.75rem;
+  opacity: 0.9;
+  font-weight: 500;
+  font-size: 0.5rem;
+  text-align: right;
+  margin-top: 2px;
+  font-style: italic;
 }
 
 tr:hover td {

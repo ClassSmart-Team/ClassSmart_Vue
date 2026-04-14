@@ -1,125 +1,154 @@
 <script setup lang="ts">
+import { computed } from 'vue'
+
+// Definimos la interfaz aquí o la importamos de tu archivo de tipos
 interface Notification {
   id: number
-  type: 'task' | 'forum' | 'grade' | 'system'
   title: string
-  message: string
-  date: string
-  isRead: boolean
-  routeName: string // Nombre de la ruta a la que redirige
-  params?: object // Parámetros para la ruta (ej: { id: 5 })
+  message?: string
+  read_at: string | null
+  created_at: string
+  // ... otros campos
 }
 
-defineProps<{ notification: Notification }>()
+const props = defineProps<{
+  notification: Notification
+}>()
+
 const emit = defineEmits(['navigate'])
 
-const getIcon = (type: string) => {
-  const icons = {
-    task: '📝',
-    forum: '💬',
-    grade: '🎓',
-    system: '🔔',
-  }
-  return icons[type] || '🔔'
-}
+// Lógica de formateo de fecha (movida al componente para que sea autónomo)
+const formattedDate = computed(() => {
+  if (!props.notification.created_at) return ''
+  const date = new Date(props.notification.created_at)
+  const now = new Date()
+  const diffMs = now.getTime() - date.getTime()
+  const diffMin = Math.floor(diffMs / 60000)
+  const diffHrs = Math.floor(diffMin / 60)
+  const diffDays = Math.floor(diffHrs / 24)
+
+  if (diffMin < 1) return 'Ahora mismo'
+  if (diffMin < 60) return `Hace ${diffMin} min`
+  if (diffHrs < 24) return `Hace ${diffHrs} h`
+  if (diffDays === 1) return 'Ayer'
+  return date.toLocaleDateString('es-MX', { day: '2-digit', month: 'short' })
+})
 </script>
 
 <template>
   <div
-    @click="emit('navigate', notification)"
-    :class="['notification-item', { unread: !notification.isRead }]"
+    class="notif-card"
+    :class="{ unread: !notification.read_at }"
+    @click="$emit('navigate', notification)"
   >
-    <div class="icon-wrapper">
-      {{ getIcon(notification.type) }}
+    <span v-if="!notification.read_at" class="unread-dot" />
+
+    <div class="notif-icon">
+      <svg
+        xmlns="http://www.w3.org/2000/svg"
+        viewBox="0 0 24 24"
+        fill="none"
+        stroke="currentColor"
+        stroke-width="2"
+        stroke-linecap="round"
+        stroke-linejoin="round"
+      >
+        <path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9" />
+        <path d="M13.73 21a2 2 0 0 1-3.46 0" />
+      </svg>
     </div>
 
-    <div class="content">
-      <div class="header">
-        <h4>{{ notification.title }}</h4>
-        <span class="time">{{ notification.date }}</span>
+    <div class="notif-body">
+      <div class="notif-top">
+        <span class="notif-title">{{ notification.title || 'Nueva Notificación' }}</span>
+        <span class="notif-time">{{ formattedDate }}</span>
       </div>
-      <p>{{ notification.message }}</p>
+      <p class="notif-text">
+        {{ notification.message || 'Toca para ver el detalle de esta notificación.' }}
+      </p>
     </div>
-
-    <div v-if="!notification.isRead" class="unread-dot"></div>
   </div>
 </template>
 
 <style scoped>
-.notification-item {
+.notif-card {
   display: flex;
-  gap: 15px;
-  padding: 15px;
-  background: white;
-  border-bottom: 1px solid #eee;
+  align-items: flex-start;
+  gap: 14px;
+  padding: 16px;
+  border-radius: 15px;
+  border: 1px solid #f1f5f9;
+  background: #f8fafc;
   cursor: pointer;
-  transition: background 0.2s;
+  transition: all 0.15s;
   position: relative;
-  align-items: center;
 }
-
-.notification-item:hover {
-  background: #f8faff;
+.notif-card:hover {
+  background: #f1f5f9;
+  border-color: #e2e8f0;
 }
-
-.notification-item.unread {
-  background: #f0f4ff;
-}
-
-.icon-wrapper {
-  font-size: 1.5rem;
-  min-width: 45px;
-  height: 45px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  background: white;
-  border-radius: 50%;
-  box-shadow: 0 2px 5px rgba(0, 0, 0, 0.05);
-}
-
-.content {
-  flex-grow: 1;
-}
-
-.header {
-  display: flex;
-  justify-content: space-between;
-  margin-bottom: 4px;
-}
-
-.header h4 {
-  margin: 0;
-  font-size: 0.95rem;
-  color: var(--color-Azul);
-}
-
-.time {
-  font-size: 0.75rem;
-  color: #999;
-}
-
-.content p {
-  margin: 0;
-  font-size: 0.85rem;
-  color: #666;
-  line-height: 1.4;
+.notif-card.unread {
+  background: #eff6ff;
+  border-color: #bfdbfe;
+  border-left: 3px solid #2563eb;
 }
 
 .unread-dot {
-  width: 10px;
-  height: 10px;
-  background: var(--color-AzulTres);
+  position: absolute;
+  top: 14px;
+  right: 14px;
+  width: 8px;
+  height: 8px;
+  background: #2563eb;
   border-radius: 50%;
-  margin-left: 10px;
 }
 
-@media (max-width: 600px) {
-  .notification-item {
-    padding: 12px;
-  }
-  .time {
-    font-size: 0.7rem;
-  }
+.notif-icon {
+  width: 38px;
+  height: 38px;
+  flex-shrink: 0;
+  background: white;
+  border-radius: 10px;
+  border: 1px solid #e2e8f0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #2563eb;
+}
+.notif-icon svg {
+  width: 18px;
+  height: 18px;
+}
+
+.notif-body {
+  flex: 1;
+  min-width: 0;
+}
+.notif-top {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: 8px;
+  margin-bottom: 4px;
+}
+.notif-title {
+  font-size: 0.88rem;
+  font-weight: 700;
+  color: #334155;
+}
+.notif-time {
+  font-size: 0.72rem;
+  color: #94a3b8;
+  white-space: nowrap;
+  flex-shrink: 0;
+}
+.notif-text {
+  font-size: 0.8rem;
+  color: #64748b;
+  margin: 0;
+  line-height: 1.5;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
 }
 </style>
