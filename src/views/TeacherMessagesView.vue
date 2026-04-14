@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { computed, nextTick, onBeforeUnmount, onMounted, ref, watch } from 'vue'
-import SideBarLayout from '@/components/ParentSidebar.vue'
+import SidebarLayout from '@/components/TeacherSidebar.vue'
 import { useapi } from '@/assets/composables/useApi'
 import { useAuthStore } from '@/stores/authStore'
 import type { Chat, ChatMessage } from '@/types/types'
@@ -350,7 +350,7 @@ onBeforeUnmount(() => {
 
 <template>
   <div class="messages-page">
-    <SideBarLayout>
+    <SidebarLayout>
       <div class="messages-view">
         <div class="ContSmall">
           <div class="left">
@@ -569,7 +569,7 @@ onBeforeUnmount(() => {
           </div>
         </div>
       </div>
-    </SideBarLayout>
+    </SidebarLayout>
   </div>
 </template>
 
