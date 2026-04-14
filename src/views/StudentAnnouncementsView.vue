@@ -185,10 +185,7 @@ function hue(name?: string) {
                 </div>
                 <div class="ann-card__meta">
                   <span class="ann-card__date">{{ formatDate(ann.created_at) }}</span>
-                  <button
-                    class="ann-card__chevron"
-                    @click="toggleExpand(ann.id)"
-                  >
+                  <button class="ann-card__chevron" @click="toggleExpand(ann.id)">
                     <svg
                       width="16" height="16"
                       viewBox="0 0 24 24"
@@ -250,20 +247,30 @@ function hue(name?: string) {
 </template>
 
 <style scoped>
-/* ── Fondo con gradiente del sistema ─────────── */
+/* ─── FULL-BLEED: escapa el padding del SidebarLayout ─── */
 .page {
-  position: relative;
-  min-height: 100vh;
+  /* Cancela el padding del layout (24px) en todos los lados */
+  margin: -24px;
+  /* Ancho que cubre el espacio recuperado */
+  width: calc(100% + 48px);
+  /* Alto mínimo que cubre toda la pantalla visible */
+  min-height: calc(100vh);
+  box-sizing: border-box;
+
+  /* Padding interno para el contenido */
+  padding: 28px;
+
+  /* Gradiente de fondo */
   background: linear-gradient(180deg, var(--color-AzulDos), var(--color-ComplementoDos));
+
   display: flex;
   flex-direction: column;
   gap: 24px;
-  padding: 28px 28px 40px;
-  box-sizing: border-box;
-  overflow: hidden;
+  position: relative;
+  overflow-x: hidden;
 }
 
-/* ── Orbes blur decorativos ──────────────────── */
+/* ─── Orbes blur decorativos ─── */
 .orb {
   position: absolute;
   border-radius: 50%;
@@ -296,10 +303,14 @@ function hue(name?: string) {
   left: 40%;
 }
 
-/* ── Header ──────────────────────────────────── */
-.page__header {
+/* Todo el contenido por encima de los orbes */
+.page > *:not(.orb) {
   position: relative;
   z-index: 1;
+}
+
+/* ─── Header ─── */
+.page__header {
   display: flex;
   align-items: center;
   gap: 16px;
@@ -337,12 +348,11 @@ function hue(name?: string) {
 
 .page__sub {
   margin: 0;
-  font-size: 1rem;
+  font-size: 0.9rem;
   color: rgba(255, 255, 255, 0.85);
-  font-weight: 500;
 }
 
-/* ── Panel glassmorphism ─────────────────────── */
+/* ─── Panel glassmorphism ─── */
 .panel {
   position: relative;
   z-index: 1;
@@ -358,7 +368,7 @@ function hue(name?: string) {
   gap: 18px;
 }
 
-/* ── Buscador ────────────────────────────────── */
+/* ─── Buscador ─── */
 .search-bar {
   display: flex;
   align-items: center;
@@ -406,7 +416,7 @@ function hue(name?: string) {
 
 .search-bar__clear:hover { color: var(--color-AzulCuatro); }
 
-/* ── Chips ───────────────────────────────────── */
+/* ─── Chips ─── */
 .chips {
   display: flex;
   flex-wrap: wrap;
@@ -452,7 +462,7 @@ function hue(name?: string) {
   flex-shrink: 0;
 }
 
-/* ── Estados ─────────────────────────────────── */
+/* ─── Estados ─── */
 .state {
   display: flex;
   align-items: center;
@@ -492,14 +502,14 @@ function hue(name?: string) {
   font-weight: 500;
 }
 
-/* ── Lista ───────────────────────────────────── */
+/* ─── Lista ─── */
 .ann-list {
   display: flex;
   flex-direction: column;
   gap: 12px;
 }
 
-/* ── Card ────────────────────────────────────── */
+/* ─── Card ─── */
 .ann-card {
   display: flex;
   border-radius: 16px;
@@ -532,7 +542,6 @@ function hue(name?: string) {
   backdrop-filter: blur(8px);
 }
 
-/* Top row */
 .ann-card__top {
   display: flex;
   align-items: center;
@@ -607,7 +616,6 @@ function hue(name?: string) {
 .chevron-icon { transition: transform 0.25s ease; }
 .chevron-icon.rotated { transform: rotate(180deg); }
 
-/* Título */
 .ann-card__title {
   margin: 0;
   font-size: 1.05rem;
@@ -616,7 +624,6 @@ function hue(name?: string) {
   line-height: 1.3;
 }
 
-/* Mensaje colapsable */
 .ann-card__collapse {
   max-height: 0;
   overflow: hidden;
@@ -633,7 +640,6 @@ function hue(name?: string) {
   padding-top: 2px;
 }
 
-/* Footer */
 .ann-card__footer {
   display: flex;
   align-items: center;
@@ -679,7 +685,7 @@ function hue(name?: string) {
 
 .ann-card__read-btn:hover { color: var(--color-AzulCuatro); text-decoration: underline; }
 
-/* Contador */
+/* ─── Contador ─── */
 .count {
   margin: 0;
   text-align: center;
@@ -688,7 +694,7 @@ function hue(name?: string) {
   font-weight: 500;
 }
 
-/* Animaciones */
+/* ─── Animaciones ─── */
 @keyframes slideUp {
   from { opacity: 0; transform: translateY(14px); }
   to   { opacity: 1; transform: translateY(0); }
@@ -698,9 +704,15 @@ function hue(name?: string) {
   to { transform: rotate(360deg); }
 }
 
-/* ── Responsive ──────────────────────────────── */
+/* ─── Responsive ─── */
 @media (max-width: 768px) {
-  .page { padding: 20px 16px 32px; }
+  .page {
+    /* El layout mobile suele tener 16px de padding */
+    margin: -16px;
+    width: calc(100% + 32px);
+    padding: 20px 16px 32px;
+  }
+
   .page__title { font-size: 1.6rem; }
   .ann-card__group-name { max-width: 130px; }
   .orb--1 { width: 260px; height: 260px; }

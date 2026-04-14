@@ -52,7 +52,7 @@ const { data: periodsData } = useapi('/periods', {
 }).json()
 
 function showgroup(id:number){
-  router.push({name:'teachershowgroup',params:{id}})
+  router.push({name:'studentshowgroup',params:{id}})
 }
 </script>
 

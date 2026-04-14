@@ -113,7 +113,6 @@ const filteredAnnouncements = computed(() => {
   })
 })
 
-// Grupos que tienen al menos un anuncio
 const groupsWithAnnouncements = computed(() => {
   const ids = new Set(announcements.value.map((a) => a.group?.id).filter(Boolean))
   return availableGroups.value.filter((g) => ids.has(g.id))
@@ -276,10 +275,11 @@ function deleteAnnouncement(announcement: AnnouncementItem) {
 
 <template>
   <SidebarLayout>
-    <div class="bg-page page-wrapper">
+    <!-- El page-wrapper se extiende fuera del padding del layout -->
+    <div class="page-wrapper">
 
       <!-- Header superior -->
-      <div class="page-header header-box">
+      <div class="page-header">
         <div class="page-header__left">
           <div class="page-header__icon">
             <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
@@ -519,17 +519,61 @@ function deleteAnnouncement(announcement: AnnouncementItem) {
 </template>
 
 <style scoped>
-/* Wrapper general */
+/* ─── FULL-BLEED: escapa el padding del SidebarLayout ─── */
 .page-wrapper {
+  /* Cancela el padding del layout en todos los lados */
+  margin: -24px;
+  /* Recupera el espacio interno para el contenido */
+  padding: 24px;
+  /* Ancho exacto incluyendo los márgenes negativos */
+  width: calc(100% + 48px);
+  /* Alto mínimo que cubra toda la pantalla */
+  min-height: calc(100vh);
+  box-sizing: border-box;
+
+  /* Fondo con gradiente del sistema de diseño */
+  background: linear-gradient(180deg, var(--color-AzulDos), var(--color-ComplementoDos));
   display: flex;
   flex-direction: column;
   gap: 20px;
-  padding: 24px;
-  min-height: 100vh;
-  box-sizing: border-box;
+  position: relative;
+  overflow-x: hidden;
 }
 
-/* Header */
+/* Orbes blur decorativos (igual que la vista estudiante) */
+.page-wrapper::before,
+.page-wrapper::after {
+  content: '';
+  position: absolute;
+  border-radius: 50%;
+  filter: blur(80px);
+  pointer-events: none;
+  z-index: 0;
+}
+
+.page-wrapper::before {
+  width: 420px;
+  height: 420px;
+  background: rgba(139, 194, 243, 0.35);
+  top: -120px;
+  right: -80px;
+}
+
+.page-wrapper::after {
+  width: 320px;
+  height: 320px;
+  background: rgba(113, 225, 253, 0.3);
+  bottom: 60px;
+  left: -60px;
+}
+
+/* Todo el contenido por encima de los orbes */
+.page-wrapper > * {
+  position: relative;
+  z-index: 1;
+}
+
+/* ─── Header ─── */
 .page-header {
   display: flex;
   align-items: center;
@@ -545,32 +589,36 @@ function deleteAnnouncement(announcement: AnnouncementItem) {
 }
 
 .page-header__icon {
-  width: 46px;
-  height: 46px;
-  background: rgba(255, 255, 255, 0.25);
-  border-radius: 14px;
+  width: 52px;
+  height: 52px;
+  background: rgba(255, 255, 255, 0.2);
+  backdrop-filter: blur(12px);
+  border: 1.5px solid rgba(255, 255, 255, 0.4);
+  border-radius: 16px;
   display: flex;
   align-items: center;
   justify-content: center;
   color: white;
   flex-shrink: 0;
+  box-shadow: 0 4px 20px rgba(0,0,0,0.1);
 }
 
 .page-header__title {
-  margin: 0 0 3px;
-  font-size: 1.5rem;
-  font-weight: 800;
+  margin: 0 0 4px;
+  font-size: 1.9rem;
+  font-weight: 900;
   color: white;
-  letter-spacing: -0.3px;
+  letter-spacing: -0.4px;
+  text-shadow: 0 2px 12px rgba(0,0,0,0.15);
 }
 
 .page-header__sub {
   margin: 0;
-  font-size: 0.88rem;
+  font-size: 0.9rem;
   color: rgba(255, 255, 255, 0.85);
 }
 
-/* Botón nuevo */
+/* ─── Botón nuevo ─── */
 .btn-new {
   display: inline-flex;
   align-items: center;
@@ -594,15 +642,18 @@ function deleteAnnouncement(announcement: AnnouncementItem) {
   box-shadow: 0 4px 16px rgba(0,0,0,0.15);
 }
 
-/* Panel blanco */
+/* ─── Panel principal (glassmorphism) ─── */
 .main-box {
-  background: var(--color-Blanco);
-  border-radius: 20px;
+  background: rgba(255, 255, 255, 0.18);
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+  border: 1.5px solid rgba(255, 255, 255, 0.35);
+  border-radius: 24px;
   padding: 22px;
-  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.07);
+  box-shadow: 0 8px 40px rgba(8, 70, 122, 0.2), inset 0 1px 0 rgba(255,255,255,0.4);
 }
 
-/* Toolbar */
+/* ─── Toolbar ─── */
 .toolbar {
   display: flex;
   align-items: center;
@@ -622,7 +673,7 @@ function deleteAnnouncement(announcement: AnnouncementItem) {
   left: 12px;
   top: 50%;
   transform: translateY(-50%);
-  color: #94a3b8;
+  color: var(--color-AzulTres);
   pointer-events: none;
 }
 
@@ -630,20 +681,24 @@ function deleteAnnouncement(announcement: AnnouncementItem) {
   width: 100%;
   padding: 10px 36px 10px 38px;
   border-radius: 12px;
-  border: 1.5px solid #e2e8f0;
-  background: var(--color-Fondo);
+  border: 1.5px solid rgba(255, 255, 255, 0.6);
+  background: rgba(255, 255, 255, 0.55);
+  backdrop-filter: blur(10px);
   font-size: 0.92rem;
   box-sizing: border-box;
   font-family: inherit;
-  color: var(--color-Texto);
-  transition: border-color 0.2s, box-shadow 0.2s;
+  color: var(--color-AzulCuatro);
+  font-weight: 500;
+  transition: border-color 0.2s, box-shadow 0.2s, background 0.2s;
 }
+
+.search-input::placeholder { color: rgba(30, 103, 163, 0.5); }
 
 .search-input:focus {
   outline: none;
-  border-color: var(--color-AzulDos);
-  box-shadow: 0 0 0 3px rgba(75, 164, 223, 0.15);
-  background: white;
+  border-color: white;
+  box-shadow: 0 0 0 3px rgba(255, 255, 255, 0.25);
+  background: rgba(255, 255, 255, 0.8);
 }
 
 .search-clear {
@@ -654,44 +709,82 @@ function deleteAnnouncement(announcement: AnnouncementItem) {
   background: none;
   border: none;
   cursor: pointer;
-  color: #94a3b8;
+  color: var(--color-AzulTres);
   display: flex;
   align-items: center;
   padding: 2px;
 }
 
-.search-clear:hover { color: #475569; }
+.search-clear:hover { color: var(--color-AzulCuatro); }
 
 .toolbar__count {
   font-size: 0.83rem;
   font-weight: 600;
-  color: #94a3b8;
+  color: rgba(255, 255, 255, 0.75);
   white-space: nowrap;
 }
 
-/* Estados */
+/* ─── Chips de grupo ─── */
+.group-chips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-bottom: 20px;
+}
+
+.group-chip {
+  padding: 7px 16px;
+  border-radius: 999px;
+  border: 1.5px solid rgba(255, 255, 255, 0.5);
+  background: rgba(255, 255, 255, 0.2);
+  color: white;
+  font-size: 0.83rem;
+  font-weight: 600;
+  cursor: pointer;
+  font-family: inherit;
+  transition: all 0.18s ease;
+  white-space: nowrap;
+  backdrop-filter: blur(6px);
+}
+
+.group-chip:hover {
+  background: rgba(255, 255, 255, 0.35);
+  border-color: rgba(255,255,255,0.7);
+}
+
+.group-chip--active {
+  background: white;
+  color: var(--color-AzulCuatro);
+  border-color: transparent;
+  box-shadow: 0 3px 14px rgba(8, 70, 122, 0.25);
+}
+
+.group-chip--active:hover { background: white; color: var(--color-AzulCuatro); }
+
+/* ─── Estados ─── */
 .state-msg {
   display: flex;
   align-items: center;
   justify-content: center;
   gap: 10px;
   padding: 40px 20px;
-  color: var(--color-OscuroAzulado);
+  color: white;
   font-size: 0.95rem;
+  font-weight: 500;
 }
 
-.state-msg--error { color: #c0392b; font-weight: 600; }
+.state-msg--error { color: #fce8e6; font-weight: 600; }
 
 .state-spinner {
   width: 20px;
   height: 20px;
-  border: 2.5px solid #e2e8f0;
-  border-top-color: var(--color-AzulDos);
+  border: 2.5px solid rgba(255,255,255,0.3);
+  border-top-color: white;
   border-radius: 50%;
   animation: spin 0.7s linear infinite;
 }
 
-/* Empty state */
+/* ─── Empty state ─── */
 .empty-state {
   display: flex;
   flex-direction: column;
@@ -704,19 +797,19 @@ function deleteAnnouncement(announcement: AnnouncementItem) {
 
 .empty-state__text {
   margin: 0;
-  color: #94a3b8;
+  color: rgba(255, 255, 255, 0.8);
   font-size: 0.95rem;
   text-align: center;
 }
 
-/* Grid de cards */
+/* ─── Grid de cards ─── */
 .cards-grid {
   display: grid;
   grid-template-columns: repeat(auto-fill, minmax(290px, 1fr));
   gap: 16px;
 }
 
-/* Modal */
+/* ─── Modal ─── */
 .modal-overlay {
   position: fixed;
   inset: 0;
@@ -792,7 +885,7 @@ function deleteAnnouncement(announcement: AnnouncementItem) {
 
 .modal-close:hover { background: #e2e8f0; color: #1e293b; }
 
-/* Formulario */
+/* ─── Formulario ─── */
 .modal-form {
   padding: 22px;
   overflow-y: auto;
@@ -866,7 +959,7 @@ function deleteAnnouncement(announcement: AnnouncementItem) {
   line-height: 1.55;
 }
 
-/* File drop zone */
+/* ─── File drop ─── */
 .file-drop {
   display: flex;
   flex-direction: column;
@@ -888,9 +981,7 @@ function deleteAnnouncement(announcement: AnnouncementItem) {
   color: var(--color-AzulTres);
 }
 
-.file-drop__input {
-  display: none;
-}
+.file-drop__input { display: none; }
 
 .file-drop__text {
   font-size: 0.88rem;
@@ -940,7 +1031,7 @@ function deleteAnnouncement(announcement: AnnouncementItem) {
 
 .file-current__link:hover { text-decoration: underline; }
 
-/* Actions del form */
+/* ─── Acciones del form ─── */
 .form-actions {
   display: flex;
   justify-content: flex-end;
@@ -982,69 +1073,28 @@ function deleteAnnouncement(announcement: AnnouncementItem) {
 .btn-submit:hover:not(:disabled) { transform: translateY(-1px); opacity: 0.92; }
 .btn-submit:disabled { opacity: 0.6; cursor: not-allowed; }
 
-/* Spinner */
+/* ─── Animaciones ─── */
 @keyframes spin {
   to { transform: rotate(360deg); }
 }
 
 .spin { animation: spin 0.8s linear infinite; }
 
-/* Chips de grupo */
-.group-chips {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 8px;
-  margin-bottom: 20px;
-}
-
-.group-chip {
-  padding: 6px 14px;
-  border-radius: 999px;
-  border: 1.5px solid #e2e8f0;
-  background: var(--color-Fondo);
-  color: #64748b;
-  font-size: 0.83rem;
-  font-weight: 600;
-  cursor: pointer;
-  transition: all 0.18s ease;
-  font-family: inherit;
-  white-space: nowrap;
-}
-
-.group-chip:hover {
-  border-color: var(--color-AzulDos);
-  color: var(--color-AzulTres);
-  background: #f0f9ff;
-}
-
-.group-chip--active {
-  background: linear-gradient(135deg, var(--color-AzulDos), var(--color-AzulTres));
-  color: white;
-  border-color: transparent;
-  box-shadow: 0 2px 8px rgba(75, 164, 223, 0.3);
-}
-
-.group-chip--active:hover {
-  color: white;
-  background: linear-gradient(135deg, var(--color-AzulDos), var(--color-AzulTres));
-}
-
-/* Responsive */
+/* ─── Responsive ─── */
 @media (max-width: 768px) {
-  .page-wrapper { padding: 16px; gap: 14px; }
+  .page-wrapper {
+    margin: -16px;
+    width: calc(100% + 32px);
+    padding: 16px;
+    gap: 14px;
+  }
 
   .page-header { flex-direction: column; align-items: stretch; }
-
   .page-header__left { flex-direction: row; }
-
   .btn-new { justify-content: center; }
-
   .cards-grid { grid-template-columns: 1fr; }
-
   .form-grid { grid-template-columns: 1fr; }
-
   .form-actions { flex-direction: column; }
-
   .form-actions .btn-cancel,
   .form-actions .btn-submit { width: 100%; justify-content: center; }
 }

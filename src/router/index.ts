@@ -1,44 +1,61 @@
 import { createRouter, createWebHistory } from 'vue-router'
+
+// Auth & registro
 import AdminRegistroView from '../views/AdminRegistroView.vue'
-import RegistroView from '../views/RegistroView.vue'
+import RegistroView from '@/views/RegistroView.vue'
 import LoginView from '@/views/LoginView.vue'
-import HomeTeacherView from '@/views/HomeTeacherView.vue'
-import ProfileTeacherView from '@/views/ProfileTeacherView.vue'
-import GroupsTeacherView from '@/views/GroupsTeacherView.vue'
-import TasksTeacherView from '@/views/TasksTeacherView.vue'
-import AnnouncementTeacherView from '@/views/AnnouncementTeacherView.vue'
-import SettingsView from '@/views/SettingsView.vue'
-import HomeParentView from '@/views/HomeParentView.vue'
-import ProfileParentView from '@/views/ProfileParentView.vue'
-import StudentsParentView from '@/views/StudentsParentView.vue'
-import GroupsParentView from '@/views/GroupsParentView.vue'
-import TasksParentView from '@/views/TasksParentView.vue'
-import GradesParentView from '@/views/GradesParentView.vue'
-import NotificationParentView from '@/views/NotificationParentView.vue'
-import SettingsParentView from '@/views/SettingsParentView.vue'
-import TaskDetailTeacherView from '@/views/TaskDetailTeacherView.vue'
+
+// Admin
 import AdminHomeView from '@/views/AdminHomeView.vue'
-import { useAuthStore } from '@/stores/authStore'
-import TeacherShowGroupView from "@/views/TeacherShowGroupView.vue";
-import HomeStudentView from "@/views/HomeStudentView.vue";
-import TaskDetailStudentView from "@/views/TaskDetailStudentView.vue";
-import TaskStudentView from "@/views/TaskStudentView.vue";
 import AdminUsersView from '@/views/AdminUsersView.vue'
-import ProfileStudentView from '@/views/ProfileStudentView.vue'
 import AdminRolesView from '@/views/AdminRolesView.vue'
 import AdminGroupsView from '@/views/AdminGroupsView.vue'
 import AdminAssignmentsView from '@/views/AdminAssignmentsView.vue'
 import AdminAnnouncementsView from '@/views/AdminAnnouncementsView.vue'
+import AdminPeriodsView from '@/views/AdminPeriodsView.vue'
+
+// Teacher
+import HomeTeacherView from '@/views/HomeTeacherView.vue'
+import ProfileTeacherView from '@/views/ProfileTeacherView.vue'
+import GroupsTeacherView from '@/views/GroupsTeacherView.vue'
+import TeacherShowGroupView from '@/views/TeacherShowGroupView.vue'
+import TasksTeacherView from '@/views/TasksTeacherView.vue'
+import TaskDetailTeacherView from '@/views/TaskDetailTeacherView.vue'
+import AnnouncementTeacherView from '@/views/AnnouncementTeacherView.vue'
+import NotificationTeacherView from '@/views/NotificationTeacherView.vue'
+import TeacherMessagesView from '@/views/TeacherMessagesView.vue'
+import SettingsTeacherView from '@/views/SettingsTeacherView.vue'
+
+// Parent
+import HomeParentView from '@/views/HomeParentView.vue'
+import ProfileParentView from '@/views/ProfileParentView.vue'
+import StudentsParentView from '@/views/StudentsParentView.vue'
+import GroupsParentView from '@/views/GroupsParentView.vue'
+import ShowGroupParent from '@/views/ShowGroupParent.vue'
+import TasksParentView from '@/views/TasksParentView.vue'
+import TaskDetailParentView from '@/views/TaskDetailParentView.vue'
+import GradesParentView from '@/views/GradesParentView.vue'
+import NotificationParentView from '@/views/NotificationParentView.vue'
+import AnnouncementParentView from '@/views/AnnouncementParentView.vue'
+
+// Student
+import HomeStudentView from '@/views/HomeStudentView.vue'
+import ProfileStudentView from '@/views/ProfileStudentView.vue'
 import studentGroupsView from '@/views/studentGroupsView.vue'
+import TaskStudentView from '@/views/TaskStudentView.vue'
+import TaskDetailStudentView from '@/views/TaskDetailStudentView.vue'
+import StudentAnnouncementsView from '@/views/StudentAnnouncementsView.vue'
 import StudentMessagesView from '@/views/StudentMessagesView.vue'
 import NotificationStudentView from '@/views/NotificationStudentView.vue'
-import NotificationTeacherView from '@/views/NotificationTeacherView.vue'
-import AdminPeriodsView from '@/views/AdminPeriodsView.vue'
-import ShowGroupParent from '@/views/ShowGroupParent.vue'
-import TaskDetailParentView from '@/views/TaskDetailParentView.vue'
-import AnnouncementParentView from '@/views/AnnouncementParentView.vue'
-import AnnouncementDetailView from '@/views/AnnouncementDetailView.vue'
 import SettingsStudentView from '@/views/SettingsStudentView.vue'
+
+// Shared
+import SettingsParentView from '@/views/SettingsParentView.vue'
+import AnnouncementDetailView from '@/views/AnnouncementDetailView.vue'
+
+// Store
+import { useAuthStore } from '@/stores/authStore'
+import StudentShowGroupView from '@/views/StudentShowGroupView.vue'
 //ROLES//
 //1-admin
 //2-teacher
@@ -132,9 +149,16 @@ const router = createRouter({
       name: 'groups',
       component: GroupsTeacherView,
       meta: { requiresAuth: true, rol: 2 },
-    },
+    }
+  ,{
+    path: '/student/show/group/:id',
+    name: 'studentshowgroup',
+    component: StudentShowGroupView,
+    meta: { requiresAuth: true, rol: 3 },
+  },
 
-    {
+
+  {
       path: '/teacher/show/group/:id',
       name: 'teachershowgroup',
       component: TeacherShowGroupView,
@@ -165,7 +189,7 @@ const router = createRouter({
     {
       path: '/teacher/messages',
       name: 'messages',
-      component: HomeTeacherView, // temporal
+      component: TeacherMessagesView,
       meta: { requiresAuth: true, rol: 2 },
     },
     {
@@ -178,7 +202,7 @@ const router = createRouter({
     {
       path: '/teacher/settings',
       name: 'SettingsTeacher',
-      component: SettingsStudentView,
+      component: SettingsTeacherView,
       meta: { requiresAuth: true, rol: 2 },
     },
 
@@ -235,69 +259,75 @@ const router = createRouter({
       component: SettingsStudentView,
       meta: { requiresAuth: true, rol: 3 },
     },
+    {
+      path: '/student/announcements',
+      name: 'studentAnnouncements',
+      component: StudentAnnouncementsView,
+      meta: { requiresAuth: true, rol: 3 },
+    },
 
     // Parent
     {
       path: '/parent/home',
       name: 'parentHome',
       component: HomeParentView,
-      meta: { requiresAuth: true, role: 4 },
+      meta: { requiresAuth: true, rol: 4 },
     },
 
     {
       path: '/parent/profile',
       name: 'parentProfile',
       component: ProfileParentView,
-      meta: { requiresAuth: true, role: 4 },
+      meta: { requiresAuth: true, rol: 4 },
     },
 
     {
       path: '/parent/students',
       name: 'parentStudents',
       component: StudentsParentView,
-      meta: { requiresAuth: true, role: 4 },
+      meta: { requiresAuth: true, rol: 4 },
     },
 
     {
       path: '/parent/groups',
       name: 'parentGroups',
       component: GroupsParentView,
-      meta: { requiresAuth: true, role: 4 },
+      meta: { requiresAuth: true, rol: 4 },
     },
 
     {
       path: '/parent/groups/:id/:childId',
       name: 'parentGroupDetail',
       component: ShowGroupParent,
-      meta: { requiresAuth: true, role: 4 },
+      meta: { requiresAuth: true, rol: 4 },
     },
 
     {
       path: '/parent/groups/:id/assignments/:childId',
       name: 'parentGroupAssignmentDetail',
       component: TaskDetailParentView,
-      meta: { requiresAuth: true, role: 4 },
+      meta: { requiresAuth: true, rol: 4 },
     },
 
     {
       path: '/parent/assignments/',
       name: 'parentAssignments',
       component: TasksParentView,
-      meta: { requiresAuth: true, role: 4 },
+      meta: { requiresAuth: true, rol: 4 },
     },
 
     {
       path: '/parent/assignments/:id/:childId',
       name: 'parentAssignmentsDetail',
       component: TaskDetailParentView,
-      meta: { requiresAuth: true, role: 4 },
+      meta: { requiresAuth: true, rol: 4 },
     },
 
     {
       path: '/parent/announcements',
       name: 'parentAnnouncements',
       component: AnnouncementParentView,
-      meta: { requiresAuth: true, role: 4 },
+      meta: { requiresAuth: true, rol: 4 },
     },
 
     {
@@ -305,28 +335,28 @@ const router = createRouter({
       name: 'parentAnnouncementDetail',
       component: AnnouncementDetailView,
       props: true,
-      meta: { requiresAuth: true, role: 4 },
+      meta: { requiresAuth: true, rol: 4 },
     },
 
     {
       path: '/parent/grades',
       name: 'parentGrades',
       component: GradesParentView,
-      meta: { requiresAuth: true, role: 4 },
+      meta: { requiresAuth: true, rol: 4 },
     },
 
     {
       path: '/parent/notifications',
       name: 'parentNotifications',
       component: NotificationParentView,
-      meta: { requiresAuth: true, role: 4 },
+      meta: { requiresAuth: true, rol: 4 },
     },
 
     {
       path: '/parent/settings',
       name: 'parentSettings',
       component: SettingsParentView,
-      meta: { requiresAuth: true, role: 4 },
+      meta: { requiresAuth: true, rol: 4 },
     },
   ],
 })
@@ -335,7 +365,7 @@ router.beforeEach((to, from, next) => {
   const authStore = useAuthStore()
   const user = authStore.credentials
 
-  // 🚫 Evitar que usuarios logueados entren a login
+  //Evitar que usuarios logueados entren a login
   if (to.name === 'Login' && user) {
     const role = user.user.role.id
 
@@ -348,7 +378,7 @@ router.beforeEach((to, from, next) => {
     }
   }
 
-  // 🔐 Rutas protegidas
+  //Rutas protegidas
   if (to.matched.some(r => r.meta.requiresAuth)) {
     if (!user) {
       return next({ name: 'Login' })
@@ -364,7 +394,7 @@ router.beforeEach((to, from, next) => {
     }
   }
 
-  // 🔁 Redirección desde "/"
+  //Redirección desde "/"
   if (to.path === '/') {
     if (!user) {
       return next({ name: 'Login' })
