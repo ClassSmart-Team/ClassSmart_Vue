@@ -15,9 +15,16 @@ const form = ref<Register>({
   cellphone: '',
 })
 
+const passwordConfirmation = ref('')
+
 function registrar() {
   errorMessage.value = ''
-  
+
+  if (form.value.password !== passwordConfirmation.value) {
+    errorMessage.value = 'Las contraseñas no coinciden.'
+    return
+  }
+
   const { data, onFetchError, onFetchResponse } = useFetch(
     'https://api.sutando-user.me/api/register',
     {
@@ -46,12 +53,12 @@ function registrar() {
   <div class="register-page">
     <div class="form-section-dark">
       <div class="register-box">
-        
+
         <h1 class="title-dark">Crear Cuenta</h1>
         <p class="subtitle-dark">Únete a nuestra comunidad educativa</p>
 
         <form class="register-form" @submit.prevent="registrar">
-          
+
           <div class="form-grid">
             <div class="input-container">
               <input v-model="form.name" type="text" placeholder=" " class="styled-input-dark" id="name" required />
@@ -84,12 +91,18 @@ function registrar() {
             <div class="input-highlight-dark"></div>
           </div>
 
+          <div class="input-container">
+            <input v-model="passwordConfirmation" type="password" placeholder=" " class="styled-input-dark" id="password_confirm" required />
+            <label for="password_confirm" class="styled-label-dark">Confirmar contraseña</label>
+            <div class="input-highlight-dark"></div>
+          </div>
+
           <div v-if="errorMessage" class="error-alert-dark">
             {{ errorMessage }}
           </div>
 
           <div class="footer-links-dark">
-            ¿Ya tienes cuenta? 
+            ¿Ya tienes cuenta?
             <a href="/login">Inicia sesión aquí</a>
           </div>
 
@@ -257,10 +270,10 @@ function registrar() {
   position: relative;
   background: linear-gradient(
     135deg,
-    #1e1b4b, /* Deep Indigo */
-    #312e81, /* Indigo */
-    #1e3a8a, /* Blue */
-    #0f172a  /* Slate */
+    #1e1b4b,
+    #312e81,
+    #1e3a8a,
+    #0f172a
   );
   background-size: 400% 400%;
   animation: gradient-dark 12s ease infinite;
@@ -270,12 +283,11 @@ function registrar() {
   overflow: hidden;
 }
 
-/* Capa de destellos 1 */
 .visual-section-dark::before {
   content: "";
   position: absolute;
   inset: 0;
-  background-image: 
+  background-image:
     radial-gradient(1px 1px at 15% 25%, #fff, transparent),
     radial-gradient(1.5px 1.5px at 40% 15%, #fff, transparent),
     radial-gradient(1px 1px at 70% 45%, #fff, transparent),
@@ -286,12 +298,11 @@ function registrar() {
   animation: twinkle 5s infinite ease-in-out;
 }
 
-/* Capa de destellos 2 */
 .visual-section-dark::after {
   content: "";
   position: absolute;
   inset: 0;
-  background-image: 
+  background-image:
     radial-gradient(1px 1px at 35% 65%, #fff, transparent),
     radial-gradient(2px 2px at 55% 35%, #fff, transparent),
     radial-gradient(1.5px 1.5px at 75% 15%, #fff, transparent);

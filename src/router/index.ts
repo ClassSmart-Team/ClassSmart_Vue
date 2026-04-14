@@ -38,8 +38,6 @@ import ShowGroupParent from '@/views/ShowGroupParent.vue'
 import TaskDetailParentView from '@/views/TaskDetailParentView.vue'
 import AnnouncementParentView from '@/views/AnnouncementParentView.vue'
 import AnnouncementDetailView from '@/views/AnnouncementDetailView.vue'
-import SettingsTeacherView from '@/views/SettingsTeacherView.vue'
-import SettingsStudentView from '@/views/SettingsStudentView.vue'
 //ROLES//
 //1-admin
 //2-teacher
@@ -177,10 +175,10 @@ const router = createRouter({
     },
 
     {
-      path: '/teacher/settings',
-      name: 'teacherSettings',
-      component: SettingsTeacherView,
-      meta: { requiresAuth: true, rol: 2 },
+      path: '/settings',
+      name: 'settings',
+      component: SettingsView,
+      meta: { requiresAuth: true },
     },
 
     //STUDENT
@@ -230,75 +228,68 @@ const router = createRouter({
       meta: { requiresAuth: true, rol: 3 },
     },
 
-    {
-      path: '/student/settings',
-      name: 'studentSettings',
-      component: SettingsStudentView,
-      meta: { requiresAuth: true, rol: 3 },
-    },
-
     // Parent
     {
       path: '/parent/home',
       name: 'parentHome',
       component: HomeParentView,
-      meta: { requiresAuth: true, rol: 4 },
+      meta: { requiresAuth: true, role: 4 },
     },
 
     {
       path: '/parent/profile',
       name: 'parentProfile',
       component: ProfileParentView,
-      meta: { requiresAuth: true, rol: 4 },
+      meta: { requiresAuth: true, role: 4 },
     },
 
     {
       path: '/parent/students',
       name: 'parentStudents',
       component: StudentsParentView,
-      meta: { requiresAuth: true, rol: 4 },
+      meta: { requiresAuth: true, role: 4 },
     },
 
     {
       path: '/parent/groups',
       name: 'parentGroups',
       component: GroupsParentView,
-      meta: { requiresAuth: true, rol: 4 },
+      meta: { requiresAuth: true, role: 4 },
     },
 
     {
       path: '/parent/groups/:id/:childId',
       name: 'parentGroupDetail',
       component: ShowGroupParent,
-      meta: { requiresAuth: true, rol: 4 },
+      meta: { requiresAuth: true, role: 4 },
     },
 
     {
       path: '/parent/groups/:id/assignments/:childId',
       name: 'parentGroupAssignmentDetail',
       component: TaskDetailParentView,
-      meta: { requiresAuth: true, rol: 4 },
+      meta: { requiresAuth: true, role: 4 },
     },
 
     {
       path: '/parent/assignments/',
       name: 'parentAssignments',
       component: TasksParentView,
-      meta: { requiresAuth: true, rol: 4 },
+      meta: { requiresAuth: true, role: 4 },
     },
 
     {
       path: '/parent/assignments/:id/:childId',
       name: 'parentAssignmentsDetail',
       component: TaskDetailParentView,
-      meta: { requiresAuth: true, rol: 4 },
+      meta: { requiresAuth: true, role: 4 },
     },
 
     {
       path: '/parent/announcements',
       name: 'parentAnnouncements',
       component: AnnouncementParentView,
-      meta: { requiresAuth: true, rol: 4 },
+      meta: { requiresAuth: true, role: 4 },
     },
 
     {
@@ -306,28 +297,28 @@ const router = createRouter({
       name: 'parentAnnouncementDetail',
       component: AnnouncementDetailView,
       props: true,
-      meta: { requiresAuth: true, rol: 4 },
+      meta: { requiresAuth: true, role: 4 },
     },
 
     {
       path: '/parent/grades',
       name: 'parentGrades',
       component: GradesParentView,
-      meta: { requiresAuth: true, rol: 4 },
+      meta: { requiresAuth: true, role: 4 },
     },
 
     {
       path: '/parent/notifications',
       name: 'parentNotifications',
       component: NotificationParentView,
-      meta: { requiresAuth: true, rol: 4 },
+      meta: { requiresAuth: true, role: 4 },
     },
 
     {
       path: '/parent/settings',
       name: 'parentSettings',
       component: SettingsParentView,
-      meta: { requiresAuth: true, rol: 4 },
+      meta: { requiresAuth: true, role: 4 },
     },
   ],
 })

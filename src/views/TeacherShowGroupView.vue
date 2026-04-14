@@ -6,7 +6,12 @@ import { h } from 'vue'
 import type { User } from '@/types/types.ts'
 import type { UnitRequest } from '@/types/types.ts'
 import type { Unit } from '@/types/types.ts'
-
+const isSubmittingUnit = ref(false)
+const isupdattingUnit = ref(false)
+const isSubmittingGroup = ref(false)
+const isaddingStudent = ref(false)
+const isdeletingStudent = ref(false)
+const isdeletingUnit = ref(false)
 const route = useRoute()
 const router = useRouter()
 const id = Number(route.params.id)
@@ -49,6 +54,8 @@ const { data, isFetching, error, execute: reloadGroup } = useapi(`/groups/${id}`
 
 // --- AGREGAR UNIDAD ---
 function submitAddUnit() {
+  if (isSubmittingUnit.value) return
+  isSubmittingUnit.value = true
   const { data: dat, onFetchResponse: onaddsubmitresposne } = useapi('units', {
     method: 'POST',
   })
@@ -65,62 +72,168 @@ function submitAddUnit() {
       start_date: '',
       end_date: '',
     }
+    isSubmittingUnit.value = false
   })
 }
 
 // --- ICONS ---
 const IconBack = () =>
-  h('svg', { width: '20', height: '20', viewBox: '0 0 24 24', fill: 'none', stroke: 'currentColor', 'stroke-width': '2.5', 'stroke-linecap': 'round', 'stroke-linejoin': 'round' }, [
-    h('line', { x1: '19', y1: '12', x2: '5', y2: '12' }),
-    h('polyline', { points: '12 19 5 12 12 5' }),
-  ])
+  h(
+    'svg',
+    {
+      width: '20',
+      height: '20',
+      viewBox: '0 0 24 24',
+      fill: 'none',
+      stroke: 'currentColor',
+      'stroke-width': '2.5',
+      'stroke-linecap': 'round',
+      'stroke-linejoin': 'round',
+    },
+    [
+      h('line', { x1: '19', y1: '12', x2: '5', y2: '12' }),
+      h('polyline', { points: '12 19 5 12 12 5' }),
+    ],
+  )
 
 const IconUser = () =>
-  h('svg', { width: '18', height: '18', viewBox: '0 0 24 24', fill: 'none', stroke: 'currentColor', 'stroke-width': '2', 'stroke-linecap': 'round', 'stroke-linejoin': 'round' }, [
-    h('path', { d: 'M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2' }),
-    h('circle', { cx: '12', cy: '7', r: '4' }),
-  ])
+  h(
+    'svg',
+    {
+      width: '18',
+      height: '18',
+      viewBox: '0 0 24 24',
+      fill: 'none',
+      stroke: 'currentColor',
+      'stroke-width': '2',
+      'stroke-linecap': 'round',
+      'stroke-linejoin': 'round',
+    },
+    [
+      h('path', { d: 'M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2' }),
+      h('circle', { cx: '12', cy: '7', r: '4' }),
+    ],
+  )
 
 const IconCalendar = () =>
-  h('svg', { width: '18', height: '18', viewBox: '0 0 24 24', fill: 'none', stroke: 'currentColor', 'stroke-width': '2', 'stroke-linecap': 'round', 'stroke-linejoin': 'round' }, [
-    h('rect', { x: '3', y: '4', width: '18', height: '18', rx: '2', ry: '2' }),
-    h('line', { x1: '16', y1: '2', x2: '16', y2: '6' }),
-    h('line', { x1: '8', y1: '2', x2: '8', y2: '6' }),
-    h('line', { x1: '3', y1: '10', x2: '21', y2: '10' }),
-  ])
+  h(
+    'svg',
+    {
+      width: '18',
+      height: '18',
+      viewBox: '0 0 24 24',
+      fill: 'none',
+      stroke: 'currentColor',
+      'stroke-width': '2',
+      'stroke-linecap': 'round',
+      'stroke-linejoin': 'round',
+    },
+    [
+      h('rect', { x: '3', y: '4', width: '18', height: '18', rx: '2', ry: '2' }),
+      h('line', { x1: '16', y1: '2', x2: '16', y2: '6' }),
+      h('line', { x1: '8', y1: '2', x2: '8', y2: '6' }),
+      h('line', { x1: '3', y1: '10', x2: '21', y2: '10' }),
+    ],
+  )
 
 const IconPlus = () =>
-  h('svg', { width: '18', height: '18', viewBox: '0 0 24 24', fill: 'none', stroke: 'currentColor', 'stroke-width': '2.5', 'stroke-linecap': 'round', 'stroke-linejoin': 'round' }, [
-    h('line', { x1: '12', y1: '5', x2: '12', y2: '19' }),
-    h('line', { x1: '5', y1: '12', x2: '19', y2: '12' }),
-  ])
+  h(
+    'svg',
+    {
+      width: '18',
+      height: '18',
+      viewBox: '0 0 24 24',
+      fill: 'none',
+      stroke: 'currentColor',
+      'stroke-width': '2.5',
+      'stroke-linecap': 'round',
+      'stroke-linejoin': 'round',
+    },
+    [
+      h('line', { x1: '12', y1: '5', x2: '12', y2: '19' }),
+      h('line', { x1: '5', y1: '12', x2: '19', y2: '12' }),
+    ],
+  )
 
 const IconX = () =>
-  h('svg', { width: '20', height: '20', viewBox: '0 0 24 24', fill: 'none', stroke: 'currentColor', 'stroke-width': '2.5', 'stroke-linecap': 'round', 'stroke-linejoin': 'round' }, [
-    h('line', { x1: '18', y1: '6', x2: '6', y2: '18' }),
-    h('line', { x1: '6', y1: '6', x2: '18', y2: '18' }),
-  ])
+  h(
+    'svg',
+    {
+      width: '20',
+      height: '20',
+      viewBox: '0 0 24 24',
+      fill: 'none',
+      stroke: 'currentColor',
+      'stroke-width': '2.5',
+      'stroke-linecap': 'round',
+      'stroke-linejoin': 'round',
+    },
+    [
+      h('line', { x1: '18', y1: '6', x2: '6', y2: '18' }),
+      h('line', { x1: '6', y1: '6', x2: '18', y2: '18' }),
+    ],
+  )
 
 const IconHamburger = () =>
-  h('svg', { width: '18', height: '18', viewBox: '0 0 24 24', fill: 'none', stroke: 'currentColor', 'stroke-width': '2.5', 'stroke-linecap': 'round', 'stroke-linejoin': 'round' }, [
-    h('line', { x1: '3', y1: '6', x2: '21', y2: '6' }),
-    h('line', { x1: '3', y1: '12', x2: '21', y2: '12' }),
-    h('line', { x1: '3', y1: '18', x2: '21', y2: '18' }),
-  ])
+  h(
+    'svg',
+    {
+      width: '18',
+      height: '18',
+      viewBox: '0 0 24 24',
+      fill: 'none',
+      stroke: 'currentColor',
+      'stroke-width': '2.5',
+      'stroke-linecap': 'round',
+      'stroke-linejoin': 'round',
+    },
+    [
+      h('line', { x1: '3', y1: '6', x2: '21', y2: '6' }),
+      h('line', { x1: '3', y1: '12', x2: '21', y2: '12' }),
+      h('line', { x1: '3', y1: '18', x2: '21', y2: '18' }),
+    ],
+  )
 
 const IconTask = () =>
-  h('svg', { width: '16', height: '16', viewBox: '0 0 24 24', fill: 'none', stroke: 'currentColor', 'stroke-width': '2', 'stroke-linecap': 'round', 'stroke-linejoin': 'round' }, [
-    h('path', { d: 'M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z' }),
-    h('polyline', { points: '14 2 14 8 20 8' }),
-  ])
+  h(
+    'svg',
+    {
+      width: '16',
+      height: '16',
+      viewBox: '0 0 24 24',
+      fill: 'none',
+      stroke: 'currentColor',
+      'stroke-width': '2',
+      'stroke-linecap': 'round',
+      'stroke-linejoin': 'round',
+    },
+    [
+      h('path', { d: 'M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z' }),
+      h('polyline', { points: '14 2 14 8 20 8' }),
+    ],
+  )
 
 const IconEdit = () =>
-  h('svg', { width: '18', height: '18', viewBox: '0 0 24 24', fill: 'none', stroke: 'currentColor', 'stroke-width': '2', 'stroke-linecap': 'round', 'stroke-linejoin': 'round' }, [
-    h('path', { d: 'M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7' }),
-    h('path', { d: 'M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z' }),
-  ])
+  h(
+    'svg',
+    {
+      width: '18',
+      height: '18',
+      viewBox: '0 0 24 24',
+      fill: 'none',
+      stroke: 'currentColor',
+      'stroke-width': '2',
+      'stroke-linecap': 'round',
+      'stroke-linejoin': 'round',
+    },
+    [
+      h('path', { d: 'M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7' }),
+      h('path', { d: 'M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z' }),
+    ],
+  )
 
-const getInitials = (name: string, lastname: string) => `${name.charAt(0)}${lastname.charAt(0)}`.toUpperCase()
+const getInitials = (name: string, lastname: string) =>
+  `${name.charAt(0)}${lastname.charAt(0)}`.toUpperCase()
 
 const goBack = () => router.push('/teacher/groups')
 
@@ -130,14 +243,14 @@ const showEditGroupModal = ref(false)
 const editGroupForm = ref({
   name: '',
   description: '',
-  active:false
+  active: false,
 })
 
 const openEditGroupModal = () => {
   editGroupForm.value = {
     name: data.value?.data?.name || '',
     description: data.value?.data?.description || '',
-    active: data.value.data.active // <--- AQUÍ LO PONES
+    active: data.value.data.active, // <--- AQUÍ LO PONES
   }
   showEditGroupModal.value = true
 }
@@ -147,7 +260,13 @@ const closeEditGroupModal = () => {
 }
 
 const submitEditGroup = async () => {
-  const { data: res, error: err } = await useapi(`/groups/${id}`, {
+  if (isSubmittingGroup.value) return
+  isSubmittingGroup.value = true
+  const {
+    data: res,
+    error: err,
+    onFetchResponse,
+  } = await useapi(`/groups/${id}`, {
     method: 'PUT',
   })
     .put(editGroupForm.value)
@@ -159,6 +278,9 @@ const submitEditGroup = async () => {
   } else {
     alert('Error al actualizar el grupo')
   }
+  onFetchResponse(() => {
+    isSubmittingGroup.value = false
+  })
 }
 
 // --- ELIMINAR ESTUDIANTE ---
@@ -176,11 +298,21 @@ const closeDeleteStudentModal = () => {
 }
 
 const submitDeleteStudent = async () => {
+  if (isdeletingStudent.value) return
+  isdeletingStudent.value = true
   if (!studentToDelete.value) return
-  const { data: res, error: err } = await useapi(`/groups/${id}/students`, {
+  const {
+    data: res,
+    error: err,
+    onFetchResponse: off,
+  } = await useapi(`/groups/${id}/students`, {
     method: 'DELETE',
     body: JSON.stringify({ student_id: studentToDelete.value.id }),
   }).json()
+
+  off(() => {
+    isdeletingStudent.value = false
+  })
   if (!err.value) {
     alert(res.value.message || 'Estudiante eliminado del grupo')
     closeDeleteStudentModal()
@@ -202,8 +334,14 @@ const closeDeleteConfirm = () => {
 }
 
 const executeDelete = async () => {
+  if (isdeletingUnit.value) return
+  isdeletingUnit.value = true
   if (!selectedUnit.value) return
-  const { data: res, error: err } = await useapi(`/units/${selectedUnit.value.id}`, {
+  const {
+    data: res,
+    error: err,
+    onFetchResponse: ofrud,
+  } = await useapi(`/units/${selectedUnit.value.id}`, {
     method: 'DELETE',
   }).json()
   if (!err.value) {
@@ -211,6 +349,9 @@ const executeDelete = async () => {
     showDeleteConfirmModal.value = false
     showManageUnitModal.value = false
     reloadGroup()
+    ofrud(() => {
+      isdeletingUnit.value = false
+    })
   } else {
     alert('Error al eliminar')
   }
@@ -240,8 +381,14 @@ const openEditUnitModal = () => {
 }
 
 const submitEditUnit = async () => {
+  if (isupdattingUnit.value) return
+  isupdattingUnit.value = true
   if (!selectedUnit.value) return
-  const { data: res, error: err } = await useapi(`/units/${selectedUnit.value.id}`, {
+  const {
+    data: res,
+    error: err,
+    onFetchResponse: ofru,
+  } = await useapi(`/units/${selectedUnit.value.id}`, {
     method: 'PUT',
   })
     .put(editUnitForm.value)
@@ -254,6 +401,9 @@ const submitEditUnit = async () => {
   } else {
     alert('Error al actualizar la unidad')
   }
+  ofru(() => {
+    isupdattingUnit.value = false
+  })
 }
 
 // --- GESTIONAR UNIDAD ---
@@ -314,11 +464,21 @@ const closeAddUnitModal = () => {
 }
 
 const submitAddStudent = async () => {
+  if (isaddingStudent.value) return
+  isaddingStudent.value = true
   if (!selectedStudentId.value) return
-  const { data: dd, error: err } = await useapi(`/groups/${id}/students`, {
+  const {
+    data: dd,
+    error: err,
+    onFetchResponse: ofras,
+  } = await useapi(`/groups/${id}/students`, {
     method: 'POST',
     body: JSON.stringify({ student_id: selectedStudentId.value }),
   }).json()
+
+  ofras(() => {
+    isaddingStudent.value = false
+  })
   if (err.value) {
     alert('Error al inscribir estudiante')
     return
@@ -342,7 +502,6 @@ function addSubmision() {
 
     <div v-else-if="data?.data" class="main-layout">
       <aside class="sidebar-info">
-
         <!-- BOTÓN VOLVER + BOTÓN EDITAR GRUPO -->
         <div class="back-row">
           <button @click="goBack" class="btn-back-soft">
@@ -438,7 +597,16 @@ function addSubmision() {
         <section class="top-stats">
           <div class="stat-box box-solid-blue">
             <div class="stat-icon-wrapper stat-icon-primary">
-              <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <svg
+                width="28"
+                height="28"
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                stroke-width="2"
+                stroke-linecap="round"
+                stroke-linejoin="round"
+              >
                 <path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20" />
                 <path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z" />
               </svg>
@@ -450,7 +618,16 @@ function addSubmision() {
           </div>
           <div class="stat-box box-soft-blue">
             <div class="stat-icon-wrapper stat-icon-secondary">
-              <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <svg
+                width="28"
+                height="28"
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                stroke-width="2"
+                stroke-linecap="round"
+                stroke-linejoin="round"
+              >
                 <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7" />
                 <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z" />
               </svg>
@@ -502,7 +679,9 @@ function addSubmision() {
                     <div class="date-tag end"><strong>TÉRMINO</strong> {{ unit.end_date }}</div>
                   </div>
                 </div>
-                <button @click="openManageUnitModal(unit)" class="btn-manage-unit">Gestionar</button>
+                <button @click="openManageUnitModal(unit)" class="btn-manage-unit">
+                  Gestionar
+                </button>
               </div>
             </div>
           </div>
@@ -516,8 +695,19 @@ function addSubmision() {
         <div class="modal-content modal-large">
           <div class="modal-header">
             <div>
-              <small style="color: #1d65d8; font-weight: 800; text-transform: uppercase; font-size: 0.65rem; letter-spacing: 0.5px;">Configuración</small>
-              <h2 style="margin: 0; font-size: 1.3rem; color: #1e3a5f">Actualizar datos del grupo</h2>
+              <small
+                style="
+                  color: #1d65d8;
+                  font-weight: 800;
+                  text-transform: uppercase;
+                  font-size: 0.65rem;
+                  letter-spacing: 0.5px;
+                "
+                >Configuración</small
+              >
+              <h2 style="margin: 0; font-size: 1.3rem; color: #1e3a5f">
+                Actualizar datos del grupo
+              </h2>
             </div>
             <button class="btn-close-modal" @click="closeEditGroupModal"><IconX /></button>
           </div>
@@ -525,55 +715,81 @@ function addSubmision() {
           <div class="modal-body">
             <div class="form-group">
               <label>Nombre del Grupo</label>
-              <input v-model="editGroupForm.name" type="text" class="form-input" placeholder="Ej: Matemáticas 3A" />
+              <input
+                v-model="editGroupForm.name"
+                type="text"
+                class="form-input"
+                placeholder="Ej: Matemáticas 3A"
+              />
             </div>
 
             <div class="form-group">
               <label>Descripción</label>
-              <textarea v-model="editGroupForm.description" class="form-input" rows="3" placeholder="Descripción del grupo..." style="resize: vertical;"></textarea>
+              <textarea
+                v-model="editGroupForm.description"
+                class="form-input"
+                rows="3"
+                placeholder="Descripción del grupo..."
+                style="resize: vertical"
+              ></textarea>
             </div>
 
-            <div class="form-group" style="margin-top: 10px;">
+            <div class="form-group" style="margin-top: 10px">
               <label>Estado del Grupo</label>
               <div
                 @click="editGroupForm.active = !editGroupForm.active"
                 style="
-              display: flex;
-              align-items: center;
-              gap: 12px;
-              padding: 15px;
-              border-radius: 12px;
-              cursor: pointer;
-              transition: 0.3s;
-            "
-                :style="{ backgroundColor: editGroupForm.active ? 'rgba(120, 251, 166, 0.15)' : 'rgba(29, 101, 216, 0.05)' }"
+                  display: flex;
+                  align-items: center;
+                  gap: 12px;
+                  padding: 15px;
+                  border-radius: 12px;
+                  cursor: pointer;
+                  transition: 0.3s;
+                "
+                :style="{
+                  backgroundColor: editGroupForm.active
+                    ? 'rgba(120, 251, 166, 0.15)'
+                    : 'rgba(29, 101, 216, 0.05)',
+                }"
               >
-                <div style="
-              width: 44px;
-              height: 24px;
-              border-radius: 20px;
-              position: relative;
-              transition: 0.3s;
-            "
-                     :style="{ backgroundColor: editGroupForm.active ? '#166534' : '#4b7ba7' }">
-                  <div style="
-                width: 18px;
-                height: 18px;
-                background: white;
-                border-radius: 50%;
-                position: absolute;
-                top: 3px;
-                transition: 0.3s;
-              "
-                       :style="{ left: editGroupForm.active ? '23px' : '3px' }"></div>
+                <div
+                  style="
+                    width: 44px;
+                    height: 24px;
+                    border-radius: 20px;
+                    position: relative;
+                    transition: 0.3s;
+                  "
+                  :style="{ backgroundColor: editGroupForm.active ? '#166534' : '#4b7ba7' }"
+                >
+                  <div
+                    style="
+                      width: 18px;
+                      height: 18px;
+                      background: white;
+                      border-radius: 50%;
+                      position: absolute;
+                      top: 3px;
+                      transition: 0.3s;
+                    "
+                    :style="{ left: editGroupForm.active ? '23px' : '3px' }"
+                  ></div>
                 </div>
 
                 <div>
-              <span style="display: block; font-weight: 700; font-size: 0.9rem;" :style="{ color: editGroupForm.active ? '#166534' : '#1e3a5f' }">
-                {{ editGroupForm.active ? 'Grupo Activo' : 'Grupo Inactivo' }}
-              </span>
-                  <small style="color: #4b7ba7; font-size: 0.75rem;">
-                    {{ editGroupForm.active ? 'Los estudiantes pueden ver el contenido.' : 'El grupo estará oculto para los estudiantes.' }}
+                  <span
+                    style="display: block; font-weight: 700; font-size: 0.9rem"
+                    :style="{ color: editGroupForm.active ? '#166534' : '#1e3a5f' }"
+                  >
+                    {{ editGroupForm.active ? 'Grupo Activo' : 'Grupo Inactivo' }}
+                  </span>
+                  <small style="color: #4b7ba7; font-size: 0.75rem">
+                    {{
+                      editGroupForm.active
+                        ? 'Los estudiantes pueden ver el contenido.'
+                        : 'El grupo estará oculto para los estudiantes.'
+                    }}
                   </small>
                 </div>
               </div>
@@ -582,7 +798,9 @@ function addSubmision() {
 
           <div class="modal-footer">
             <button @click="closeEditGroupModal" class="btn-cancel">Cancelar</button>
-            <button @click="submitEditGroup" class="btn-confirm">Guardar Cambios</button>
+            <button :disabled="isSubmittingGroup" @click="submitEditGroup" class="btn-confirm">
+              Guardar Cambios
+            </button>
           </div>
         </div>
       </div>
@@ -590,10 +808,14 @@ function addSubmision() {
 
     <!-- MODAL: ELIMINAR ESTUDIANTE -->
     <Teleport to="body">
-      <div v-if="showDeleteStudentModal" class="modal-overlay" @click.self="closeDeleteStudentModal">
+      <div
+        v-if="showDeleteStudentModal"
+        class="modal-overlay"
+        @click.self="closeDeleteStudentModal"
+      >
         <div class="modal-content">
           <div class="modal-header">
-            <h2 style="color: #c53030;">Eliminar Estudiante</h2>
+            <h2 style="color: #c53030">Eliminar Estudiante</h2>
             <button class="btn-close-modal" @click="closeDeleteStudentModal"><IconX /></button>
           </div>
           <div class="modal-body">
@@ -606,13 +828,19 @@ function addSubmision() {
                 </option>
               </select>
             </div>
-            <p v-if="studentToDelete" style="margin-top: 15px; color: #4b7ba7; font-size: 0.9rem;">
-              Esta acción quitará a <strong>{{ studentToDelete.name }}</strong> de este grupo. No se borrarán sus datos personales, solo su inscripción.
+            <p v-if="studentToDelete" style="margin-top: 15px; color: #4b7ba7; font-size: 0.9rem">
+              Esta acción quitará a <strong>{{ studentToDelete.name }}</strong> de este grupo. No se
+              borrarán sus datos personales, solo su inscripción.
             </p>
           </div>
           <div class="modal-footer">
             <button @click="closeDeleteStudentModal" class="btn-cancel">Cancelar</button>
-            <button @click="submitDeleteStudent" class="btn-confirm" style="background: #c53030;" :disabled="!studentToDelete">
+            <button
+              @click="submitDeleteStudent"
+              class="btn-confirm"
+              style="background: #c53030"
+              :disabled="!studentToDelete || isdeletingStudent"
+            >
               Confirmar Eliminación
             </button>
           </div>
@@ -622,11 +850,24 @@ function addSubmision() {
 
     <!-- MODAL: GESTIONAR UNIDAD -->
     <Teleport to="body">
-      <div v-if="showManageUnitModal && selectedUnit" class="modal-overlay" @click.self="closeManageUnitModal">
+      <div
+        v-if="showManageUnitModal && selectedUnit"
+        class="modal-overlay"
+        @click.self="closeManageUnitModal"
+      >
         <div class="modal-content">
           <div class="modal-header">
             <div>
-              <small style="color: #1d65d8; font-weight: 800; text-transform: uppercase; font-size: 0.65rem; letter-spacing: 0.5px;">Opciones de Unidad</small>
+              <small
+                style="
+                  color: #1d65d8;
+                  font-weight: 800;
+                  text-transform: uppercase;
+                  font-size: 0.65rem;
+                  letter-spacing: 0.5px;
+                "
+                >Opciones de Unidad</small
+              >
               <h2 style="margin: 0; font-size: 1.3rem; color: #1e3a5f">{{ selectedUnit.name }}</h2>
             </div>
             <button class="btn-close-modal" @click="closeManageUnitModal"><IconX /></button>
@@ -638,18 +879,6 @@ function addSubmision() {
                 <div class="menu-text">
                   <span class="menu-title">Editar Detalles</span>
                   <p>Cambiar nombre o fechas de entrega.</p>
-                </div>
-              </button>
-              <button class="menu-item">
-                <div class="menu-icon activity-bg">
-                  <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                    <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z" />
-                    <polyline points="14 2 14 8 20 8" />
-                  </svg>
-                </div>
-                <div class="menu-text">
-                  <span class="menu-title">Ver Actividades</span>
-                  <p>Gestionar tareas asignadas a esta unidad.</p>
                 </div>
               </button>
               <button class="menu-item danger-item" @click="openDeleteConfirm">
@@ -689,7 +918,9 @@ function addSubmision() {
           </div>
           <div class="modal-footer">
             <button @click="closeAddStudentModal" class="btn-cancel">Cancelar</button>
-            <button @click="submitAddStudent" class="btn-confirm">Inscribir</button>
+            <button @click="submitAddStudent" :disabled="isaddingStudent" class="btn-confirm">
+              Inscribir
+            </button>
           </div>
         </div>
       </div>
@@ -697,7 +928,11 @@ function addSubmision() {
 
     <!-- MODAL: DETALLES DEL ESTUDIANTE -->
     <Teleport to="body">
-      <div v-if="showStudentDetailModal && selectedStudent" class="modal-overlay" @click.self="closeStudentDetailModal">
+      <div
+        v-if="showStudentDetailModal && selectedStudent"
+        class="modal-overlay"
+        @click.self="closeStudentDetailModal"
+      >
         <div class="modal-content">
           <div class="modal-header">
             <h2>Información del Estudiante</h2>
@@ -712,7 +947,16 @@ function addSubmision() {
             </div>
             <div class="info-item">
               <div class="info-icon email-icon">
-                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <svg
+                  width="18"
+                  height="18"
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  stroke="currentColor"
+                  stroke-width="2"
+                  stroke-linecap="round"
+                  stroke-linejoin="round"
+                >
                   <rect x="2" y="4" width="20" height="16" rx="2" />
                   <path d="m22 7-8.97 5.7a1.94 1.94 0 0 1-2.06 0L2 7" />
                 </svg>
@@ -724,18 +968,40 @@ function addSubmision() {
             </div>
             <div class="info-item">
               <div class="info-icon phone-icon">
-                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                  <path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72 12.84 12.84 0 0 0 .7 2.81 2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45 12.84 12.84 0 0 0 2.81.7A2 2 0 0 1 22 16.92z" />
+                <svg
+                  width="18"
+                  height="18"
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  stroke="currentColor"
+                  stroke-width="2"
+                  stroke-linecap="round"
+                  stroke-linejoin="round"
+                >
+                  <path
+                    d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72 12.84 12.84 0 0 0 .7 2.81 2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45 12.84 12.84 0 0 0 2.81.7A2 2 0 0 1 22 16.92z"
+                  />
                 </svg>
               </div>
               <div class="info-content">
                 <label>Teléfono</label>
-                <a :href="`tel:${selectedStudent.cellphone}`" class="phone-link">{{ selectedStudent.cellphone }}</a>
+                <a :href="`tel:${selectedStudent.cellphone}`" class="phone-link">{{
+                  selectedStudent.cellphone
+                }}</a>
               </div>
             </div>
             <div class="info-item">
               <div class="info-icon status-icon">
-                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <svg
+                  width="18"
+                  height="18"
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  stroke="currentColor"
+                  stroke-width="2"
+                  stroke-linecap="round"
+                  stroke-linejoin="round"
+                >
                   <polyline points="20 6 9 17 4 12" />
                 </svg>
               </div>
@@ -763,8 +1029,14 @@ function addSubmision() {
           <div class="modal-body">
             <div class="form-group">
               <label for="unit-name">Nombre de la Unidad</label>
-              <input id="unit-name" v-model="ur.name" type="text" class="form-input" placeholder="Ej: Introducción a los Conceptos Básicos" />
-             </div>
+              <input
+                id="unit-name"
+                v-model="ur.name"
+                type="text"
+                class="form-input"
+                placeholder="Ej: Introducción a los Conceptos Básicos"
+              />
+            </div>
             <div class="form-row">
               <div class="form-group">
                 <label for="unit-start">Fecha de Inicio</label>
@@ -787,17 +1059,24 @@ function addSubmision() {
 
   <!-- MODAL: CONFIRMAR ELIMINACIÓN -->
   <Teleport to="body">
-    <div v-if="showDeleteConfirmModal" class="modal-overlay delete-confirm-overlay" @click.self="closeDeleteConfirm">
+    <div
+      v-if="showDeleteConfirmModal"
+      class="modal-overlay delete-confirm-overlay"
+      @click.self="closeDeleteConfirm"
+    >
       <div class="modal-content modal-alert">
         <div class="modal-body text-center" style="padding: 40px 30px">
           <div class="warning-icon-circle">!</div>
           <h2 style="color: #c53030; margin-bottom: 10px">¿Confirmar eliminación?</h2>
           <p style="color: #4b7ba7; line-height: 1.5">
-            Estás a punto de eliminar la unidad <strong>"{{ selectedUnit?.name }}"</strong>. Esta acción borrará todas las actividades asociadas y no se puede deshacer.
+            Estás a punto de eliminar la unidad <strong>"{{ selectedUnit?.name }}"</strong>. Esta
+            acción borrará todas las actividades asociadas y no se puede deshacer.
           </p>
           <div class="confirm-actions">
             <button @click="closeDeleteConfirm" class="btn-cancel">No, cancelar</button>
-            <button @click="executeDelete" class="btn-danger">Sí, eliminar unidad</button>
+            <button @click="executeDelete" :disabled="isdeletingUnit" class="btn-danger">
+              Sí, eliminar unidad
+            </button>
           </div>
         </div>
       </div>
@@ -818,9 +1097,14 @@ function addSubmision() {
             <input id="edit-unit-name" v-model="editUnitForm.name" type="text" class="form-input" />
           </div>
         </div>
-        <div class="modal-footer" style="padding: 20px; display: flex; justify-content: flex-end; gap: 10px">
+        <div
+          class="modal-footer"
+          style="padding: 20px; display: flex; justify-content: flex-end; gap: 10px"
+        >
           <button @click="showEditUnitModal = false" class="btn-cancel">Cancelar</button>
-          <button @click="submitEditUnit" class="btn-confirm">Guardar Cambios</button>
+          <button @click="submitEditUnit" :disabled="isupdattingUnit" class="btn-confirm">
+            Guardar Cambios
+          </button>
         </div>
       </div>
     </div>
@@ -1125,7 +1409,9 @@ function addSubmision() {
 
 .dropdown-enter-active,
 .dropdown-leave-active {
-  transition: opacity 0.15s ease, transform 0.15s ease;
+  transition:
+    opacity 0.15s ease,
+    transform 0.15s ease;
 }
 
 .dropdown-enter-from,
@@ -1562,9 +1848,18 @@ function addSubmision() {
   flex-shrink: 0;
 }
 
-.edit-bg { background: rgba(29, 101, 216, 0.1); color: #1d65d8; }
-.activity-bg { background: rgba(74, 222, 128, 0.15); color: #166534; }
-.delete-bg { background: rgba(239, 68, 68, 0.1); color: #c53030; }
+.edit-bg {
+  background: rgba(29, 101, 216, 0.1);
+  color: #1d65d8;
+}
+.activity-bg {
+  background: rgba(74, 222, 128, 0.15);
+  color: #166534;
+}
+.delete-bg {
+  background: rgba(239, 68, 68, 0.1);
+  color: #c53030;
+}
 
 .menu-title {
   display: block;
@@ -1723,9 +2018,18 @@ select:focus {
   flex-shrink: 0;
 }
 
-.email-icon { background: rgba(29, 101, 216, 0.1); color: #1d65d8; }
-.phone-icon { background: rgba(74, 222, 128, 0.15); color: #166534; }
-.status-icon { background: rgba(120, 251, 166, 0.3); color: #166534; }
+.email-icon {
+  background: rgba(29, 101, 216, 0.1);
+  color: #1d65d8;
+}
+.phone-icon {
+  background: rgba(74, 222, 128, 0.15);
+  color: #166534;
+}
+.status-icon {
+  background: rgba(120, 251, 166, 0.3);
+  color: #166534;
+}
 
 .info-content label {
   display: block;
