@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { computed, nextTick, onBeforeUnmount, onMounted, ref, watch } from 'vue'
-import SidebarLayout from '@/components/TeacherSidebarLayout.vue'
+import SideBarLayout from '@/components/ParentSidebar.vue'
 import { useapi } from '@/assets/composables/useApi'
 import { useAuthStore } from '@/stores/authStore'
 import type { Chat, ChatMessage } from '@/types/types'
