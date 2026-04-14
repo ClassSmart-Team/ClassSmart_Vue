@@ -365,7 +365,7 @@ router.beforeEach((to, from, next) => {
   const authStore = useAuthStore()
   const user = authStore.credentials
 
-  // 🚫 Evitar que usuarios logueados entren a login
+  //Evitar que usuarios logueados entren a login
   if (to.name === 'Login' && user) {
     const role = user.user.role.id
 
