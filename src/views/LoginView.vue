@@ -58,12 +58,12 @@ function login() {
 
     <div class="form-section">
       <div class="login-box">
-        
+
         <h1>Iniciar sesión</h1>
         <p class="subtitle">Ingresa tus credenciales</p>
 
         <form class="login-form" @submit.prevent="login">
-          
+
           <div class="input-container">
             <input
               v-model="credentials.email"
@@ -95,7 +95,7 @@ function login() {
           </div>
 
           <div class="footer-links">
-            ¿No tienes cuenta? 
+            ¿No tienes cuenta?
             <a href="/register">Regístrate aquí</a>
           </div>
 
@@ -109,7 +109,7 @@ function login() {
 </template>
 
 <style scoped>
-/* Los estilos anteriores se mantienen intactos. 
+/* Los estilos anteriores se mantienen intactos.
    Solo añado el estilo de la alerta de error: */
 
 .error-alert {
@@ -145,7 +145,7 @@ function login() {
   flex: 1;
   position: relative;
   background-color: var(--color-AzulTres); /* Color de fondo base */
-  background-image: 
+  background-image:
     radial-gradient(at 0% 0%, var(--color-Complemento) 0px, transparent 50%),
     radial-gradient(at 100% 0%, var(--color-Azul) 0px, transparent 50%),
     radial-gradient(at 100% 100%, var(--color-ComplementoDos) 0px, transparent 50%),

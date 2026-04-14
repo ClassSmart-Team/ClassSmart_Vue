@@ -121,7 +121,10 @@ watch(
     if (newVal) {
       const permission = await Notification.requestPermission()
       if (permission === 'granted') {
-        const token = await getToken(messaging, { vapidKey: 'TU_VAPID_KEY' })
+        const token = await getToken(messaging, {
+          vapidKey:
+            'BJkmDK1oGI-rcVM1Y5GHXtpAwNE7TW4k0KSK62aSWFhoCyiGN-pk3TanfursphCGo537ClBo6-4fl6l_ifghNcU',
+        })
         if (token) {
           // Guardamos el token en el servidor para que Laravel sepa a dónde enviar
           await useapi('/save-fcm-token').post({ token }).json()

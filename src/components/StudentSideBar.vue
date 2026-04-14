@@ -24,7 +24,7 @@ const logout = () => {
           <RouterLink to="/student/announcements" class="link"> Anuncios</RouterLink>
           <RouterLink to="/student/messages" class="link"> Mensajes</RouterLink>
           <RouterLink to="/student/notifications" class="link"> Notificaciones</RouterLink>
-          <RouterLink to="/settings" class="link"> Configuración</RouterLink>
+          <RouterLink to="/student/settings" class="link"> Configuración</RouterLink>
           <div class="sidebar-divider"></div>
           <button class="link btn-logout" v-on:click="logout">Cerrar Sesión</button>
         </nav>

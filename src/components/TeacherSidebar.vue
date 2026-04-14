@@ -25,7 +25,7 @@ const logout = () => {
         <RouterLink to="/teacher/announcements" class="link">Anuncios</RouterLink>
         <RouterLink to="/teacher/messages" class="link">Mensajes</RouterLink>
         <RouterLink to="/teacher/notifications" class="link">Notificaciones</RouterLink>
-        <RouterLink to="/settings" class="link">Configuración</RouterLink>
+        <RouterLink to="/teacher/settings" class="link">Configuración</RouterLink>
 
         <div class="sidebar-divider"></div>
 

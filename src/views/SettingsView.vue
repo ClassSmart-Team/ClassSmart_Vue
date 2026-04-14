@@ -1,15 +1,15 @@
 <template>
 
 <div class="bg-page center ">
-  
+
   <div class="form-container">
-    
+
     <div class="ContSmall">
 
       asdf
 
     </div>
-    
+
   </div>
 
   </div>
