@@ -6,7 +6,7 @@ import { useapi } from '@/assets/composables/useApi'
 import { useAuthStore } from '@/stores/authStore.ts'
 
 const ua = useAuthStore()
-const { data, error, isFetching } = useapi('/groups').json()
+const { data, error, isFetching } = useapi('/parent/groups').json()
 
 const selectedChildId = ref<number | string | null>(null)
 

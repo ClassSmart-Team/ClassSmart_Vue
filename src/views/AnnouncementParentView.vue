@@ -18,7 +18,7 @@ const {
   data: announcementsData,
   isFetching: loadingAnnouncements,
   error,
-} = useapi('/announcements').json()
+} = useapi('/parent/announcements').json()
 const announcements = computed<Announcement[]>(() => announcementsData.value?.data || [])
 
 const selectedChild = ref<number | null>(null)

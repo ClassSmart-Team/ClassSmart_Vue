@@ -16,7 +16,7 @@ const {
   data,
   error: errorActivities,
   isFetching: isFetchingActivities,
-} = useapi('/assignments').json()
+} = useapi('/parent/assignments').json()
 
 const {
   data: childrenData,
