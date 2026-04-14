@@ -24,6 +24,7 @@ import TaskDetailTeacherView from '@/views/TaskDetailTeacherView.vue'
 import AnnouncementTeacherView from '@/views/AnnouncementTeacherView.vue'
 import NotificationTeacherView from '@/views/NotificationTeacherView.vue'
 import TeacherMessagesView from '@/views/TeacherMessagesView.vue'
+import SettingsTeacherView from '@/views/SettingsTeacherView.vue'
 
 // Parent
 import HomeParentView from '@/views/HomeParentView.vue'
@@ -180,7 +181,7 @@ const router = createRouter({
     {
       path: '/teacher/messages',
       name: 'messages',
-      component: TeacherMessagesView, // temporal
+      component: TeacherMessagesView,
       meta: { requiresAuth: true, rol: 2 },
     },
     {
@@ -193,7 +194,7 @@ const router = createRouter({
     {
       path: '/teacher/settings',
       name: 'SettingsTeacher',
-      component: SettingsStudentView,
+      component: SettingsTeacherView,
       meta: { requiresAuth: true, rol: 2 },
     },
 
