@@ -38,6 +38,7 @@ import ShowGroupParent from '@/views/ShowGroupParent.vue'
 import TaskDetailParentView from '@/views/TaskDetailParentView.vue'
 import AnnouncementParentView from '@/views/AnnouncementParentView.vue'
 import AnnouncementDetailView from '@/views/AnnouncementDetailView.vue'
+import SettingsStudentView from '@/views/SettingsStudentView.vue'
 //ROLES//
 //1-admin
 //2-teacher
@@ -175,10 +176,10 @@ const router = createRouter({
     },
 
     {
-      path: '/settings',
-      name: 'settings',
-      component: SettingsView,
-      meta: { requiresAuth: true },
+      path: '/teacher/settings',
+      name: 'SettingsTeacher',
+      component: SettingsStudentView,
+      meta: { requiresAuth: true, rol: 2 },
     },
 
     //STUDENT
@@ -225,6 +226,13 @@ const router = createRouter({
       path: '/student/notifications',
       name: 'studentNotifications',
       component: NotificationStudentView,
+      meta: { requiresAuth: true, rol: 3 },
+    },
+
+    {
+      path: '/student/settings',
+      name: 'SettingsStudent',
+      component: SettingsStudentView,
       meta: { requiresAuth: true, rol: 3 },
     },
 
