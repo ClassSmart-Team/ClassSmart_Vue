@@ -242,63 +242,63 @@ const router = createRouter({
       path: '/parent/home',
       name: 'parentHome',
       component: HomeParentView,
-      meta: { requiresAuth: true, role: 4 },
+      meta: { requiresAuth: true, rol: 4 },
     },
 
     {
       path: '/parent/profile',
       name: 'parentProfile',
       component: ProfileParentView,
-      meta: { requiresAuth: true, role: 4 },
+      meta: { requiresAuth: true, rol: 4 },
     },
 
     {
       path: '/parent/students',
       name: 'parentStudents',
       component: StudentsParentView,
-      meta: { requiresAuth: true, role: 4 },
+      meta: { requiresAuth: true, rol: 4 },
     },
 
     {
       path: '/parent/groups',
       name: 'parentGroups',
       component: GroupsParentView,
-      meta: { requiresAuth: true, role: 4 },
+      meta: { requiresAuth: true, rol: 4 },
     },
 
     {
       path: '/parent/groups/:id/:childId',
       name: 'parentGroupDetail',
       component: ShowGroupParent,
-      meta: { requiresAuth: true, role: 4 },
+      meta: { requiresAuth: true, rol: 4 },
     },
 
     {
       path: '/parent/groups/:id/assignments/:childId',
       name: 'parentGroupAssignmentDetail',
       component: TaskDetailParentView,
-      meta: { requiresAuth: true, role: 4 },
+      meta: { requiresAuth: true, rol: 4 },
     },
 
     {
       path: '/parent/assignments/',
       name: 'parentAssignments',
       component: TasksParentView,
-      meta: { requiresAuth: true, role: 4 },
+      meta: { requiresAuth: true, rol: 4 },
     },
 
     {
       path: '/parent/assignments/:id/:childId',
       name: 'parentAssignmentsDetail',
       component: TaskDetailParentView,
-      meta: { requiresAuth: true, role: 4 },
+      meta: { requiresAuth: true, rol: 4 },
     },
 
     {
       path: '/parent/announcements',
       name: 'parentAnnouncements',
       component: AnnouncementParentView,
-      meta: { requiresAuth: true, role: 4 },
+      meta: { requiresAuth: true, rol: 4 },
     },
 
     {
@@ -306,28 +306,28 @@ const router = createRouter({
       name: 'parentAnnouncementDetail',
       component: AnnouncementDetailView,
       props: true,
-      meta: { requiresAuth: true, role: 4 },
+      meta: { requiresAuth: true, rol: 4 },
     },
 
     {
       path: '/parent/grades',
       name: 'parentGrades',
       component: GradesParentView,
-      meta: { requiresAuth: true, role: 4 },
+      meta: { requiresAuth: true, rol: 4 },
     },
 
     {
       path: '/parent/notifications',
       name: 'parentNotifications',
       component: NotificationParentView,
-      meta: { requiresAuth: true, role: 4 },
+      meta: { requiresAuth: true, rol: 4 },
     },
 
     {
       path: '/parent/settings',
       name: 'parentSettings',
       component: SettingsParentView,
-      meta: { requiresAuth: true, role: 4 },
+      meta: { requiresAuth: true, rol: 4 },
     },
   ],
 })
