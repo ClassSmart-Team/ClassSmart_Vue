@@ -39,6 +39,7 @@ import TaskDetailParentView from '@/views/TaskDetailParentView.vue'
 import AnnouncementParentView from '@/views/AnnouncementParentView.vue'
 import AnnouncementDetailView from '@/views/AnnouncementDetailView.vue'
 import StudentAnnouncementsView from '@/views/StudentAnnouncementsView.vue'
+import TeacherMessagesView from '@/views/TeacherMessagesView.vue'
 
 //ROLES//
 //1-admin
@@ -172,7 +173,7 @@ const router = createRouter({
     {
       path: '/teacher/messages',
       name: 'messages',
-      component: HomeTeacherView, // temporal
+      component: TeacherMessagesView,
       meta: { requiresAuth: true, rol: 2 },
     },
     {
