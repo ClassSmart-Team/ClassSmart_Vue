@@ -370,7 +370,7 @@ router.beforeEach((to, from, next) => {
     }
   }
 
-  // 🔐 Rutas protegidas
+  //Rutas protegidas
   if (to.matched.some(r => r.meta.requiresAuth)) {
     if (!user) {
       return next({ name: 'Login' })
@@ -386,7 +386,7 @@ router.beforeEach((to, from, next) => {
     }
   }
 
-  // 🔁 Redirección desde "/"
+  //Redirección desde "/"
   if (to.path === '/') {
     if (!user) {
       return next({ name: 'Login' })
