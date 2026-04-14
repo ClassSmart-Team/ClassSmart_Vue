@@ -350,7 +350,7 @@ onBeforeUnmount(() => {
 
 <template>
   <div class="messages-page">
-    <SidebarLayout>
+    <SideBarLayout>
       <div class="messages-view">
         <div class="ContSmall">
           <div class="left">
@@ -569,7 +569,7 @@ onBeforeUnmount(() => {
           </div>
         </div>
       </div>
-    </SidebarLayout>
+    </SideBarLayout>
   </div>
 </template>
 
