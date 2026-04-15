@@ -275,10 +275,8 @@ function deleteAnnouncement(announcement: AnnouncementItem) {
 
 <template>
   <SidebarLayout>
-    <!-- El page-wrapper se extiende fuera del padding del layout -->
     <div class="page-wrapper">
 
-      <!-- Header superior -->
       <div class="page-header">
         <div class="page-header__left">
           <div class="page-header__icon">
@@ -301,10 +299,8 @@ function deleteAnnouncement(announcement: AnnouncementItem) {
         </button>
       </div>
 
-      <!-- Panel principal -->
       <div class="main-box">
 
-        <!-- Barra de búsqueda + conteo -->
         <div class="toolbar">
           <div class="search-wrap">
             <svg class="search-icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
@@ -329,7 +325,6 @@ function deleteAnnouncement(announcement: AnnouncementItem) {
           </span>
         </div>
 
-        <!-- Chips de grupo -->
         <div v-if="groupsWithAnnouncements.length > 0" class="group-chips">
           <button
             class="group-chip"
@@ -349,13 +344,11 @@ function deleteAnnouncement(announcement: AnnouncementItem) {
           </button>
         </div>
 
-        <!-- Estado: cargando -->
         <div v-if="announcementsLoading || groupsLoading" class="state-msg">
           <div class="state-spinner"></div>
           Cargando anuncios...
         </div>
 
-        <!-- Estado: error -->
         <div v-else-if="announcementsError || groupsError" class="state-msg state-msg--error">
           <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
             <circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/>
@@ -363,7 +356,6 @@ function deleteAnnouncement(announcement: AnnouncementItem) {
           {{ announcementsError?.message || groupsError?.message || 'Error al cargar anuncios' }}
         </div>
 
-        <!-- Estado: sin resultados -->
         <div v-else-if="filteredAnnouncements.length === 0" class="empty-state">
           <div class="empty-state__icon">📢</div>
           <p class="empty-state__text">
@@ -374,7 +366,6 @@ function deleteAnnouncement(announcement: AnnouncementItem) {
           </button>
         </div>
 
-        <!-- Grid de cards -->
         <div v-else class="cards-grid">
           <NoticeCard
             v-for="announcement in filteredAnnouncements"
@@ -387,7 +378,6 @@ function deleteAnnouncement(announcement: AnnouncementItem) {
         </div>
       </div>
 
-      <!-- Modal crear / editar -->
       <div v-if="showModal" class="modal-overlay" @click.self="closeModal">
         <div class="modal-card">
 
@@ -418,7 +408,6 @@ function deleteAnnouncement(announcement: AnnouncementItem) {
             </div>
 
             <div class="form-grid">
-              <!-- Grupo -->
               <div class="field">
                 <label class="field__label">
                   <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
@@ -436,7 +425,6 @@ function deleteAnnouncement(announcement: AnnouncementItem) {
                 </select>
               </div>
 
-              <!-- Título -->
               <div class="field">
                 <label class="field__label">
                   <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
@@ -447,7 +435,6 @@ function deleteAnnouncement(announcement: AnnouncementItem) {
                 <input v-model="form.title" type="text" class="field__input" placeholder="Ej. Tarea para la próxima clase" />
               </div>
 
-              <!-- Mensaje -->
               <div class="field field--full">
                 <label class="field__label">
                   <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
@@ -463,7 +450,6 @@ function deleteAnnouncement(announcement: AnnouncementItem) {
                 ></textarea>
               </div>
 
-              <!-- Archivo adjunto -->
               <div class="field field--full">
                 <label class="field__label">
                   <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
@@ -519,19 +505,13 @@ function deleteAnnouncement(announcement: AnnouncementItem) {
 </template>
 
 <style scoped>
-/* ─── FULL-BLEED: escapa el padding del SidebarLayout ─── */
 .page-wrapper {
-  /* Cancela el padding del layout en todos los lados */
   margin: -24px;
-  /* Recupera el espacio interno para el contenido */
   padding: 24px;
-  /* Ancho exacto incluyendo los márgenes negativos */
   width: calc(100% + 48px);
-  /* Alto mínimo que cubra toda la pantalla */
   min-height: calc(100vh);
   box-sizing: border-box;
 
-  /* Fondo con gradiente del sistema de diseño */
   background: linear-gradient(180deg, var(--color-AzulDos), var(--color-ComplementoDos));
   display: flex;
   flex-direction: column;
@@ -540,7 +520,6 @@ function deleteAnnouncement(announcement: AnnouncementItem) {
   overflow-x: hidden;
 }
 
-/* Orbes blur decorativos (igual que la vista estudiante) */
 .page-wrapper::before,
 .page-wrapper::after {
   content: '';
@@ -567,13 +546,11 @@ function deleteAnnouncement(announcement: AnnouncementItem) {
   left: -60px;
 }
 
-/* Todo el contenido por encima de los orbes */
 .page-wrapper > * {
   position: relative;
   z-index: 1;
 }
 
-/* ─── Header ─── */
 .page-header {
   display: flex;
   align-items: center;
@@ -618,7 +595,6 @@ function deleteAnnouncement(announcement: AnnouncementItem) {
   color: rgba(255, 255, 255, 0.85);
 }
 
-/* ─── Botón nuevo ─── */
 .btn-new {
   display: inline-flex;
   align-items: center;
@@ -642,7 +618,6 @@ function deleteAnnouncement(announcement: AnnouncementItem) {
   box-shadow: 0 4px 16px rgba(0,0,0,0.15);
 }
 
-/* ─── Panel principal (glassmorphism) ─── */
 .main-box {
   background: rgba(255, 255, 255, 0.18);
   backdrop-filter: blur(20px);
@@ -653,7 +628,6 @@ function deleteAnnouncement(announcement: AnnouncementItem) {
   box-shadow: 0 8px 40px rgba(8, 70, 122, 0.2), inset 0 1px 0 rgba(255,255,255,0.4);
 }
 
-/* ─── Toolbar ─── */
 .toolbar {
   display: flex;
   align-items: center;
@@ -681,24 +655,29 @@ function deleteAnnouncement(announcement: AnnouncementItem) {
   width: 100%;
   padding: 10px 36px 10px 38px;
   border-radius: 12px;
-  border: 1.5px solid rgba(255, 255, 255, 0.6);
-  background: rgba(255, 255, 255, 0.55);
+  border: 1.5px solid rgba(255, 255, 255, 0.65);
+  background: rgba(255, 255, 255, 0.82);
   backdrop-filter: blur(10px);
   font-size: 0.92rem;
   box-sizing: border-box;
   font-family: inherit;
-  color: var(--color-AzulCuatro);
-  font-weight: 500;
+
+  color: #0f172a;
+  font-weight: 750;
+
   transition: border-color 0.2s, box-shadow 0.2s, background 0.2s;
 }
 
-.search-input::placeholder { color: rgba(30, 103, 163, 0.5); }
+.search-input::placeholder {
+  color: rgba(15, 23, 42, 0.72);
+  font-weight: 750;
+}
 
 .search-input:focus {
   outline: none;
   border-color: white;
   box-shadow: 0 0 0 3px rgba(255, 255, 255, 0.25);
-  background: rgba(255, 255, 255, 0.8);
+  background: rgba(255, 255, 255, 0.95);
 }
 
 .search-clear {
@@ -715,16 +694,19 @@ function deleteAnnouncement(announcement: AnnouncementItem) {
   padding: 2px;
 }
 
-.search-clear:hover { color: var(--color-AzulCuatro); }
+.search-clear:hover {
+  color: var(--color-AzulCuatro);
+}
 
 .toolbar__count {
   font-size: 0.83rem;
-  font-weight: 600;
-  color: rgba(255, 255, 255, 0.75);
+  font-weight: 800;
+  color: rgba(255, 255, 255, 0.92);
   white-space: nowrap;
+  text-shadow: 0 2px 10px rgba(0,0,0,0.15);
 }
 
-/* ─── Chips de grupo ─── */
+/* 🔥 CHIPS BLANCOS SIEMPRE */
 .group-chips {
   display: flex;
   flex-wrap: wrap;
@@ -735,31 +717,40 @@ function deleteAnnouncement(announcement: AnnouncementItem) {
 .group-chip {
   padding: 7px 16px;
   border-radius: 999px;
-  border: 1.5px solid rgba(255, 255, 255, 0.5);
-  background: rgba(255, 255, 255, 0.2);
-  color: white;
+  border: 1.5px solid rgba(255, 255, 255, 0.85);
+
+  background: white;
+
+  color: var(--color-AzulCuatro);
   font-size: 0.83rem;
-  font-weight: 600;
+  font-weight: 850;
   cursor: pointer;
   font-family: inherit;
   transition: all 0.18s ease;
   white-space: nowrap;
-  backdrop-filter: blur(6px);
+
+  box-shadow: 0 3px 12px rgba(8, 70, 122, 0.18);
 }
 
 .group-chip:hover {
-  background: rgba(255, 255, 255, 0.35);
-  border-color: rgba(255,255,255,0.7);
+  transform: translateY(-1px);
+  box-shadow: 0 5px 16px rgba(8, 70, 122, 0.22);
 }
 
+/* ACTIVO: MÁS FUERTE */
 .group-chip--active {
-  background: white;
-  color: var(--color-AzulCuatro);
+  background: linear-gradient(135deg, var(--color-AzulDos), var(--color-AzulTres));
+  color: white;
   border-color: transparent;
-  box-shadow: 0 3px 14px rgba(8, 70, 122, 0.25);
+  box-shadow: 0 6px 18px rgba(8, 70, 122, 0.28);
 }
 
-.group-chip--active:hover { background: white; color: var(--color-AzulCuatro); }
+/* CUANDO HAY UNO ACTIVO, LOS DEMÁS SE DIFUMINAN PERO SE LEEN */
+.group-chips:has(.group-chip--active:not(:first-child)) .group-chip:not(.group-chip--active) {
+  opacity: 0.72;
+  filter: blur(0.2px) saturate(0.9);
+  transform: scale(0.98);
+}
 
 /* ─── Estados ─── */
 .state-msg {
@@ -773,7 +764,10 @@ function deleteAnnouncement(announcement: AnnouncementItem) {
   font-weight: 500;
 }
 
-.state-msg--error { color: #fce8e6; font-weight: 600; }
+.state-msg--error {
+  color: #fce8e6;
+  font-weight: 600;
+}
 
 .state-spinner {
   width: 20px;
@@ -784,7 +778,6 @@ function deleteAnnouncement(announcement: AnnouncementItem) {
   animation: spin 0.7s linear infinite;
 }
 
-/* ─── Empty state ─── */
 .empty-state {
   display: flex;
   flex-direction: column;
@@ -797,16 +790,59 @@ function deleteAnnouncement(announcement: AnnouncementItem) {
 
 .empty-state__text {
   margin: 0;
-  color: rgba(255, 255, 255, 0.8);
+  color: rgba(255, 255, 255, 0.85);
   font-size: 0.95rem;
   text-align: center;
+  font-weight: 600;
 }
 
-/* ─── Grid de cards ─── */
 .cards-grid {
   display: grid;
   grid-template-columns: repeat(auto-fill, minmax(290px, 1fr));
   gap: 16px;
+}
+
+/* 🔥 MEJOR VISIBILIDAD EN NoticeCard */
+.cards-grid :deep(.notice-card),
+.cards-grid :deep(.card),
+.cards-grid :deep(.notice),
+.cards-grid :deep(.notice-content) {
+  color: #0f172a;
+}
+
+.cards-grid :deep(.notice-card p),
+.cards-grid :deep(.notice-card span),
+.cards-grid :deep(.notice-card small),
+.cards-grid :deep(.notice-card .meta),
+.cards-grid :deep(.notice-card .description),
+.cards-grid :deep(.notice-card .message) {
+  color: rgba(15, 23, 42, 0.9) !important;
+  font-weight: 650;
+}
+
+/* 🔥 FECHA NEGRA */
+.cards-grid :deep(.notice-card .date),
+.cards-grid :deep(.notice-card .created-at),
+.cards-grid :deep(.notice-card .time),
+.cards-grid :deep(.notice-card .timestamp),
+.cards-grid :deep(.notice-card small) {
+  color: #0f172a !important;
+  font-weight: 800;
+}
+
+/* TITULO MÁS FUERTE */
+.cards-grid :deep(.notice-card h3),
+.cards-grid :deep(.notice-card .title) {
+  color: #0f172a !important;
+  font-weight: 900;
+}
+
+/* DESCRIPCIÓN MÁS CLARA */
+.cards-grid :deep(.notice-card .description),
+.cards-grid :deep(.notice-card .message) {
+  color: rgba(15, 23, 42, 0.88) !important;
+  font-weight: 650;
+  line-height: 1.45;
 }
 
 /* ─── Modal ─── */
@@ -883,9 +919,11 @@ function deleteAnnouncement(announcement: AnnouncementItem) {
   transition: background 0.15s;
 }
 
-.modal-close:hover { background: #e2e8f0; color: #1e293b; }
+.modal-close:hover {
+  background: #e2e8f0;
+  color: #1e293b;
+}
 
-/* ─── Formulario ─── */
 .modal-form {
   padding: 22px;
   overflow-y: auto;
@@ -944,6 +982,12 @@ function deleteAnnouncement(announcement: AnnouncementItem) {
   box-sizing: border-box;
   width: 100%;
   transition: border-color 0.2s, box-shadow 0.2s;
+  font-weight: 600;
+}
+
+.field__input::placeholder {
+  color: #64748b;
+  font-weight: 600;
 }
 
 .field__input:focus {
@@ -959,7 +1003,6 @@ function deleteAnnouncement(announcement: AnnouncementItem) {
   line-height: 1.55;
 }
 
-/* ─── File drop ─── */
 .file-drop {
   display: flex;
   flex-direction: column;
@@ -970,7 +1013,7 @@ function deleteAnnouncement(announcement: AnnouncementItem) {
   border-radius: 12px;
   cursor: pointer;
   background: var(--color-Fondo);
-  color: #94a3b8;
+  color: #64748b;
   transition: border-color 0.2s, background 0.2s;
   text-align: center;
 }
@@ -985,7 +1028,7 @@ function deleteAnnouncement(announcement: AnnouncementItem) {
 
 .file-drop__text {
   font-size: 0.88rem;
-  font-weight: 500;
+  font-weight: 650;
 }
 
 .file-selected {
@@ -1031,7 +1074,6 @@ function deleteAnnouncement(announcement: AnnouncementItem) {
 
 .file-current__link:hover { text-decoration: underline; }
 
-/* ─── Acciones del form ─── */
 .form-actions {
   display: flex;
   justify-content: flex-end;
@@ -1070,17 +1112,22 @@ function deleteAnnouncement(announcement: AnnouncementItem) {
   transition: opacity 0.2s, transform 0.15s;
 }
 
-.btn-submit:hover:not(:disabled) { transform: translateY(-1px); opacity: 0.92; }
-.btn-submit:disabled { opacity: 0.6; cursor: not-allowed; }
+.btn-submit:hover:not(:disabled) {
+  transform: translateY(-1px);
+  opacity: 0.92;
+}
 
-/* ─── Animaciones ─── */
+.btn-submit:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
 @keyframes spin {
   to { transform: rotate(360deg); }
 }
 
 .spin { animation: spin 0.8s linear infinite; }
 
-/* ─── Responsive ─── */
 @media (max-width: 768px) {
   .page-wrapper {
     margin: -16px;

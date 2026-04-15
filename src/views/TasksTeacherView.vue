@@ -151,15 +151,15 @@ function handleTaskClick(task: any) {
 
 function handleEditTask(task: any) {
   editingTask.value = task;
-  
+
   form.value = {
     title: task.title,
-    description: task.description || '', 
+    description: task.description || '',
     start_date: task.start_date?.replace(' ', 'T').substring(0, 16) ?? '',
     end_date: task.end_date?.replace(' ', 'T').substring(0, 16) ?? '',
     group_id: task.group_id ? Number(task.group_id) : (task.group?.id || null),
     status: task.status ?? 'Activa',
-    unit_id: null 
+    unit_id: null
   };
 
   setTimeout(() => {
@@ -190,7 +190,7 @@ async function createTask() {
 
   const baseUrl = import.meta.env.VITE_API_URL ?? 'https://api.sutando-user.me/api'
   const fd = new FormData()
-  
+
   fd.append('title', form.value.title)
   fd.append('description', form.value.description || '')
   fd.append('start_date', toBackendDate(form.value.start_date))
@@ -220,7 +220,7 @@ async function createTask() {
       alert('Error: ' + JSON.stringify(json?.errors ?? json?.message ?? json))
       return
     }
-    
+
     showModal.value = false
     form.value = { ...initialTask }
     selectedFiles.value = []
@@ -400,7 +400,7 @@ async function deleteTask() {
                 <p>Click para seleccionar archivos</p>
                 <span>PDF, Word o Imágenes</span>
               </div>
-              
+
               <div v-if="selectedFiles.length" class="files-preview">
                 <div v-for="(f, i) in selectedFiles" :key="i" class="file-item">
                   <span class="file-name text-truncate" style="max-width: 100px;">{{ f.name }}</span>
@@ -642,8 +642,8 @@ async function deleteTask() {
   color: var(--color-AzulCuatro);
 }
 
-.field-group input, 
-.field-group textarea, 
+.field-group input,
+.field-group textarea,
 .field-group select {
   border: 2px solid #e2e8f0;
   border-radius: 10px;
@@ -655,8 +655,8 @@ async function deleteTask() {
   box-sizing: border-box;
 }
 
-.field-group input:focus, 
-.field-group textarea:focus, 
+.field-group input:focus,
+.field-group textarea:focus,
 .field-group select:focus {
   border-color: var(--color-Azul);
   background: white;
@@ -803,10 +803,10 @@ async function deleteTask() {
 
 /* Filtros Generales */
 .filters-container { display: flex; gap: 10px; margin-bottom: 15px; }
-.filters-container select { 
-  padding: 8px 12px; 
-  border-radius: 10px; 
-  border: 1px solid #d1d5db; 
-  font-size: 0.85rem; 
+.filters-container select {
+  padding: 8px 12px;
+  border-radius: 10px;
+  border: 1px solid #d1d5db;
+  font-size: 0.85rem;
 }
 </style>

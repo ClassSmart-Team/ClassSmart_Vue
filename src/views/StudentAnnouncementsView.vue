@@ -129,7 +129,7 @@ function hue(name?: string) {
             :class="{ 'chip--active': selectedGroupId === null }"
             @click="selectedGroupId = null"
           >
-            <span class="chip__dot" style="background: var(--color-AzulDos)"></span>
+            <span class="chip__dot" style="background: white"></span>
             Todas las materias
           </button>
           <button
@@ -249,18 +249,13 @@ function hue(name?: string) {
 <style scoped>
 /* ─── FULL-BLEED: escapa el padding del SidebarLayout ─── */
 .page {
-  /* Cancela el padding del layout (24px) en todos los lados */
   margin: -24px;
-  /* Ancho que cubre el espacio recuperado */
   width: calc(100% + 48px);
-  /* Alto mínimo que cubre toda la pantalla visible */
   min-height: calc(100vh);
   box-sizing: border-box;
 
-  /* Padding interno para el contenido */
   padding: 28px;
 
-  /* Gradiente de fondo */
   background: linear-gradient(180deg, var(--color-AzulDos), var(--color-ComplementoDos));
 
   display: flex;
@@ -303,7 +298,6 @@ function hue(name?: string) {
   left: 40%;
 }
 
-/* Todo el contenido por encima de los orbes */
 .page > *:not(.orb) {
   position: relative;
   z-index: 1;
@@ -343,13 +337,13 @@ function hue(name?: string) {
   font-weight: 900;
   color: white;
   letter-spacing: -0.5px;
-  text-shadow: 0 2px 12px rgba(0,0,0,0.15);
 }
 
 .page__sub {
   margin: 0;
   font-size: 0.9rem;
-  color: rgba(255, 255, 255, 0.85);
+  color: rgba(255, 255, 255, 0.95);
+  font-weight: 500;
 }
 
 /* ─── Panel glassmorphism ─── */
@@ -373,18 +367,18 @@ function hue(name?: string) {
   display: flex;
   align-items: center;
   gap: 10px;
-  background: rgba(255, 255, 255, 0.55);
-  backdrop-filter: blur(10px);
-  border: 1.5px solid rgba(255, 255, 255, 0.6);
+  background: rgba(255, 255, 255, 0.85);
+  border: 1.5px solid rgba(255, 255, 255, 0.9);
   border-radius: 14px;
   padding: 0 16px;
   transition: background 0.2s, border-color 0.2s, box-shadow 0.2s;
 }
 
 .search-bar:focus-within {
-  background: rgba(255, 255, 255, 0.8);
+  background: rgba(255, 255, 255, 0.95);
   border-color: var(--color-AzulDos);
   box-shadow: 0 0 0 3px rgba(75, 164, 223, 0.25);
+  backdrop-filter: blur(10px);
 }
 
 .search-bar__icon { color: var(--color-AzulTres); flex-shrink: 0; }
@@ -397,11 +391,11 @@ function hue(name?: string) {
   font-size: 1rem;
   font-family: inherit;
   color: var(--color-AzulCuatro);
-  font-weight: 500;
+  font-weight: 600;
   outline: none;
 }
 
-.search-bar__input::placeholder { color: rgba(30, 103, 163, 0.5); }
+.search-bar__input::placeholder { color: rgba(30, 103, 163, 0.55); }
 
 .search-bar__clear {
   background: none;
@@ -429,31 +423,34 @@ function hue(name?: string) {
   gap: 6px;
   padding: 7px 16px;
   border-radius: 999px;
-  border: 1.5px solid rgba(255, 255, 255, 0.5);
-  background: rgba(255, 255, 255, 0.2);
+  border: 1.5px solid rgba(255, 255, 255, 0.6);
+  background: rgba(255, 255, 255, 0.25);
   color: white;
   font-size: 0.85rem;
-  font-weight: 600;
+  font-weight: 700;
   cursor: pointer;
   font-family: inherit;
   transition: all 0.18s ease;
   white-space: nowrap;
-  backdrop-filter: blur(6px);
 }
 
 .chip:hover {
   background: rgba(255, 255, 255, 0.35);
-  border-color: rgba(255,255,255,0.7);
+  border-color: rgba(255,255,255,0.8);
 }
 
 .chip--active {
-  background: white;
+  background: rgba(255, 255, 255, 0.9);
   color: var(--color-AzulCuatro);
   border-color: transparent;
   box-shadow: 0 3px 14px rgba(8, 70, 122, 0.25);
+  backdrop-filter: blur(10px);
 }
 
-.chip--active:hover { background: white; color: var(--color-AzulCuatro); }
+.chip--active:hover {
+  background: rgba(255, 255, 255, 0.95);
+  color: var(--color-AzulCuatro);
+}
 
 .chip__dot {
   width: 7px;
@@ -471,10 +468,10 @@ function hue(name?: string) {
   padding: 48px 20px;
   color: white;
   font-size: 1rem;
-  font-weight: 500;
+  font-weight: 600;
 }
 
-.state--error { color: #fce8e6; font-weight: 600; }
+.state--error { color: #fce8e6; font-weight: 700; }
 
 .state__spinner {
   width: 22px;
@@ -497,9 +494,9 @@ function hue(name?: string) {
 
 .empty__text {
   margin: 0;
-  color: rgba(255,255,255,0.8);
+  color: rgba(255,255,255,0.95);
   font-size: 1rem;
-  font-weight: 500;
+  font-weight: 600;
 }
 
 /* ─── Lista ─── */
@@ -538,10 +535,10 @@ function hue(name?: string) {
   flex-direction: column;
   gap: 10px;
   min-width: 0;
-  background: rgba(255, 255, 255, 0.88);
-  backdrop-filter: blur(8px);
+  background: rgba(255, 255, 255, 0.95);
 }
 
+/* ─── Top ─── */
 .ann-card__top {
   display: flex;
   align-items: center;
@@ -556,14 +553,15 @@ function hue(name?: string) {
   min-width: 0;
 }
 
+/* AVATAR FIJO AZUL */
 .ann-card__avatar {
   width: 32px;
   height: 32px;
   border-radius: 10px;
-  background: hsl(var(--hue), 65%, 50%);
+  background: var(--color-AzulDos);
   color: white;
   font-size: 0.85rem;
-  font-weight: 800;
+  font-weight: 900;
   display: flex;
   align-items: center;
   justify-content: center;
@@ -572,9 +570,9 @@ function hue(name?: string) {
 
 .ann-card__group-name {
   font-size: 0.82rem;
-  font-weight: 700;
-  color: var(--color-AzulTres);
-  background: var(--color-Rol);
+  font-weight: 800;
+  color: var(--color-AzulCuatro);
+  background: rgba(219, 234, 254, 0.85);
   padding: 4px 12px;
   border-radius: 999px;
   white-space: nowrap;
@@ -592,13 +590,13 @@ function hue(name?: string) {
 
 .ann-card__date {
   font-size: 0.8rem;
-  color: #64748b;
-  font-weight: 500;
+  color: #111827;
+  font-weight: 700;
   white-space: nowrap;
 }
 
 .ann-card__chevron {
-  background: var(--color-Rol);
+  background: rgba(219, 234, 254, 0.9);
   border: 1px solid rgba(30,103,163,0.15);
   width: 28px;
   height: 28px;
@@ -608,10 +606,13 @@ function hue(name?: string) {
   align-items: center;
   justify-content: center;
   color: var(--color-AzulTres);
-  transition: background 0.15s;
+  transition: all 0.15s;
 }
 
-.ann-card__chevron:hover { background: #dbeafe; }
+.ann-card__chevron:hover {
+  background: rgba(191, 219, 254, 0.95);
+  backdrop-filter: blur(10px);
+}
 
 .chevron-icon { transition: transform 0.25s ease; }
 .chevron-icon.rotated { transform: rotate(180deg); }
@@ -619,7 +620,7 @@ function hue(name?: string) {
 .ann-card__title {
   margin: 0;
   font-size: 1.05rem;
-  font-weight: 800;
+  font-weight: 900;
   color: var(--color-AzulCuatro);
   line-height: 1.3;
 }
@@ -638,6 +639,7 @@ function hue(name?: string) {
   color: #334155;
   line-height: 1.7;
   padding-top: 2px;
+  font-weight: 500;
 }
 
 .ann-card__footer {
@@ -655,9 +657,9 @@ function hue(name?: string) {
   align-items: center;
   gap: 5px;
   font-size: 0.8rem;
-  font-weight: 600;
+  font-weight: 700;
   color: #075985;
-  background: #e0f2fe;
+  background: rgba(224, 242, 254, 0.95);
   padding: 4px 12px;
   border-radius: 999px;
   text-decoration: none;
@@ -665,33 +667,39 @@ function hue(name?: string) {
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
-  transition: background 0.15s;
+  transition: all 0.15s;
 }
 
-.ann-card__file:hover { background: #bae6fd; }
+.ann-card__file:hover {
+  background: rgba(186, 230, 253, 0.95);
+  backdrop-filter: blur(10px);
+}
 
 .ann-card__read-btn {
   margin-left: auto;
   background: none;
   border: none;
   font-size: 0.85rem;
-  font-weight: 700;
+  font-weight: 800;
   color: var(--color-AzulTres);
   cursor: pointer;
   padding: 0;
   font-family: inherit;
-  transition: color 0.15s;
+  transition: all 0.15s;
 }
 
-.ann-card__read-btn:hover { color: var(--color-AzulCuatro); text-decoration: underline; }
+.ann-card__read-btn:hover {
+  color: var(--color-AzulCuatro);
+  text-decoration: underline;
+}
 
 /* ─── Contador ─── */
 .count {
   margin: 0;
   text-align: center;
   font-size: 0.85rem;
-  color: rgba(255,255,255,0.7);
-  font-weight: 500;
+  color: rgba(255,255,255,0.95);
+  font-weight: 600;
 }
 
 /* ─── Animaciones ─── */
@@ -707,7 +715,6 @@ function hue(name?: string) {
 /* ─── Responsive ─── */
 @media (max-width: 768px) {
   .page {
-    /* El layout mobile suele tener 16px de padding */
     margin: -16px;
     width: calc(100% + 32px);
     padding: 20px 16px 32px;
