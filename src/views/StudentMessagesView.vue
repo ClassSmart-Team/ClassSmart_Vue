@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { computed, nextTick, onBeforeUnmount, onMounted, ref, watch } from 'vue'
-import SidebarLayout from '@/components/StudentSideBar.vue'
+import SidebarLayout from '@/components/TeacherSidebar.vue'
 import { useapi } from '@/assets/composables/useApi'
 import { useAuthStore } from '@/stores/authStore'
 import type { Chat, ChatMessage } from '@/types/types'
@@ -10,6 +10,7 @@ type ChatCandidateUser = {
   name: string
   lastname: string
   email: string
+  role_id: number
 }
 
 const ua = useAuthStore()
@@ -45,6 +46,12 @@ const chats = computed<Chat[]>(() => chatsData.value?.data ?? [])
 const candidateUsers = ref<ChatCandidateUser[]>([])
 const candidatesLoading = ref(false)
 const candidatesError = ref('')
+const roleFilter = ref<0 | 2 | 3 | 4>(0)
+
+const filteredCandidateUsers = computed(() => {
+  if (roleFilter.value === 0) return candidateUsers.value
+  return candidateUsers.value.filter((u) => u.role_id === roleFilter.value)
+})
 
 const currentUserId = computed<number | null>(() => ua.credentials?.user?.id ?? null)
 const currentUserName = computed<string>(() => ua.credentials?.user?.name ?? '')
@@ -138,23 +145,34 @@ async function loadCandidateUsers() {
     const json = await response.json()
 
     if (!response.ok) {
-      candidatesError.value =
-        json?.message ??
-        json?.error ??
-        `Error al cargar usuarios disponibles (${response.status})`
+      candidatesError.value = json?.message ?? 'Error al cargar usuarios'
       return
     }
 
-    candidateUsers.value = json?.data ?? []
+    // MAPEO CORRECTO: Accedemos a u.role.id para que el filtro funcione
+    candidateUsers.value = (json?.data ?? []).map((u: any) => ({
+      id: u.id,
+      name: u.name,
+      lastname: u.lastname,
+      email: u.email,
+      role_id: u.role?.id ?? 0, // Aquí tomamos el ID del objeto role
+    }))
   } catch (error) {
     console.error(error)
-    candidatesError.value = 'Error de conexión al cargar usuarios disponibles'
+    candidatesError.value = 'Error de conexión al cargar usuarios'
   } finally {
     candidatesLoading.value = false
   }
-}
+} // <--- Asegúrate de que solo haya UNA llave aquí.
 
 async function loadChat(chatId: number) {
+  // Dentro de loadChat, busca la parte de Echo:
+  if (window.Echo) {
+    window.Echo.private(`chat.${chatId}`)
+      .listen('.message.sent', async (event: ChatMessage) => {
+        // ... resto del código igual
+      })
+  }
   selectedChatLoading.value = true
   localError.value = ''
   leaveCurrentChannel()
@@ -260,12 +278,14 @@ async function sendMessage() {
 async function openCreateModal() {
   showCreateModal.value = true
   createChatError.value = ''
+  roleFilter.value = 0
   await loadCandidateUsers()
 }
 
 function closeCreateModal() {
   showCreateModal.value = false
   createChatError.value = ''
+  roleFilter.value = 0
   createChatForm.value = {
     name: '',
     user_ids: [],
@@ -355,7 +375,7 @@ onBeforeUnmount(() => {
         <div class="ContSmall">
           <div class="left">
             <div class="avatar">
-                {{ currentUserInitials }}
+              {{ currentUserInitials }}
             </div>
 
             <div>
@@ -367,7 +387,7 @@ onBeforeUnmount(() => {
 
           <div class="right">
             <button class="btn-create-chat" @click="openCreateModal">
-                <span>＋</span> Nuevo chat
+              <span>＋</span> Nuevo chat
             </button>
           </div>
         </div>
@@ -536,9 +556,37 @@ onBeforeUnmount(() => {
                 <div class="field">
                   <label>Selecciona usuarios</label>
 
-                  <div v-if="candidateUsers.length" class="users-selector">
+                  <div class="role-filter">
+                    <button
+                      type="button"
+                      class="role-btn"
+                      :class="{ active: roleFilter === 0 }"
+                      @click="roleFilter = 0"
+                    >
+                      Todos
+                    </button>
+                    <button
+                      type="button"
+                      class="role-btn"
+                      :class="{ active: roleFilter === 2 }"
+                      @click="roleFilter = 2"
+                    >
+                      Profesores
+                    </button>
+                    <button
+                      type="button"
+                      class="role-btn"
+                      :class="{ active: roleFilter === 3 }"
+                      @click="roleFilter = 3"
+                    >
+                      Alumnos
+                    </button>
+
+                  </div>
+
+                  <div v-if="filteredCandidateUsers.length" class="users-selector">
                     <label
-                      v-for="user in candidateUsers"
+                      v-for="user in filteredCandidateUsers"
                       :key="user.id"
                       class="user-option"
                     >
@@ -552,7 +600,7 @@ onBeforeUnmount(() => {
                   </div>
 
                   <div v-else class="empty-state modal-empty">
-                    <p>No hay usuarios disponibles para crear chats.</p>
+                    <p>No hay usuarios disponibles para este filtro.</p>
                   </div>
                 </div>
 
@@ -628,7 +676,6 @@ onBeforeUnmount(() => {
   align-items: center;
   flex-shrink: 0;
 }
-
 
 .messages-layout {
   flex: 1;
@@ -1020,6 +1067,35 @@ onBeforeUnmount(() => {
   color: #111827;
 }
 
+.role-filter {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+.role-btn {
+  border: 1px solid #e5e7eb;
+  border-radius: 10px;
+  background: #f1f5f9;
+  color: #475569;
+  padding: 6px 14px;
+  font-size: 0.85rem;
+  font-weight: 700;
+  cursor: pointer;
+  transition: all 0.15s ease;
+}
+
+.role-btn:hover {
+  background: #dbeafe;
+  border-color: #93c5fd;
+}
+
+.role-btn.active {
+  background: var(--color-AzulTres);
+  border-color: var(--color-AzulTres);
+  color: white;
+}
+
 .users-selector {
   display: flex;
   flex-direction: column;
@@ -1157,7 +1233,7 @@ onBeforeUnmount(() => {
   .btn-create-chat {
     width: 100%;
   }
-  
+
   .chat-list-box,
   .chat-box {
     height: auto;
