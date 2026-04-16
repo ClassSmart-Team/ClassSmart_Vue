@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import SidebarLayout from '@/components/TeacherSidebar.vue'
+import SidebarLayout from '@/components/StudentSideBar.vue'
 import GroupTargect from '@/components/GroupTargect.vue'
 import { useapi } from '@/assets/composables/useApi'
 import Modal from '@/components/createGroupModal.vue'

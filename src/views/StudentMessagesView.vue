@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { computed, nextTick, onBeforeUnmount, onMounted, ref, watch } from 'vue'
-import SidebarLayout from '@/components/TeacherSidebar.vue'
+import SidebarLayout from '@/components/StudentSideBar.vue'
 import { useapi } from '@/assets/composables/useApi'
 import { useAuthStore } from '@/stores/authStore'
 import type { Chat, ChatMessage } from '@/types/types'
@@ -342,8 +342,9 @@ async function createChat() {
 watch(
   chats,
   async (newChats) => {
-    if (!selectedChatId.value && newChats.length > 0) {
-      await loadChat(newChats[0].id)
+    const firstChat = newChats[0]
+    if (!selectedChatId.value && firstChat) {
+      await loadChat(firstChat.id)
     }
   },
   { immediate: true }
@@ -358,8 +359,9 @@ watch(
 )
 
 onMounted(async () => {
-  if (chats.value.length > 0 && !selectedChatId.value) {
-    await loadChat(chats.value[0].id)
+  const firstChat = chats.value[0]
+  if (firstChat && !selectedChatId.value) {
+    await loadChat(firstChat.id)
   }
 })
 

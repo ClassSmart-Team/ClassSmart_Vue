@@ -1,7 +1,7 @@
 <script setup lang="ts">
-import Contenedor from '@/components/Contenedor.vue'
 import { useAuthStore } from '@/stores/authStore.ts'
 import { useRouter } from 'vue-router'
+
 const us = useAuthStore()
 const router = useRouter()
 
@@ -15,7 +15,7 @@ const logout = () => {
     <div class="layout">
       <aside class="sidebar">
         <nav class="columna">
-          <img class="logo" src="@/components/Logo.svg" />
+          <img class="logo" src="@/components/Logo.svg" alt="Logo" />
 
           <RouterLink to="/student/home" class="link"> Home</RouterLink>
           <RouterLink to="/student/profile" class="link link-perfil">Perfil</RouterLink>

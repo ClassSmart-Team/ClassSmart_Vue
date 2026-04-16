@@ -191,7 +191,7 @@ const IconTask = () =>
 const getInitials = (name: string, lastname: string) =>
   `${name.charAt(0)}${lastname.charAt(0)}`.toUpperCase()
 
-const goBack = () => router.push('/teacher/groups')
+const goBack = () => router.push('/student/groups')
 
 // --- EDITAR GRUPO ---
 const showEditGroupModal = ref(false)
@@ -419,7 +419,7 @@ const submitAddStudent = async () => {
 
 function addSubmision() {
   showUnitsMenu.value = false
-  router.push({ name: 'tasks' })
+  router.push({ name: 'studentTasks' })
 }
 </script>
 
@@ -570,7 +570,7 @@ function addSubmision() {
 
           <div class="timeline">
             <div v-for="(unit, index) in data.data.units" :key="unit.id" class="unit-card-soft">
-              <div class="unit-index-badge">{{ index + 1 }}</div>
+              <div class="unit-index-badge">{{ Number(index) + 1 }}</div>
               <div class="unit-body">
                 <div class="unit-main">
                   <h3>{{ unit.name }}</h3>
