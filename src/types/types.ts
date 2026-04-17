@@ -209,9 +209,9 @@ export interface Announcement {
   title: string
   message: string
   created_at: string
-  attachment_path?: string
-  attachment_name?: string
-  group?: Group
+  attachment_path?: string | null
+  attachment_name?: string | null
+  group?: Group | null
 }
 
 export interface GroupedForum {
@@ -224,7 +224,7 @@ export interface GradeRecord {
   id: number
   grade: number
   student: { id: number; name: string; lastname: string }
-  group: { id: number; name: string; teacher?: string } 
+  group: { id: number; name: string; teacher?: string }
   unit: { id: number; name: string; order: number }
 }
 

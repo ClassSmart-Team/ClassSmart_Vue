@@ -5,8 +5,10 @@ import { useapi } from '@/assets/composables/useApi'
 import { useAuthStore } from '@/stores/authStore.ts'
 import { messaging } from '@/firebaseConfig'
 import { getToken } from 'firebase/messaging'
+import { useModalStore } from '@/stores/modalStore.ts'
 
 const ua = useAuthStore()
+const ns = useModalStore()
 
 // Estado de la configuración
 const config = ref({
@@ -94,7 +96,7 @@ const saveSettings = async () => {
     const { error } = await useapi('/configurations').patch(config.value).json()
     if (!error.value) {
       originalConfig.value = JSON.stringify(config.value)
-      alert('Configuración actualizada con éxito')
+      ns.notify('Configuración actualizada con éxito', 'success')
     }
   } finally {
     saving.value = false

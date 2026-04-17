@@ -141,6 +141,10 @@ const currentChild = computed(() =>
               </div>
             </div>
           </template>
+
+          <div v-else-if="!isFetching" class="empty-state-container">
+            <p>Aún no se hay registros de evaluación para tus hijos en el sistema.</p>
+          </div>
         </template>
       </div>
     </SidebarLayout>
@@ -342,55 +346,45 @@ const currentChild = computed(() =>
   }
 }
 
-.loader-dots {
-  width: 50px;
-  aspect-ratio: 2;
-  --_g: no-repeat radial-gradient(circle closest-side, var(--color-Texto) 90%, #0000);
-  background:
-    var(--_g) 0% 50%,
-    var(--_g) 50% 50%,
-    var(--_g) 100% 50%;
-  background-size: calc(100% / 3) 50%;
-  animation: l3 1s infinite linear;
-  opacity: 0.3;
-}
-@keyframes l3 {
-  20% {
-    background-position:
-      0% 0%,
-      50% 50%,
-      100% 50%;
-  }
-  40% {
-    background-position:
-      0% 100%,
-      50% 0%,
-      100% 50%;
-  }
-  60% {
-    background-position:
-      0% 50%,
-      50% 100%,
-      100% 0%;
-  }
-  80% {
-    background-position:
-      0% 50%,
-      50% 50%,
-      100% 100%;
-  }
+.empty-state-container {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 60px 20px;
+  text-align: center;
+  background: rgba(255, 255, 255, 0.5);
+  border-radius: 24px;
+  border: 2px dashed #e2e8f0;
 }
 
-/* Error */
-.icon-circle {
-  width: 70px;
-  height: 70px;
-  background: var(--color-Error);
+.empty-icon-wrapper {
+  width: 80px;
+  height: 80px;
+  background: #f1f5f9;
   border-radius: 50%;
   display: flex;
   align-items: center;
   justify-content: center;
-  font-size: 2rem;
-  margin-bottom: 10px;
+  margin-bottom: 20px;
+}
+
+.empty-emoji {
+  font-size: 2.5rem;
+}
+
+.empty-state-container h2 {
+  color: var(--color-Azul);
+  margin: 0 0 10px 0;
+  font-size: 1.5rem;
+  font-weight: 800;
+}
+
+.empty-state-container p {
+  color: #64748b;
+  max-width: 300px;
+  margin: 0;
+  line-height: 1.5;
+  font-weight: 500;
 }
 </style>

@@ -5,8 +5,10 @@ import { useapi } from '@/assets/composables/useApi'
 import { useAuthStore } from '@/stores/authStore.ts'
 import { messaging } from '@/firebaseConfig'
 import { getToken } from 'firebase/messaging'
+import { useModalStore } from '@/stores/modalStore.ts'
 
 const ua = useAuthStore()
+const ns = useModalStore()
 
 // Estado de la configuración
 const config = ref({
@@ -94,7 +96,7 @@ const saveSettings = async () => {
     const { error } = await useapi('/configurations').patch(config.value).json()
     if (!error.value) {
       originalConfig.value = JSON.stringify(config.value)
-      alert('Configuración actualizada con éxito')
+      ns.notify( 'Configuración actualizada con éxito', 'success')
     }
   } finally {
     saving.value = false
@@ -144,7 +146,7 @@ watch(
             {{ ua.credentials?.user.name.charAt(0) }}{{ ua.credentials?.user.lastname.charAt(0) }}
           </div>
           <div>
-            <h1>Notificaciones</h1>
+            <h1>Configuración</h1>
           </div>
         </div>
         <div class="right">
@@ -515,7 +517,8 @@ body {
 }
 
 .setting-card {
-  background: #f8fafc;
+  background: var(--color-Fondos);
+  border: 1px solid var(--color-Bordes);
   border-radius: 18px;
   padding: 10px 25px;
   margin-bottom: 40px;

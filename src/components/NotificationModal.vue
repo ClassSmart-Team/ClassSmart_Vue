@@ -28,7 +28,7 @@ const goToUrl = () => {
 
         <div class="custom-modal-footer">
           <button @click="store.showModal = false" class="btn-secondary">Cerrar</button>
-          <button @click="goToUrl" class="btn-primary">Ver</button>
+          <button @click="goToUrl" class="btn-primary">Ver detalles</button>
         </div>
       </div>
     </div>

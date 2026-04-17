@@ -3,8 +3,10 @@ import { computed, reactive, ref, watch } from 'vue'
 import SidebarLayout from '@/components/ParentSidebar.vue'
 import { useapi } from '@/assets/composables/useApi'
 import { useAuthStore } from '@/stores/authStore.ts'
+import { useModalStore } from '@/stores/modalStore.ts'
 
 const ua = useAuthStore()
+const ns = useModalStore()
 const isModalOpen = ref(false)
 
 const { data, error, isFetching, execute: refetchProfile } = useapi('/profile').json()
@@ -68,7 +70,23 @@ const closeEditModal = () => {
   form.password = ''
 }
 
+const hasChanges = computed(() => {
+  if (!user.value) return false
+
+  const sameEmail = form.email === user.value.email
+  const sameCellphone = form.cellphone === (user.value.cellphone || '')
+  const hasPassword = form.password.trim().length > 0
+
+  return !sameEmail || !sameCellphone || hasPassword
+})
+
 async function updateProfile() {
+  if (!hasChanges.value) {
+    ns.notify('No has realizado ningún cambio para guardar', 'info')
+    closeEditModal()
+    return
+  }
+
   const payload: any = {
     name: form.name,
     lastname: form.lastname,
@@ -79,20 +97,20 @@ async function updateProfile() {
   if (form.password && form.password.trim().length >= 8) {
     payload.password = form.password
   } else if (form.password && form.password.trim().length > 0) {
-    alert('La contraseña debe tener al menos 8 caracteres')
+    ns.notify('La contraseña debe tener al menos 8 caracteres', 'error')
     return
   }
 
   const { error: updateError } = await useapi('/profile').put(payload).json()
 
   if (!updateError.value) {
-    alert('Perfil actualizado con éxito')
+    ns.notify('Tu perfil se ha actualizado correctamente', 'success')
     closeEditModal()
     refetchProfile()
 
     form.password = ''
   } else {
-    alert('Error al actualizar: Revisa los datos o el correo duplicado')
+    ns.notify('No se pudieron guardar los cambios', 'error')
   }
 }
 </script>
@@ -173,7 +191,9 @@ async function updateProfile() {
                 <div class="detail-value">********</div>
               </div>
 
-              <button @click="openEditModal" class="btn-edit">Editar Datos</button>
+              <div class="edit-button">
+                <button @click="openEditModal" class="btn-edit">Editar Datos</button>
+              </div>
 
               <div class="content-header2">
                 <h3>Hijos Vinculados</h3>
@@ -243,7 +263,17 @@ async function updateProfile() {
                     <button type="button" @click="closeEditModal" class="btn-cancel">
                       Cancelar
                     </button>
-                    <button type="submit" class="btn-save">Guardar Cambios</button>
+                    <button
+                      type="submit"
+                      class="btn-save"
+                      :disabled="!hasChanges"
+                      :style="{
+                        opacity: !hasChanges ? 0.5 : 1,
+                        cursor: !hasChanges ? 'not-allowed' : 'pointer',
+                      }"
+                    >
+                      Guardar Cambios
+                    </button>
                   </div>
                 </form>
               </div>
@@ -262,6 +292,82 @@ async function updateProfile() {
   overflow-x: hidden;
   overflow-y: auto;
   z-index: -1;
+}
+
+.ContSmall {
+  background: var(--color-Azul);
+  width: 1000px;
+  min-height: 40px;
+  border-radius: 20px;
+  margin: 0 auto;
+  padding: 20px 25px;
+  color: white;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+.ContSmall h1 {
+  margin: 0;
+  font-size: 1.5rem;
+  letter-spacing: -0.5px;
+}
+
+.ContSmall p {
+  margin: 0;
+  font-size: 0.9rem;
+  opacity: 0.8;
+}
+
+.welcome-text {
+  font-weight: 600;
+  font-size: 0.9rem;
+  background: rgba(255, 255, 255, 0.1);
+  padding: 8px 15px;
+  border-radius: 10px;
+}
+
+.loading-state,
+.empty-state {
+  text-align: center;
+  padding: 80px 20px;
+  color: #94a3b8;
+}
+.spinner {
+  width: 45px;
+  height: 45px;
+  border: 4px solid #f1f5f9;
+  border-top: 4px solid var(--color-Azul);
+  border-radius: 50%;
+  animation: spin 1s linear infinite;
+  margin: 0 auto 20px;
+}
+.empty-icon {
+  font-size: 3rem;
+  margin-bottom: 15px;
+  opacity: 0.5;
+}
+@keyframes spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+.error-banner {
+  background: #fee2e2;
+  color: #dc2626;
+  padding: 18px;
+  border-radius: 15px;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  font-weight: 700;
+}
+
+@media (max-width: 1050px) {
+  .ContSmall,
+  .ContBig {
+    width: 95%;
+  }
 }
 
 .flex-center {
@@ -379,14 +485,12 @@ async function updateProfile() {
   font-weight: 800;
 }
 
-
 .content-header2 h3 {
   margin: 0;
   color: var(--color-TitulosMenu);
   font-size: 1.7rem;
   font-weight: 800;
 }
-
 
 .header-line {
   width: 50px;
@@ -418,7 +522,7 @@ async function updateProfile() {
   color: var(--color-Texto);
   font-weight: 600;
   padding: 16px 20px;
-  background: #f8fafc;
+  background:;
   border-radius: 16px;
   border: 1px solid #e2e8f0;
   transition: all 0.3s ease;
@@ -483,7 +587,7 @@ h3 {
   display: flex;
   align-items: center;
   gap: 15px;
-  background: var(--color-Bordes);
+  background: var(--color-Rol);
   padding: 15px;
   border-radius: 15px;
   border: 1px solid #eee;
@@ -514,21 +618,30 @@ h3 {
   letter-spacing: 0.5px;
 }
 
+.edit-button {
+  grid-column: 1 / -1;
+  display: flex;
+  justify-content: flex-end;
+  margin-top: -10px;
+}
+
 .btn-edit {
   background: var(--color-Azul);
   color: white;
   border: none;
-  padding: 10px 25px;
-  border-radius: 10px;
-  font-weight: bold;
+  padding: 8px 18px;
+  border-radius: 8px;
+  font-size: 0.85rem;
+  font-weight: 700;
   cursor: pointer;
-  align-self: flex-end;
-  transition: background 0.3s ease;
-  margin-bottom: 30px;
+  transition: all 0.3s ease;
+  margin-bottom: 20px;
 }
 
 .btn-edit:hover {
   background: var(--color-AzulTres);
+  transform: translateY(-1px);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
 }
 
 @media (max-width: 850px) {
@@ -591,8 +704,8 @@ h3 {
 
 .form-group label {
   display: block;
-  font-size: 0.85rem;
-  color: var(--color-Texto);
+  font-size: 0.95rem;
+  color: #94a3b8;
   margin-bottom: 8px;
   font-weight: bold;
   font-family: 'Roboto', sans-serif;

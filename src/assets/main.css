@@ -34,6 +34,7 @@ html, body, #app {
   --color-Anuncio: #1e293b;
   --color-Hover: #f8fafc;
   --color-Tabs: #f1f5f9;
+  --color-Fondos: #f8fafc;
 
   /* detalle de tarea */
   --color-Pendente: #f1f3f4;
@@ -45,6 +46,7 @@ html, body, #app {
   --color-SinEntrega: #efeff4;
   --color-StatusSinEntrega: #e6f4ea;
   --color-Retroalimentacion: #2c2f36;
+
 
   --bg-gradient-top: var(--color-AzulDos);       /* #4ba4df */
   --bg-gradient-bottom: var(--color-ComplementoDos);
@@ -68,6 +70,8 @@ html, body, #app {
   --color-Anuncio: #595A69;
   --color-Hover: #242424;
   --color-Tabs: #242f4e;
+  --color-Fondos: #1e2530;
+
 
   /* detalle de tarea */
   --color-Pendente: #2d2e31;

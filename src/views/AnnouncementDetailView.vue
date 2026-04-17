@@ -17,6 +17,7 @@ const { data: announcementsData, isFetching: loadingAds, error } = useapi('/anno
 const { data: groupData, isFetching: loadingGroup } = useapi(
   `/groups/${groupId}?child_id=${childId}`,
 ).json()
+
 const filteredAnnouncements = computed(() => {
   const announcementList = announcementsData.value?.data || []
 

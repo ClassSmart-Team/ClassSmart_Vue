@@ -126,10 +126,8 @@ const timeLeft = computed(() => {
               <span class="time-chip" :class="{ urgent: timeLeft.includes('h restantes') }">
                 {{ timeLeft }}
               </span>
-              <h2 class="header-subtitle">
-                {{ task.group?.name }} | Prof. {{ task.group?.owner_user?.name }}
-                {{ task.group?.owner_user?.lastname }}
-              </h2>
+              <h3 class="header-subtitle">{{ task.group?.name }}</h3>
+              <h3 class="header-subtitle2">Prof. {{ task.group?.owner?.name }}</h3>
             </div>
           </div>
         </div>
@@ -325,6 +323,14 @@ const timeLeft = computed(() => {
 }
 
 .header-subtitle {
+  font-weight: 600;
+  margin: 0;
+  opacity: 0.9;
+  color: #f0f7ff;
+  line-height: 1.2;
+}
+
+.header-subtitle2 {
   font-weight: 600;
   margin-bottom: 15%;
   opacity: 0.9;
